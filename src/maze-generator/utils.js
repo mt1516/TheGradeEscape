@@ -1,6 +1,9 @@
 module.exports = {
     initMaze,
     getUnvisitedNighbors,
+    addAdjacentCells,
+    union,
+    find,
 };
 
 function initMaze(width, height) {
@@ -32,4 +35,37 @@ function getUnvisitedNighbors(comilationMaze, row, col){
         }
     }
     return neighbors;
+}
+
+function addAdjacentCells(adjacentCells, compilationMaze, cell) {
+    const unvisitedNighbors = getUnvisitedNighbors(compilationMaze, cell[0], cell[1]);
+    for (let [row, col] of unvisitedNighbors) {
+        adjacentCells.push([[cell[0], cell[1]], [row, col]]);
+    }
+}
+
+function union(sets, row1, col1, row2, col2) {
+    const set1 = find(sets, row1, col1);
+    const set2 = find(sets, row2, col2);
+
+    if (set1 < 0 || set2 < 0) {
+        return; // Invalid set
+    }
+
+    if (set1 !== set2) {
+        // Merge two sets
+        sets[set2].cells.forEach(cell => {
+            sets[set1].cells.push(cell);
+        });
+        sets.splice(set2, 1); // Remove the merged set
+    }
+}
+
+function find(sets, row, col) {
+    for (let i = 0; i < sets.length; i++) {
+        if (sets[i].cells.some(cell => cell[0] === row && cell[1] === col)) {
+            return i; // Return the index of the set containing the cell
+        }
+    }
+    return -1; // Not found
 }
