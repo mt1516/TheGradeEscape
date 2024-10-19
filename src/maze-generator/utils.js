@@ -1,11 +1,3 @@
-module.exports = {
-    initMaze,
-    getUnvisitedNighbors,
-    addAdjacentCells,
-    union,
-    find,
-};
-
 function initMaze(width, height) {
     var visualizeMaze = new Array(2 * height - 1);
     var maze = new Array(height).fill(0).map(() => new Array(width).fill(0));
@@ -68,4 +60,12 @@ function find(sets, row, col) {
         }
     }
     return -1; // Not found
+}
+
+export {
+    initMaze,
+    getUnvisitedNighbors,
+    addAdjacentCells,
+    union,
+    find,
 }

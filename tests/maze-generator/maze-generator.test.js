@@ -1,4 +1,5 @@
-const { recursiveBacktracing, primsAlgorithm, ellersAlgorithm } = require('../../src/maze-generator/maze-generator').default;
+// const { recursiveBacktracing, primsAlgorithm, ellersAlgorithm } = require('../../src/maze-generator/maze-generator').default;
+import { recursiveBacktracing, primsAlgorithm, ellersAlgorithm } from '../../src/maze-generator/maze-generator';
 
 const parameters = [
     [5, 5, 0, 0, 4, 4], 

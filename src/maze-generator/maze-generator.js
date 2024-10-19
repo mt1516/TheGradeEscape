@@ -1,20 +1,21 @@
-const { initMaze, getUnvisitedNighbors, addAdjacentCells, union, find } = require('./utils');
+import { initMaze, getUnvisitedNighbors, addAdjacentCells, union, find } from './utils';
+// const { initMaze, getUnvisitedNighbors, addAdjacentCells, union, find } = require('./utils');
 
-module.exports = {
-    default: {
-        recursiveBacktracing,
-        primsAlgorithm,
-        ellersAlgorithm,
-    },
-};
+// module.exports = {
+//     default: {
+//         mazeGenerator,
+//         recursiveBacktracing,
+//         primsAlgorithm,
+//         ellersAlgorithm,
+//     },
 
 function mazeGenerator(width, height, startRow, startCol, endRow, endCol, complexity) {
     switch (complexity) {
-        case 1:
+        case 0:
             return primsAlgorithm(width, height, startRow, startCol, endRow, endCol);
-        case 2:
+        case 1:
             return ellersAlgorithm(width, height, startRow, startCol, endRow, endCol);
-        case 3:
+        case 2:
             return recursiveBacktracing(width, height, startRow, startCol, endRow, endCol);
         default:
             return recursiveBacktracing(width, height, startRow, startCol, endRow, endCol);
@@ -114,6 +115,12 @@ function ellersAlgorithm(width, height, startRow, startCol, endRow, endCol, prob
     return maze;
 }
 
+export {
+    mazeGenerator,
+    recursiveBacktracing,
+    primsAlgorithm,
+    ellersAlgorithm,
+};
 
 // WALL = 0
 // PATH = 1

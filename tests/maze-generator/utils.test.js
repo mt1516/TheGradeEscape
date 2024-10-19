@@ -1,4 +1,5 @@
-const { initMaze, getUnvisitedNighbors, addAdjacentCells, union, find } = require('../../src/maze-generator/utils');
+// const { initMaze, getUnvisitedNighbors, addAdjacentCells, union, find } = require('../../src/maze-generator/utils');
+import { initMaze, getUnvisitedNighbors, addAdjacentCells, union, find } from '../../src/maze-generator/utils';
 
 describe('maze-generator utils test', () => {
     test('initMaze test case 1', () => {
