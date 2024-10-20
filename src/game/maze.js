@@ -5,6 +5,12 @@ import Player from './player';
 let scene, camera, renderer;
 let width = 10;
 let height = 10;
+let startRow = 0;
+let startCol = 0;
+let endRow = 9;
+let endCol = 9;
+let complexity = 0;
+const cellSize = 3; // Size of each cell
 
 // Initialize Three.js
 function initThreeJS() {
@@ -14,18 +20,16 @@ function initThreeJS() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
     
-    camera.position.set(0, 0, 30);
+    camera.position.set(0, 0, 60);
     camera.lookAt(0, 0, 0); // Adjust the camera position to look at the maze
 }
 
 // Render the maze
 function renderMaze(maze) {
     const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black walls
-    const pathMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White paths
+    const pathMaterial = new THREE.MeshBasicMaterial({ color: 0xafafaf }); // White paths
     const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
-    const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell
-
-    const cellSize = 1; // Size of each cell
+    const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
 
     maze.forEach((row, y) => {
         row.forEach((cell, x) => {
@@ -43,16 +47,16 @@ function renderMaze(maze) {
                     scene.add(path);
                     break;
                 case 2:
-                    const startGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
-                    const start = new THREE.Mesh(startGeometry, startMaterial);
-                    start.position.set((x - width + 1) * cellSize, (height - y - 1) * cellSize, 0); // Adjust position
-                    scene.add(start);
-                    break;
-                case 3:
                     const winGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
                     const win = new THREE.Mesh(winGeometry, winMaterial);
                     win.position.set((x - width + 1) * cellSize, (height - y - 1) * cellSize, 0); // Adjust position
                     scene.add(win);
+                    break;
+                case 3:
+                    const startGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+                    const start = new THREE.Mesh(startGeometry, startMaterial);
+                    start.position.set((x - width + 1) * cellSize, (height - y - 1) * cellSize, 0); // Adjust position
+                    scene.add(start);
                     break;
             }
         });
@@ -71,29 +75,6 @@ function renderMaze(maze) {
     addBorderWall(width, height, cellSize);
     addBorderWall(-width, -height, cellSize);
     addBorderWall(width, -height, cellSize);
-
-
-    // if (x === 0) {
-        
-    // }
-    // if (x === width - 1) {
-    //     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
-    //     const border = new THREE.Mesh(borderGeometry, borderMaterial);
-    //     border.position.set(width * cellSize, (height - y - 1) * cellSize, 0); // Adjust position
-    //     scene.add(border);
-    // }
-    // if (y === 0) {
-    //     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
-    //     const border = new THREE.Mesh(borderGeometry, borderMaterial);
-    //     border.position.set((x - width + 1) * cellSize, height * cellSize, 0); // Adjust position
-    //     scene.add(border);
-    // }
-    // if (y === width - 1) {
-    //     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
-    //     const border = new THREE.Mesh(borderGeometry, borderMaterial);
-    //     border.position.set((x - width + 1) * cellSize, -height * cellSize, 0); // Adjust position
-    //     scene.add(border);
-    // }
 }
 
 function addBorderWall(x, y, cellSize) {
@@ -114,31 +95,32 @@ function animate() {
 // Initialize the game
 function initGame() { 
     // TODO: Add difficulty levels
-    const maze = mazeGenerator(width, height, 0, 0, 9, 9, 0);
+    const maze = mazeGenerator(width, height, startRow, startCol, endRow, endCol, complexity);
     initThreeJS();
     renderMaze(maze);
     animate();
 
-    const player = new Player(0, 0, maze); // Start at (1, 1)
+    const player = new Player(startRow, startCol, (1 - width) * cellSize, (height - 1) * cellSize, maze); // Start at (0, 0)
+    scene.add(player.player); // Add the player to the scene
 
     // Handle keyboard input
     document.addEventListener('keydown', (event) => {
         switch (event.key) {
             case 'ArrowUp':
-                player.move(0, -1); // Move up
+                player.turnDirection(1); // Move up
                 console.log('up')
                 break;
+            case 'ArrowRight':
+                player.turnDirection(2); // Move right
+                console.log('right')
+                break;
             case 'ArrowDown':
-                player.move(0, 1); // Move down
+                player.turnDirection(3); // Move down
                 console.log('down')
                 break;
             case 'ArrowLeft':
-                player.move(-1, 0); // Move left
+                player.turnDirection(4); // Move left
                 console.log('left')
-                break;
-            case 'ArrowRight':
-                player.move(1, 0); // Move right
-                console.log('right')
                 break;
         }
     });

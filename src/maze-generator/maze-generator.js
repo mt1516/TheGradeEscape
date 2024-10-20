@@ -25,10 +25,10 @@ function mazeGenerator(width, height, startRow, startCol, endRow, endCol, comple
 
 function recursiveBacktracing(width, height, startRow, startCol, endRow, endCol) {
     var maze = initMaze(width, height);
-    maze.compilationMaze[startRow][startCol] = 1;
-    maze.visualizeMaze[2*startRow][2*startCol] = 2;
+    maze.compilationMaze[endRow][endCol] = 1;
+    maze.visualizeMaze[2*endRow][2*endCol] = 2;
     const stack = []
-    stack.push([startRow, startCol]);
+    stack.push([endRow, endCol]);
     while (stack.length>0) {
         const [row, col] = stack.pop();
         const neighbors = getUnvisitedNighbors(maze.compilationMaze, row, col);
@@ -40,17 +40,17 @@ function recursiveBacktracing(width, height, startRow, startCol, endRow, endCol)
             stack.push(chosenNeighbor)
         }
     }
-    maze.visualizeMaze[2*endRow][2*endCol] = 3;
+    maze.visualizeMaze[2*startRow][2*startCol] = 3;
     return maze.visualizeMaze;
 }
 
 function primsAlgorithm(width, height, startRow, startCol, endRow, endCol) {
     var maze = initMaze(width, height);
-    maze.compilationMaze[2*startRow][2*startCol] = 1;
-    maze.visualizeMaze[2*startRow][2*startCol] = 2;
+    maze.compilationMaze[endRow][endCol] = 1;
+    maze.visualizeMaze[2*endRow][2*endCol] = 2;
 
     var adjacentCells = [];
-    addAdjacentCells(adjacentCells, maze.compilationMaze, [startRow, startCol]);
+    addAdjacentCells(adjacentCells, maze.compilationMaze, [endRow, endCol]);
     while (adjacentCells.length > 0) {
         const cell = adjacentCells[Math.floor(Math.random() * adjacentCells.length)];
         adjacentCells = adjacentCells.filter(c => c !== cell);
@@ -61,7 +61,7 @@ function primsAlgorithm(width, height, startRow, startCol, endRow, endCol) {
         maze.visualizeMaze[cell[0][0] + cell[1][0]][cell[0][1] + cell[1][1]] = 1;
         addAdjacentCells(adjacentCells, maze.compilationMaze, cell[1]);
     }
-    maze.visualizeMaze[2 * endRow][2 * endCol] = 3;
+    maze.visualizeMaze[2 * startRow][2 * startCol] = 3;
     return maze.visualizeMaze;
 }
 
@@ -69,7 +69,7 @@ function ellersAlgorithm(width, height, startRow, startCol, endRow, endCol, prob
     // Step 1: Initialize the maze
     const maze = initMaze(width, height).visualizeMaze;
     const sets = []; // List to hold sets of cells for union-find structure
-    maze[2 * startRow][2 * startCol] = 2; // Mark the start cell
+    maze[2 * endRow][2 * endCol] = 2; // Mark the start cell
 
     // Step 2: Create the first row of the maze
     for (let col = 0; col < maze[0].length; col+=2) {
@@ -110,7 +110,7 @@ function ellersAlgorithm(width, height, startRow, startCol, endRow, endCol, prob
             maze[maze.length - 1][col - 1] = 1;
         }
     }
-    maze[2 * endRow][2 * endCol] = 3; // Mark the end cell
+    maze[2 * startRow][2 * startCol] = 3; // Mark the end cell
 
     return maze;
 }
