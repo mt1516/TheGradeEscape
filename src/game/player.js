@@ -11,7 +11,7 @@ class Player {
         this.y = startY;
         this.visualizeX = visualizeX;
         this.visualizeY = visualizeY;
-        this.player = this.renderPlayer();
+        this.hitbox = this.renderPlayer();
         this.maze = maze; // Reference to the maze for collision detection
         this.speed = 1; // Speed of the player
         this.direction = 0; // Direction of the player
@@ -28,8 +28,8 @@ class Player {
 
     turnDirection(direction) {
         this.direction = direction;
-        // this.move();
     }
+
     move() {
         var newVisualizeX = this.visualizeX;
         var newVisualizeY = this.visualizeY;
@@ -79,10 +79,14 @@ class Player {
         );
     }
 
+    isWin() {
+        return this.maze[this.y][this.x] === 2;
+    }
+
     updatePosition(newVisualizeX, newVisualizeY, newX, newY) {
-        // Update the player's visual representation (e.g., position on a canvas)
+        // Update the player's position both on the canvas and the maze
         console.log(`Player moved to: (${newVisualizeX}, ${newVisualizeY}), (${newX}, ${newY})`);
-        this.player.position.set(newVisualizeX, newVisualizeY, 2); // Adjust position
+        this.hitbox.position.set(newVisualizeX, newVisualizeY, 2); // Adjust position
         this.visualizeX = newVisualizeX;
         this.visualizeY = newVisualizeY;
         this.x = newX;

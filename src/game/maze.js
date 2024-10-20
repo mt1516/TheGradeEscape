@@ -18,6 +18,7 @@ const moveEveryNFrames = 10; // Move the player every 10 frames
 // Initialize Three.js
 function initThreeJS() {
     scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff); // White background
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -29,7 +30,7 @@ function initThreeJS() {
 
 // Render the maze
 function renderMaze(maze) {
-    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black walls
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red walls
     const pathMaterial = new THREE.MeshBasicMaterial({ color: 0xafafaf }); // White paths
     const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
     const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
@@ -81,7 +82,7 @@ function renderMaze(maze) {
 }
 
 function addBorderWall(x, y, cellSize) {
-    const borderMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red border
+    const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black border
     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
     const border = new THREE.Mesh(borderGeometry, borderMaterial);
     border.position.set(x * cellSize, y * cellSize, 0); // Adjust position
@@ -90,10 +91,10 @@ function addBorderWall(x, y, cellSize) {
 
 
 // Animation loop
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
+// function animate() {
+//     requestAnimationFrame(animate);
+//     renderer.render(scene, camera);
+// }
 
 function playerMovemoment() {
     frameCount++;
@@ -101,11 +102,16 @@ function playerMovemoment() {
     // Move the player every 10 frames
     if (frameCount >= moveEveryNFrames) {
         player.move();
+        if (player.isWin()) {
+            alert('You win!');
+            window.location.reload(); // Reload the page
+        }
         frameCount = 0; // Reset the frame counter
     }
 
     // Request the next frame
     requestAnimationFrame(playerMovemoment);
+    renderer.render(scene, camera);
 }
 
 // Initialize the game
@@ -114,10 +120,10 @@ function initGame() {
     const maze = mazeGenerator(width, height, startRow, startCol, endRow, endCol, complexity);
     initThreeJS();
     renderMaze(maze);
-    animate();
+    // animate();
 
     player = new Player(startRow, startCol, (1 - width) * cellSize, (height - 1) * cellSize, maze); // Start at (0, 0)
-    scene.add(player.player); // Add the player to the scene
+    scene.add(player.hitbox); // Add the player to the scene
 
     // Handle keyboard input
     document.addEventListener('keydown', (event) => {

@@ -124,8 +124,8 @@ export {
 
 // WALL = 0
 // PATH = 1
-// START = 2
-// END = 3
+// END = 2
+// START = 3
 
 // visualizeMaze
 // -----------------
