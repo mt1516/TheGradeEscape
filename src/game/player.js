@@ -28,19 +28,9 @@ class Player {
 
     turnDirection(direction) {
         this.direction = direction;
-        this.move();
+        // this.move();
     }
     move() {
-        // const newX = this.x + dx;
-        // const newY = this.y + dy;
-
-        // // Check if the new position is within bounds and not a wall
-        // if (this.isValidMove(newX, newY)) {
-        //     this.x = newX;
-        //     this.y = newY;
-        //     this.updatePosition();
-        //     console.log('Player moved successfully, x:', this.x, 'y:', this.y);
-        // }
         var newVisualizeX = this.visualizeX;
         var newVisualizeY = this.visualizeY;
         var newX = this.x;
@@ -65,13 +55,13 @@ class Player {
         }
         if (this.isValidMove(newVisualizeX, newVisualizeY, newX, newY)) {
             this.updatePosition(newVisualizeX, newVisualizeY, newX, newY);
-        } else {
-            console.log('Invalid move, x:', newVisualizeX, 'y:', newVisualizeY, 'newX:', newX, 'newY:', newY);
-            if (newX < 0 || newY < 0 || newX >= this.maze[0].length || newY >= this.maze.length) {
-                console.log('Out of bounds');
-            } else {
-                console.log('Hit a wall, maze value:', this.maze[newY][newX]);
-            }
+        // } else {
+        //     console.log('Invalid move, x:', newVisualizeX, 'y:', newVisualizeY, 'newX:', newX, 'newY:', newY);
+        //     if (newX < 0 || newY < 0 || newX >= this.maze[0].length || newY >= this.maze.length) {
+        //         console.log('Out of bounds');
+        //     } else {
+        //         console.log('Hit a wall, maze value:', this.maze[newY][newX]);
+        //     }
         }
     }
 

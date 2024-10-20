@@ -11,6 +11,9 @@ let endRow = 9;
 let endCol = 9;
 let complexity = 0;
 const cellSize = 3; // Size of each cell
+var player;
+let frameCount = 0;
+const moveEveryNFrames = 10; // Move the player every 10 frames
 
 // Initialize Three.js
 function initThreeJS() {
@@ -92,6 +95,19 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+function playerMovemoment() {
+    frameCount++;
+
+    // Move the player every 10 frames
+    if (frameCount >= moveEveryNFrames) {
+        player.move();
+        frameCount = 0; // Reset the frame counter
+    }
+
+    // Request the next frame
+    requestAnimationFrame(playerMovemoment);
+}
+
 // Initialize the game
 function initGame() { 
     // TODO: Add difficulty levels
@@ -100,7 +116,7 @@ function initGame() {
     renderMaze(maze);
     animate();
 
-    const player = new Player(startRow, startCol, (1 - width) * cellSize, (height - 1) * cellSize, maze); // Start at (0, 0)
+    player = new Player(startRow, startCol, (1 - width) * cellSize, (height - 1) * cellSize, maze); // Start at (0, 0)
     scene.add(player.player); // Add the player to the scene
 
     // Handle keyboard input
@@ -124,6 +140,7 @@ function initGame() {
                 break;
         }
     });
+    playerMovemoment()
 }
 
 export default initGame
