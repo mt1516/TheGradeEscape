@@ -3,8 +3,8 @@ import { mazeGenerator } from '../maze-generator/maze-generator'
 import Player from './player';
 
 let scene, camera, renderer;
-let width = 14;
-let height = 14;
+let width = 10;
+let height = 10;
 
 // Initialize Three.js
 function initThreeJS() {
@@ -57,7 +57,53 @@ function renderMaze(maze) {
             }
         });
     });
+
+    // Add border walls
+    for (let y = 0; y < 2 * height - 1; y++) {
+        addBorderWall(-width, height - y - 1, cellSize);
+        addBorderWall(width, height - y - 1, cellSize);
+    }
+    for (let x = 0; x < 2 * width - 1; x++) {
+        addBorderWall(x - width + 1, height, cellSize);
+        addBorderWall(x - width + 1, -height, cellSize);
+    }
+    addBorderWall(-width, height, cellSize);
+    addBorderWall(width, height, cellSize);
+    addBorderWall(-width, -height, cellSize);
+    addBorderWall(width, -height, cellSize);
+
+
+    // if (x === 0) {
+        
+    // }
+    // if (x === width - 1) {
+    //     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+    //     const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    //     border.position.set(width * cellSize, (height - y - 1) * cellSize, 0); // Adjust position
+    //     scene.add(border);
+    // }
+    // if (y === 0) {
+    //     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+    //     const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    //     border.position.set((x - width + 1) * cellSize, height * cellSize, 0); // Adjust position
+    //     scene.add(border);
+    // }
+    // if (y === width - 1) {
+    //     const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+    //     const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    //     border.position.set((x - width + 1) * cellSize, -height * cellSize, 0); // Adjust position
+    //     scene.add(border);
+    // }
 }
+
+function addBorderWall(x, y, cellSize) {
+    const borderMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red border
+    const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+    const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    border.position.set(x * cellSize, y * cellSize, 0); // Adjust position
+    scene.add(border);
+}
+
 
 // Animation loop
 function animate() {
