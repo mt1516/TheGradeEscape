@@ -1,14 +1,15 @@
 import * as THREE from 'three';
 import { mazeGenerator } from '../maze-generator/maze-generator'
 import Player from './player';
+import settings from './settings.json';
 
 let scene, camera, renderer;
-let width = 10;
-let height = 10;
+let width = 20;
+let height = 20;
 let startRow = 0;
 let startCol = 0;
-let endRow = 9;
-let endCol = 9;
+let endRow = 19;
+let endCol = 19;
 let complexity = 0;
 const cellSize = 3; // Size of each cell
 var player;
@@ -18,20 +19,19 @@ const moveEveryNFrames = 10; // Move the player every 10 frames
 // Initialize Three.js
 function initThreeJS() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff); // White background
+    scene.background = new THREE.Color(0x6c6c6c); // White background
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    
-    camera.position.set(0, 0, 60);
+    camera.position.set(0, 0, Math.max(width, height) * 2 * cellSize); // Adjust the camera position
     camera.lookAt(0, 0, 0); // Adjust the camera position to look at the maze
 }
 
 // Render the maze
 function renderMaze(maze) {
-    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red walls
-    const pathMaterial = new THREE.MeshBasicMaterial({ color: 0xafafaf }); // White paths
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x593ac0 }); // Red walls
+    const pathMaterial = new THREE.MeshBasicMaterial({ color: 0xb199e1 }); // White paths
     const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
     const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
 
@@ -115,7 +115,7 @@ function playerMovemoment() {
 }
 
 // Initialize the game
-function initGame() { 
+function initGame(game = "default") { 
     // TODO: Add difficulty levels
     const maze = mazeGenerator(width, height, startRow, startCol, endRow, endCol, complexity);
     initThreeJS();

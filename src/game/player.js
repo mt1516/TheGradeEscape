@@ -1,8 +1,8 @@
 // player.js
 import * as THREE from 'three';
 
-let width = 10;
-let height = 10;
+let width = 14; // TODO: Change to access the JSON file to get the width and height for a specific difficulty and gamemode
+let height = 14; // TODO: Change to access the JSON file to get the width and height for a specific difficulty and gamemode
 const cellSize = 3; // Size of each cell
 
 class Player {
@@ -55,13 +55,13 @@ class Player {
         }
         if (this.isValidMove(newVisualizeX, newVisualizeY, newX, newY)) {
             this.updatePosition(newVisualizeX, newVisualizeY, newX, newY);
-        // } else {
-        //     console.log('Invalid move, x:', newVisualizeX, 'y:', newVisualizeY, 'newX:', newX, 'newY:', newY);
-        //     if (newX < 0 || newY < 0 || newX >= this.maze[0].length || newY >= this.maze.length) {
-        //         console.log('Out of bounds');
-        //     } else {
-        //         console.log('Hit a wall, maze value:', this.maze[newY][newX]);
-        //     }
+        } else {
+            console.log('Invalid move, x:', newVisualizeX, 'y:', newVisualizeY, 'newX:', newX, 'newY:', newY);
+            if (newX < 0 || newY < 0 || newX >= this.maze[0].length || newY >= this.maze.length) {
+                console.log('Out of bounds');
+            } else {
+                console.log('Hit a wall, maze value:', this.maze[newY][newX]);
+            }
         }
     }
 
