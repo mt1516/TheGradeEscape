@@ -38,19 +38,19 @@ class Player {
         switch (this.direction) {
             case 1:
                 newVisualizeY += this.speed;
-                newY = - Math.round(newVisualizeY/3) + this.maze.length - 1;
+                newY = - Math.round(newVisualizeY/3) + Math.trunc(this.maze.length/2);
                 break;
             case 2:
                 newVisualizeX += this.speed;
-                newX = Math.round(newVisualizeX/3) + this.maze[0].length - 1;
+                newX = Math.round(newVisualizeX/3) + Math.trunc(this.maze[0].length/2);
                 break;
             case 3:
                 newVisualizeY -= this.speed;
-                newY = - Math.round(newVisualizeY/3) + this.maze.length - 1;
+                newY = - Math.round(newVisualizeY/3) + Math.trunc(this.maze.length/2);
                 break;
             case 4:
                 newVisualizeX -= this.speed;
-                newX = Math.round(newVisualizeX/3) + this.maze[0].length - 1;
+                newX = Math.round(newVisualizeX/3) + Math.trunc(this.maze[0].length/2);
                 break;
         }
         if (this.isValidMove(newVisualizeX, newVisualizeY, newX, newY)) {
