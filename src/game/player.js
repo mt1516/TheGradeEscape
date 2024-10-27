@@ -1,9 +1,9 @@
 // player.js
 import * as THREE from 'three';
 
-let width = 14; // TODO: Change to access the JSON file to get the width and height for a specific difficulty and gamemode
-let height = 14; // TODO: Change to access the JSON file to get the width and height for a specific difficulty and gamemode
-const cellSize = 3; // Size of each cell
+// let width = 14; // TODO: Change to access the JSON file to get the width and height for a specific difficulty and gamemode
+// let height = 14; // TODO: Change to access the JSON file to get the width and height for a specific difficulty and gamemode
+const cellSize = 3; // Size of each cell    --> change to character size --> for collision detection
 
 class Player {
     constructor(startX, startY, visualizeX, visualizeY, maze) {
