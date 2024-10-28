@@ -102,7 +102,7 @@
 
 'use client'
 import { useEffect, useRef } from "react";
-import initGame from "./component/game/maze";
+// import initGame from "./component/game/maze";
 import Canvas from "./component/UI/canvas";
 
 export default function Home() {

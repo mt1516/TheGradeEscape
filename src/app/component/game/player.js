@@ -13,6 +13,8 @@ class Player {
         this.visualizeY = visualizeY;
         this.hitbox = this.renderPlayer();
         this.maze = maze; // Reference to the maze for collision detection
+        this.maze_height = maze.length;
+        this.maze_width = maze[0].length;
         this.speed = 1; // Speed of the player
         this.direction = 0; // Direction of the player
     }
@@ -38,26 +40,26 @@ class Player {
         switch (this.direction) {
             case 1:
                 newVisualizeY += this.speed;
-                newY = - Math.round(newVisualizeY/3) + Math.trunc(this.maze.length/2);
+                newY = - Math.round(newVisualizeY/3) + Math.trunc(this.maze_height/2);
                 break;
             case 2:
                 newVisualizeX += this.speed;
-                newX = Math.round(newVisualizeX/3) + Math.trunc(this.maze[0].length/2);
+                newX = Math.round(newVisualizeX/3) + Math.trunc(this.maze_width/2);
                 break;
             case 3:
                 newVisualizeY -= this.speed;
-                newY = - Math.round(newVisualizeY/3) + Math.trunc(this.maze.length/2);
+                newY = - Math.round(newVisualizeY/3) + Math.trunc(this.maze_height/2);
                 break;
             case 4:
                 newVisualizeX -= this.speed;
-                newX = Math.round(newVisualizeX/3) + Math.trunc(this.maze[0].length/2);
+                newX = Math.round(newVisualizeX/3) + Math.trunc(this.maze_width/2);
                 break;
         }
         if (this.isValidMove(newVisualizeX, newVisualizeY, newX, newY)) {
             this.updatePosition(newVisualizeX, newVisualizeY, newX, newY);
         } else {
             console.log('Invalid move, x:', newVisualizeX, 'y:', newVisualizeY, 'newX:', newX, 'newY:', newY);
-            if (newX < 0 || newY < 0 || newX >= this.maze[0].length || newY >= this.maze.length) {
+            if (newX < 0 || newY < 0 || newX >= this.maze_width || newY >= this.maze_width) {
                 console.log('Out of bounds');
             } else {
                 console.log('Hit a wall, maze value:', this.maze[newY][newX]);
@@ -67,14 +69,14 @@ class Player {
 
     isValidMove(newVisualizeX, newVisualizeY, newX, newY) {
         return (
-            newVisualizeX >= -Math.trunc(this.maze[0].length/2) * cellSize - 1 &&
-            newVisualizeY <= Math.trunc(this.maze.length/2) * cellSize + 1 &&
-            newVisualizeX <= Math.trunc(this.maze[0].length/2) * cellSize + 1 &&
-            newVisualizeY >= -Math.trunc(this.maze.length/2) * cellSize - 1 &&
+            newVisualizeX >= -Math.trunc(this.maze_width/2) * cellSize - 1 &&
+            newVisualizeY <= Math.trunc(this.maze_height/2) * cellSize + 1 &&
+            newVisualizeX <= Math.trunc(this.maze_width/2) * cellSize + 1 &&
+            newVisualizeY >= -Math.trunc(this.maze_height/2) * cellSize - 1 &&
             newX >= 0 &&
             newY >= 0 &&
-            newX < this.maze[0].length &&
-            newY < this.maze.length && 
+            newX < this.maze_width &&
+            newY < this.maze_height && 
             this.maze[newY][newX] !== 0
         );
     }

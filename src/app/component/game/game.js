@@ -11,19 +11,23 @@ class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement); // Use the container parameter
         this.maze = new Maze("testing");
+        // this.maze = new Maze("default");
         this.camera.position.set(0, 0, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
         this.camera.lookAt(0, 0, 0); // Adjust the camera position to look at the maze
-        this.player = new Player(this.maze.startRow, this.maze.startCol, (1 - this.maze.width) * this.maze.cellSize, (1 - this.maze.height) * this.maze.cellSize, this.maze.visualizeMaze);
+        this.player = new Player(this.maze.startRow, this.maze.startCol, (this.maze.startCol - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - this.maze.startRow - 1) * this.maze.cellSize, this.maze.visualizeMaze);
         this.frameCount = 0;
         this.moveEveryNFrames = 10;
+    }
+
+    run() {
         this.scene.add(this.player.hitbox);
         this.renderMaze();
         this.render();
-        this.keyboardControls(container);
+        this.keyboardControls();
     }
 
-    keyboardControls(container) {
-        container.addEventListener('keydown', (event) => {
+    keyboardControls() {
+        window.addEventListener('keydown', (event) => {
             switch (event.key) {
                 case 'ArrowUp':
                     this.player.turnDirection(1); // Move up
@@ -74,15 +78,9 @@ class Game {
             }
             this.frameCount = 0; // Reset the frame counter
         }
-    
-        // Request the next frame
-        // wait for 1/60th of a second
-        setTimeout(() => {
-            requestAnimationFrame(this.playerMovemoment.bind(this));
-            this.renderer.render(this.scene, this.camera);
-        }, 1000 / 60);
-        // requestAnimationFrame(this.playerMovemoment());
-        // this.renderer.render(this.scene, this.camera);
+
+        requestAnimationFrame(this.playerMovemoment.bind(this));
+        this.renderer.render(this.scene, this.camera);
     }
 
     renderMaze() {
