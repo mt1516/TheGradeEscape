@@ -1,21 +1,3 @@
-function initMaze(width, height) {
-    var visualizeMaze = new Array(2 * height - 1);
-    var maze = new Array(height).fill(0).map(() => new Array(width).fill(0));
-    for (let i=0; i<2*height-1; i++) {
-        visualizeMaze[i] = new Array(2 * width - 1).fill(0);
-        for (let j=0; j<2*width-1; j++) {
-            if (i % 2 === 0 && j % 2 === 0) {
-                visualizeMaze[i][j] = 1;
-            }
-        }
-    }
-    return {
-        visualizeMaze: visualizeMaze,
-        compilationMaze: maze
-    }
-}
-
-
 function getUnvisitedNighbors(comilationMaze, row, col){
     const neighbors = [];
     const direction = [[0, 1], [0, -1], [1, 0], [-1, 0]];
@@ -63,7 +45,6 @@ function find(sets, row, col) {
 }
 
 export {
-    initMaze,
     getUnvisitedNighbors,
     addAdjacentCells,
     union,
