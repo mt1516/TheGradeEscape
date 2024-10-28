@@ -5,7 +5,11 @@ import Player from '../game/player';
 class Game {
     constructor(container) {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x6c6c6c); // Gray background
+        // this.scene.background = new THREE.Color(0x6c6c6c); // Gray background
+        const background = new THREE.TextureLoader().load( "/texture/hkust.jpg" );
+        // background.wrapS = THREE.RepeatWrapping;
+        // background.wrapT = THREE.RepeatWrapping;
+        this.scene.background = background;
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -67,6 +71,7 @@ class Game {
     }
 
     playerMovemoment() {
+        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
         this.frameCount++;
     
         // Move the player every 10 frames
@@ -85,7 +90,11 @@ class Game {
 
     renderMaze() {
         const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x593ac0 }); // Red walls
-        const pathMaterial = new THREE.MeshBasicMaterial({ color: 0xb199e1 }); // White paths
+        const pathTexture = new THREE.TextureLoader().load( "/texture/Stone_Floor_002_COLOR.jpg" );
+        // pathTexture.wrapS = THREE.RepeatWrapping;
+        // pathTexture.wrapT = THREE.RepeatWrapping;
+        // pathTexture.repeat.set( 1, 1 );
+        const pathMaterial = new THREE.MeshBasicMaterial({ map: pathTexture });
         const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
         const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
     
