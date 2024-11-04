@@ -102,7 +102,6 @@
 
 'use client'
 import { useEffect, useRef } from "react";
-// import initGame from "./component/game/maze";
 import Canvas from "./component/UI/canvas";
 
 export default function Home() {
@@ -111,7 +110,6 @@ export default function Home() {
   useEffect(() => {
     if (canvasRef.current) {
       const canvas = new Canvas(canvasRef.current);
-      // initGame();
     }
   }, []);
 

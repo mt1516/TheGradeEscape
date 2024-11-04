@@ -1,6 +1,19 @@
 {
-    "default":
-        {
+    "default": {
+        "easy": {
+            "width": 12,
+            "height": 12,
+            "startRow": 0,
+            "startCol": 0,
+            "endRow": 11,
+            "endCol": 11,
+            "complexity": 0,
+            "cellSize": 3
+        }
+    },
+    
+    "DBTW": {
+        "easy": {
             "width": 10,
             "height": 10,
             "startRow": 0,
@@ -10,18 +23,29 @@
             "complexity": 0,
             "cellSize": 3
         },
-    
-    "testing":
-        {
+
+        "medium": {
+            "width": 16,
+            "height": 16,
+            "startRow": 0,
+            "startCol": 0,
+            "endRow": 15,
+            "endCol": 15,
+            "complexity": 1,
+            "cellSize": 3
+        },
+
+        "hard": {
             "width": 20,
             "height": 20,
             "startRow": 0,
             "startCol": 0,
             "endRow": 19,
             "endCol": 19,
-            "complexity": 0,
+            "complexity": 2,
             "cellSize": 3
         }
-    
 
+
+    }
 }
