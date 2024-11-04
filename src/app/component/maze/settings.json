@@ -14,12 +14,12 @@
     
     "DBTW": {
         "easy": {
-            "width": 10,
-            "height": 10,
+            "width": 5,
+            "height": 5,
             "startRow": 0,
             "startCol": 0,
-            "endRow": 9,
-            "endCol": 9,
+            "endRow": 4,
+            "endCol": 4,
             "complexity": 0,
             "cellSize": 3
         },
