@@ -125,8 +125,8 @@ class Game {
         const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
         const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
         
-        // var visualX = 1 - this.width * this.cellSize;
-        var visualY = this.height * this.cellSize - 1;
+        // var visualX = 1 - (this.width + 1) * this.cellSize;
+        var visualY = (this.maze.height - 1)* this.maze.cellSize + 1;
         var visualX = 0;
         // var visualY = Math.floor(this.maze.visualizeMaze.length) - 3;
         this.maze.visualizeMaze.forEach((row, y) => {
