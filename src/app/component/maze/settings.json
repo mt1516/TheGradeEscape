@@ -25,12 +25,12 @@
         },
 
         "medium": {
-            "width": 16,
-            "height": 16,
+            "width": 15,
+            "height": 15,
             "startRow": 0,
             "startCol": 0,
-            "endRow": 15,
-            "endCol": 15,
+            "endRow": 14,
+            "endCol": 14,
             "complexity": 1,
             "cellSize": 3
         },

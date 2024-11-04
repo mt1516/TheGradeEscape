@@ -20,8 +20,12 @@ class Player {
     }
 
     renderPlayer() {
-        const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // Yellow player
-        const playerGeometry = new THREE.BoxGeometry(1, 1, 0.00001);
+        // const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // Yellow player
+        const playerTexture = new THREE.TextureLoader().load('/texture/steve.webp');
+        playerTexture.magFilter = THREE.NearestFilter;
+        playerTexture.minFilter = THREE.NearestFilter;
+        const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture });
+        const playerGeometry = new THREE.BoxGeometry(2, 2, 0.00001);
         const player = new THREE.Mesh(playerGeometry, playerMaterial);
         player.position.set(this.visualizeX, this.visualizeY, 2); // Adjust position
         console.log('Player created at: ', this.visualizeX, this.visualizeY);

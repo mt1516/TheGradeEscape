@@ -21,7 +21,11 @@ class Game {
         this.camera.lookAt(0, 0, 0); // Adjust the camera position to look at the maze
         this.player = new Player(this.maze.startRow, this.maze.startCol, (this.maze.startCol - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - this.maze.startRow - 1) * this.maze.cellSize, this.maze.visualizeMaze);
         this.frameCount = 0;
-        this.moveEveryNFrames = 5;
+        this.moveEveryNFrames = 4;
+
+        // const light = new THREE.AmbientLight( 0x404040 ); // soft white light
+        // this.scene.add( light );
+        
     }
 
     run() {
