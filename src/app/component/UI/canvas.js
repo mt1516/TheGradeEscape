@@ -8,9 +8,9 @@ import Credit from './credit';
 class Canvas {
     constructor(container) {
         this.container = container;
-        // this.game = new Game(container);
         this.root = createRoot(container);
         this.displayMainMenu();
+        // new Game(this.container, "DBTW", "easy").run();
     }
 
     displayMainMenu() {

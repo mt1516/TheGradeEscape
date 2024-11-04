@@ -21,7 +21,7 @@ class Game {
         this.camera.lookAt(0, 0, 0); // Adjust the camera position to look at the maze
         this.player = new Player(this.maze.startRow, this.maze.startCol, (this.maze.startCol - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - this.maze.startRow - 1) * this.maze.cellSize, this.maze.visualizeMaze);
         this.frameCount = 0;
-        this.moveEveryNFrames = 4;
+        this.moveEveryNFrames = 10;
 
         // const light = new THREE.AmbientLight( 0x404040 ); // soft white light
         // this.scene.add( light );
@@ -84,11 +84,15 @@ class Game {
         // Move the player every 10 frames
         if (this.frameCount >= this.moveEveryNFrames) {
             this.player.move();
+            this.player.animate();
             if (this.player.isWin()) {
                 alert('You win!');
                 window.location.reload(); // Reload the page
             }
             this.frameCount = 0; // Reset the frame counter
+        }
+        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
+            this.player.animate();
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));

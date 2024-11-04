@@ -20,14 +20,29 @@ class Player {
     }
 
     renderPlayer() {
-        // const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // Yellow player
-        const playerTexture = new THREE.TextureLoader().load('/texture/steve.webp');
+        this.currentTile = 0;
+        this.tilesHorizontal = 3;
+        this.tilesVertical = 4;
+        const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;
+        const offsetY = (this.tilesVertical - Math.floor(this.currentTile / this.tilesHorizontal)) / this.tilesVertical;
+        let playerTexture = new THREE.TextureLoader().load('/texture/student.png');
         playerTexture.magFilter = THREE.NearestFilter;
         playerTexture.minFilter = THREE.NearestFilter;
-        const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture });
-        const playerGeometry = new THREE.BoxGeometry(2, 2, 0.00001);
-        const player = new THREE.Mesh(playerGeometry, playerMaterial);
-        player.position.set(this.visualizeX, this.visualizeY, 2); // Adjust position
+        playerTexture.repeat.set(1 / this.tilesHorizontal, 1 / this.tilesVertical);
+        playerTexture.offset.set(offsetX, offsetY);
+        const playerMaterial = new THREE.SpriteMaterial({ map: playerTexture, sizeAttenuation: false });
+        playerMaterial.transparent = true;
+        const player = new THREE.Sprite(playerMaterial);
+        player.scale.set(3, 3, 1);
+
+        // const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // Yellow player
+        // const playerTexture = new THREE.TextureLoader().load('/texture/steve.webp');
+        // playerTexture.magFilter = THREE.NearestFilter;
+        // playerTexture.minFilter = THREE.NearestFilter;
+        // const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture });
+        // const playerGeometry = new THREE.BoxGeometry(2, 2, 0.00001);
+        // const player = new THREE.Mesh(playerGeometry, playerMaterial);
+        player.position.set(this.visualizeX, this.visualizeY, 1); // Adjust position
         console.log('Player created at: ', this.visualizeX, this.visualizeY);
         return player;
     }
@@ -97,6 +112,27 @@ class Player {
         this.visualizeY = newVisualizeY;
         this.x = newX;
         this.y = newY;
+    }
+
+    animate() {
+        // console.log("BITCH", this.direction);
+        switch (this.direction) {
+            case 1:
+                this.currentTile = (this.currentTile >= 9 && this.currentTile < 11) ? this.currentTile + 1 : 9;
+                break;
+            case 2:
+                this.currentTile = (this.currentTile >= 6 && this.currentTile < 8) ? this.currentTile + 1 : 6;
+                break;
+            case 3:
+                this.currentTile = (this.currentTile >= 0 && this.currentTile < 2) ? this.currentTile + 1 : 0;
+                break;
+            case 4:
+                this.currentTile = (this.currentTile >= 3 && this.currentTile < 5) ? this.currentTile + 1 : 3;
+                break;
+        }
+        const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;
+        const offsetY = (this.tilesVertical - Math.floor(this.currentTile / this.tilesHorizontal) - 1) / this.tilesVertical;
+        this.hitbox.material.map.offset.set(offsetX, offsetY);
     }
 }
 
