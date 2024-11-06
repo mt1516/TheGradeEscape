@@ -10,16 +10,16 @@ class Game {
         // background.wrapS = THREE.RepeatWrapping;
         // background.wrapT = THREE.RepeatWrapping;
         this.scene.background = background;
-        // this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
         this.camera = new THREE.OrthographicCamera();
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement); // Use the container parameter
         this.maze = new Maze(mode, difficulty);
-        // this.maze = new Maze("default");
-        this.camera.position.set(0, 0, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
-        this.camera.lookAt(0, 0, 0); // Adjust the camera position to look at the maze
-        this.player = new Player(this.maze.startRow, this.maze.startCol, (this.maze.startCol - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - this.maze.startRow - 1) * this.maze.cellSize, this.maze.visualizeMaze);
+        let [middleX, middleY] = this.maze.getMiddleOfMap();
+        this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
+        this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
+        let [mapStartX, mapStartY] = this.maze.convertToMap(this.maze.startCol, this.maze.startRow)
+        this.player = new Player(this.maze.startRow, this.maze.startCol, mapStartX, mapStartY, this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
     }
@@ -122,77 +122,60 @@ class Game {
         // pathTexture.wrapT = THREE.RepeatWrapping;
         // pathTexture.repeat.set( 1, 1 );
         const pathMaterial = new THREE.MeshBasicMaterial({ map: pathTexture });
-        const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
         const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
-        
-        // var visualX = 1 - (this.width + 1) * this.cellSize;
-        var visualY = (this.maze.height - 1)* this.maze.cellSize + 1;
-        var visualX = 0;
-        // var visualY = Math.floor(this.maze.visualizeMaze.length) - 3;
-        this.maze.visualizeMaze.forEach((row, y) => {
+        const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
+        this.maze.mazeMap.forEach((row, y) => {
             row.forEach((cell, x) => {
                 switch (cell) {
                     case 0: // Wall
-                        // const wallGeometry = new THREE.BoxGeometry(this.maze.cellSize, this.maze.cellSize, this.maze.cellSize);
                         const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-                        // wall.position.set((x - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - y - 1) * this.maze.cellSize, 0); // Adjust position
-                        // wall.position.set((x - this.maze.width * this.maze.cellSize + 2), (this.maze.height * this.maze.cellSize - y), 0);
-                        wall.position.set(visualX, visualY, 0);
+                        wall.position.set(x, y, 0);
                         this.scene.add(wall);
                         break;
                     case 1:
-                        // const pathGeometry = new THREE.BoxGeometry(this.maze.cellSize, this.maze.cellSize, this.maze.cellSize);
                         const pathGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const path = new THREE.Mesh(pathGeometry, pathMaterial);
-                        // path.position.set((x - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - y - 1) * this.maze.cellSize, 0); // Adjust position
-                        // path.position.set((x - this.maze.width * this.maze.cellSize + 2), (this.maze.height * this.maze.cellSize - y), 0); // Adjust position
-                        path.position.set(visualX, visualY, 0);
+                        path.position.set(x, y, 0);
                         this.scene.add(path);
                         break;
                     case 2:
-                        const winGeometry = new THREE.BoxGeometry(this.maze.cellSize, this.maze.cellSize, this.maze.cellSize);
+                        const winGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const win = new THREE.Mesh(winGeometry, winMaterial);
-                        // win.position.set((x - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - y - 1) * this.maze.cellSize, 0); // Adjust position
-                        win.position.set((x - this.maze.width * this.maze.cellSize + 1), (this.maze.height * this.maze.cellSize - y - 1), 0); // Adjust position
+                        win.position.set(x, y, 0); // Adjust position
                         this.scene.add(win);
                         break;
                     case 3:
-                        const startGeometry = new THREE.BoxGeometry(this.maze.cellSize, this.maze.cellSize, this.maze.cellSize);
+                        const startGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const start = new THREE.Mesh(startGeometry, startMaterial);
-                        // start.position.set((x - this.maze.width + 1) * this.maze.cellSize, (this.maze.height - y - 1) * this.maze.cellSize, 0); // Adjust position
-                        start.position.set((x - this.maze.width * this.maze.cellSize + 1) , (this.maze.height * this.maze.cellSize - y - 1), 0); // Adjust position
+                        start.position.set(x, y, 0); // Adjust position
                         this.scene.add(start);
                         break;
-                }
-                visualX += 1;
-                if (visualX === this.width * this.cellSize) {
-                    visualCol = 1 - this.width * this.cellSize;
-                    visualRow += 1;
                 }
             });
         });
     
         // Add border walls
-        for (let y = 0; y < 2 * this.maze.height - 1; y++) {
-            this.addBorderWall(-this.maze.width, this.maze.height - y - 1, this.maze.cellSize);
-            this.addBorderWall(this.maze.width, this.maze.height - y - 1, this.maze.cellSize);
+        let cellMiddle = Math.floor(this.maze.cellSize / 2);
+        for (let x=1; x < this.maze.mazeMap.length; x+=this.maze.cellSize) {
+            this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
+            this.addBorderWall(x, -1 - cellMiddle, this.maze.cellSize);
         }
-        for (let x = 0; x < 2 * this.maze.width - 1; x++) {
-            this.addBorderWall(x - this.maze.width + 1, this.maze.height, this.maze.cellSize);
-            this.addBorderWall(x - this.maze.width + 1, -this.maze.height, this.maze.cellSize);
+        for (let y=1; y<this.maze.mazeMap[0].length; y+=this.maze.cellSize) {
+            this.addBorderWall(this.maze.mazeMap.length + cellMiddle, y, this.maze.cellSize);
+            this.addBorderWall(-1 - cellMiddle, y, this.maze.cellSize);
         }
-        this.addBorderWall(-this.maze.width, this.maze.height, this.maze.cellSize);
-        this.addBorderWall(this.maze.width, this.maze.height, this.maze.cellSize);
-        this.addBorderWall(-this.maze.width, -this.maze.height, this.maze.cellSize);
-        this.addBorderWall(this.maze.width, -this.maze.height, this.maze.cellSize);
+        this.addBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
+        this.addBorderWall(this.maze.mazeMap.length + cellMiddle, -1 - cellMiddle, this.maze.cellSize);
+        this.addBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
+        this.addBorderWall(-1 - cellMiddle, -1 - cellMiddle, this.maze.cellSize);
     }
 
     addBorderWall(x, y, cellSize) {
         const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black border
-        const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+        const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x * cellSize, y * cellSize, 0); // Adjust position
+        border.position.set(x, y, 0); // Adjust position
         this.scene.add(border);
     }
 
