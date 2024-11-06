@@ -1,9 +1,16 @@
 import * as THREE from 'three';
 import Maze from '../maze/maze';
 import Player from '../game/player';
+import settings from './settings.json';
 
 class Game {
     constructor(container, mode, difficulty) {
+        if (!settings[mode][difficulty]) {
+            throw new Error(`Mode "${mode}"; difficulty "${difficulty}"; is not defined in settings.json`);
+        }
+        this.setting = settings[mode][difficulty];
+        this.maze = new Maze(this.setting);
+
         this.scene = new THREE.Scene();
         // this.scene.background = new THREE.Color(0x6c6c6c); // Gray background
         const background = new THREE.TextureLoader().load( "/texture/hkust.jpg" );
@@ -14,7 +21,6 @@ class Game {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement); // Use the container parameter
-        this.maze = new Maze(mode, difficulty);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze

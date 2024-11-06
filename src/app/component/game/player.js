@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import stateMachine from './state-machine';
 
 class Player {
     #width;     // character width
@@ -12,6 +13,7 @@ class Player {
     #currentTile;
     #tilesHorizontal;
     #tilesVertical;
+    #movement;
     constructor(mapStartX, mapStartY) {
         // Simple box collision model
         this.#width = 1;
@@ -21,6 +23,7 @@ class Player {
         this.#topP = mapStartY + Math.floor(this.#height/2); 
         this.#bottomY = mapStartY; 
 
+        this.#movement = new stateMachine();
         this.#speed = 1; // Speed of the player
         this.#direction = 0; // Direction of the player
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.#leftX, this.rightP, this.topP, this.bottomY);
