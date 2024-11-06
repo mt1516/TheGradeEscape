@@ -89,10 +89,14 @@ class Game {
             }
             let [nextX, nextY] = this.player.getNextPosition();
             if (this.#isValidMove(nextX, nextY)) {
+                this.player.animate();
                 this.player.move(nextX, nextY);
             }
             
             this.frameCount = 0; // Reset the frame counter
+        }
+        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
+            this.player.animate();
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));
