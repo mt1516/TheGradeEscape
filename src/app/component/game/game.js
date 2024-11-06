@@ -84,7 +84,7 @@ class Game {
         if (this.frameCount >= this.moveEveryNFrames) {
             if (this.player.isWin(this.mapWinX, this.mapWinY)) {
                 alert('You win!');
-                this.player.win()
+                this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
                 window.location.reload(); // Reload the page
             }
             let [nextX, nextY] = this.player.getNextPosition();
