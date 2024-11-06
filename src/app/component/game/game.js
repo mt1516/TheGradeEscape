@@ -18,10 +18,13 @@ class Game {
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        let [mapStartX, mapStartY] = this.maze.convertToMap(this.maze.startCol, this.maze.startRow)
-        this.player = new Player(this.maze.startRow, this.maze.startCol, mapStartX, mapStartY, this.maze.mazeMap);
+        let [mapStartX, mapStartY] = this.maze.getStartOfMap()
+        this.player = new Player(mapStartX, mapStartY);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
+        let [winX, winY] = this.maze.getWinOfMap()
+        this.mapWinX = winX;
+        this.mapWinY = winY;
     }
 
     run() {
@@ -37,35 +40,35 @@ class Game {
         window.addEventListener('keydown', (event) => {
             switch (event.key) {
                 case 'ArrowUp':
-                    this.player.turnDirection(1); // Move up
+                    this.player.changeDirection(1); // Move up
                     console.log('up')
                     break;
                 case 'ArrowRight':
-                    this.player.turnDirection(2); // Move right
+                    this.player.changeDirection(2); // Move right
                     console.log('right')
                     break;
                 case 'ArrowDown':
-                    this.player.turnDirection(3); // Move down
+                    this.player.changeDirection(3); // Move down
                     console.log('down')
                     break;
                 case 'ArrowLeft':
-                    this.player.turnDirection(4); // Move left
+                    this.player.changeDirection(4); // Move left
                     console.log('left')
                     break;
                 case 'w':
-                    this.player.turnDirection(1); // Move up
+                    this.player.changeDirection(1); // Move up
                     console.log('up')
                     break;
                 case 'd':
-                    this.player.turnDirection(2); // Move right
+                    this.player.changeDirection(2); // Move right
                     console.log('right')
                     break;
                 case 's':
-                    this.player.turnDirection(3); // Move down
+                    this.player.changeDirection(3); // Move down
                     console.log('down')
                     break;
                 case 'a':
-                    this.player.turnDirection(4); // Move left
+                    this.player.changeDirection(4); // Move left
                     console.log('left')
                     break;
             }
@@ -79,16 +82,31 @@ class Game {
     
         // Move the player every 10 frames
         if (this.frameCount >= this.moveEveryNFrames) {
-            this.player.move();
-            if (this.player.isWin()) {
+            if (this.player.isWin(this.mapWinX, this.mapWinY)) {
                 alert('You win!');
+                this.player.win()
                 window.location.reload(); // Reload the page
             }
+            let [nextX, nextY] = this.player.getNextPosition();
+            if (this.#isValidMove(nextX, nextY)) {
+                this.player.move(nextX, nextY);
+            }
+            
             this.frameCount = 0; // Reset the frame counter
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));
         this.renderer.render(this.scene, this.camera);
+    }
+
+    #isValidMove(nextX, nextY) {
+        return (
+            nextX >= 0 &&
+            nextY >= 0 &&
+            nextX < this.maze.mazeMap[0].length &&
+            nextY < this.maze.mazeMap.length &&
+            this.maze.mazeMap[nextY][nextX] !== 0
+        )
     }
 
     onWindowResize() {

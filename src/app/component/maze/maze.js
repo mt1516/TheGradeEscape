@@ -207,8 +207,14 @@ class Maze {
         let cellMiddle = Math.floor(this.cellSize/2);
         return [x * (this.cellSize + 1) + cellMiddle, y * (this.cellSize + 1) + cellMiddle];
     }
+    getStartOfMap() {
+        return this.convertToMap(this.startCol, this.startRow)
+    }
     getMiddleOfMap() {
         return [this.mazeMap[0].length/2, this.mazeMap.length/2];
+    }
+    getWinOfMap() {
+        return this.convertToMap(this.endCol, this.endRow)
     }
 }
 
