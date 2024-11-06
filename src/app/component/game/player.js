@@ -1,24 +1,29 @@
 import * as THREE from 'three';
 
 class Player {
+    #width;     // character width
+    #height;    // character height
+    #leftX;     // use for coordinate for checking win
+    #rightP;    // use for coordinate for rendering
+    #topP;      // use for coordinate for rendering
+    #bottomY;   // use for coordinate for checking win
+    #speed;
     #direction;
     #currentTile;
     #tilesHorizontal;
     #tilesVertical;
-    #width;
-    #height;
-    #speed;
-    constructor(mapX, mapY) {
+    constructor(mapStartX, mapStartY) {
+        // Simple box collision model
         this.#width = 1;
         this.#height = 2;
-        this.mapX = mapX;
-        this.mapY = mapY + Math.floor(this.#height/2);
-        this.left = mapX - Math.floor(this.#width/2);
-        this.right = mapX + Math.floor(this.#width/2);
-        this.top = mapY;
-        this.bottom = mapY - Math.floor(this.#height/2);
+        this.#leftX = mapStartX;
+        this.#rightP = mapStartX + Math.floor(this.#width/2);
+        this.#topP = mapStartY + Math.floor(this.#height/2); 
+        this.#bottomY = mapStartY; 
+
         this.#speed = 1; // Speed of the player
         this.#direction = 0; // Direction of the player
+        // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.#leftX, this.rightP, this.topP, this.bottomY);
         this.renderPlayer();
     }
 
@@ -37,8 +42,6 @@ class Player {
         playerMaterial.transparent = true;
         const player = new THREE.Sprite(playerMaterial);
         player.scale.set(3, 3, 1);
-        // player.position.set(this.mapX, this.mapY, 2); // Adjust position
-        // console.log('Player created at: ', this.mapX, this.mapY);
         this.visual = player;
     }
 
@@ -47,38 +50,40 @@ class Player {
     }
 
     getCurrentPosition() {
-        return [this.mapX, this.mapY];
+        return [this.#leftX, this.#rightP, this.#topP, this.#bottomY];
     }
 
     getNextPosition() {
         switch (this.#direction) {
             case 1:
-                return [this.mapX, this.mapY + this.#speed];
+                return [this.#leftX, this.#rightP, this.#topP + this.#speed, this.#bottomY + this.#speed];
             case 2:
-                return [this.mapX + this.#speed, this.mapY];
+                return [this.#leftX + this.#speed, this.#rightP + this.#speed, this.#topP, this.#bottomY];
             case 3:
-                return [this.mapX, this.mapY - this.#speed];
+                return [this.#leftX, this.#rightP, this.#topP - this.#speed, this.#bottomY - this.#speed];
             case 4:
-                return [this.mapX - this.#speed, this.mapY];
+                return [this.#leftX - this.#speed, this.#rightP - this.#speed, this.#topP, this.#bottomY];
         }
         return this.getCurrentPosition();
     }
 
-    move(x, y) {
-        this.mapX = x;
-        this.mapY = y;
-        this.visual.position.set(x, y, 1);
+    move(leftX, rightP, topP, bottomY) {
+        this.#leftX = leftX;
+        this.#rightP = rightP;
+        this.#topP = topP;
+        this.#bottomY = bottomY;
+        this.visual.position.set(rightP, topP, 1);
     }
 
     win(wallX, wallY) {
         this.changeDirection(0);
-        this.mapX = wallX;
-        this.mapY = wallY;
+        this.#leftX = wallX;
+        this.#bottomY = wallY;
         this.visual.position.set(wallX, wallY, -1);
     }
 
     isWin(winX, winY) {
-        return (this.mapX === winX && this.mapY === winY);
+        return (this.#leftX === winX && this.#bottomY === winY);
     }
 
     animate() {

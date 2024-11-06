@@ -87,10 +87,10 @@ class Game {
                 this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
                 window.location.reload(); // Reload the page
             }
-            let [nextX, nextY] = this.player.getNextPosition();
-            if (this.#isValidMove(nextX, nextY)) {
+            let [leftX, rightP, topP, bottomY] = this.player.getNextPosition();
+            if (this.#isValidMove(leftX, rightP, topP, bottomY)) {
                 this.player.animate();
-                this.player.move(nextX, nextY);
+                this.player.move(leftX, rightP, topP, bottomY);
             }
             
             this.frameCount = 0; // Reset the frame counter
@@ -103,13 +103,14 @@ class Game {
         this.renderer.render(this.scene, this.camera);
     }
 
-    #isValidMove(nextX, nextY) {
+    // 2.5D: top is not needed in this case
+    #isValidMove(leftX, rightP, topP, bottomY) {
         return (
-            nextX >= 0 &&
-            nextY >= 0 &&
-            nextX < this.maze.mazeMap[0].length &&
-            nextY < this.maze.mazeMap.length &&
-            this.maze.mazeMap[nextY][nextX] !== 0
+            leftX >= 0 &&
+            bottomY >= 0 &&
+            rightP < this.maze.mazeMap[0].length &&
+            bottomY < this.maze.mazeMap.length &&
+            this.maze.mazeMap[bottomY][leftX] !== 0
         )
     }
 
