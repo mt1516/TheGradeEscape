@@ -28,7 +28,7 @@ class Game {
     }
 
     run() {
-        this.scene.add(this.player.hitbox);
+        this.scene.add(this.player.visual);
         this.renderMaze();
         this.resizeWindow();
         this.render();
