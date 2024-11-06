@@ -85,8 +85,17 @@ class Player {
         this.visual.position.set(wallX, wallY, -1);
     }
 
-    isWin(winX, winY) {
-        return (this.#leftX === winX && this.#bottomY === winY);
+    checkWin(winCoordinate) {
+        this.#movement.checkWin([this.#leftX, this.#bottomY], winCoordinate);
+    }
+
+    isWin() {
+        // return (this.#leftX === winX && this.#bottomY === winY);
+        return (this.#movement.isWin());
+    }
+
+    reset() {
+        this.#movement.reset();
     }
 
     animate() {

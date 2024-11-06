@@ -24,15 +24,22 @@ class stateMachine {
         this.#direction = DIRECTION.IDLE;
     }
 
+    reset() {
+        this.#state = STATE.IDLE;
+        this.#direction = DIRECTION.IDLE;
+    }
+
     move() {
         if (this.#state === STATE.IDLE) {
             this.#state = STATE.MOVE;
         }
     }
 
-    // checkWin(checkMaze, coordinate) {
-        
-    // }
+    checkWin(coordinate, winCoordinate) {
+        if (coordinate[0] === winCoordinate[0] && coordinate[1] === winCoordinate[1]) {
+            this.#state = STATE.WIN;
+        }
+    }
 
     isWin() {
         return (this.#state === STATE.WIN);

@@ -88,11 +88,18 @@ class Game {
     
         // Move the player every 10 frames
         if (this.frameCount >= this.moveEveryNFrames) {
-            if (this.player.isWin(this.mapWinX, this.mapWinY)) {
+            this.player.checkWin(this.maze.getWinOfMap())
+            if (this.player.isWin()) {
+                this.player.reset()
                 alert('You win!');
-                this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
+                // this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
                 window.location.reload(); // Reload the page
             }
+            // if (this.player.isWin(this.mapWinX, this.mapWinY)) {
+            //     alert('You win!');
+            //     this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
+            //     window.location.reload(); // Reload the page
+            // }
             let [leftX, rightP, topP, bottomY] = this.player.getNextPosition();
             if (this.#isValidMove(leftX, rightP, topP, bottomY)) {
                 this.player.animate();
