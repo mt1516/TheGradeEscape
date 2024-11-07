@@ -4,14 +4,11 @@ import stateMachine from './state-machine';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 class Player {
-    #direction;
     #currentTile;
     #tilesHorizontal;
     #tilesVertical;
     constructor(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap) {
-        // Simple box collision model
         this.state = new stateMachine(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap);
-        // this.#direction = 0; // Direction of the player
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.#leftX, this.rightP, this.topP, this.bottomY);
         this.renderPlayer();
         this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1]/2), 2);
@@ -46,7 +43,7 @@ class Player {
 
     animate() {
         // console.log("BITCH", this.direction);
-        switch (this.#direction) {
+        switch (this.state.getDirection()) {
             case 1:
                 this.#currentTile = (this.#currentTile >= 9 && this.#currentTile < 11) ? this.#currentTile + 1 : 9;
                 break;

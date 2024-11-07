@@ -42,103 +42,6 @@ class Game {
         this.onWindowResize();
     }
 
-    keyboardControls() {
-        window.addEventListener('keydown', (event) => {
-            this.#keyPressed = true;
-            this.#key = event.key;
-        }, false);
-        window.addEventListener('keyup', (event) => {
-            this.#keyPressed = false;
-            this.#key = null;
-        }, false);
-    }
-
-    update() {
-        this.#isWin = this.player.state.isWin();
-        if (this.#isWin) {
-            return;
-        }
-        if (this.#keyPressed) {
-            switch (this.#key) {
-                case 'ArrowUp':
-                    this.player.state.up(); // Move up
-                    break;
-                case 'ArrowRight':
-                    this.player.state.right(); // Move right
-                    break;
-                case 'ArrowDown':
-                    this.player.state.down(); // Move down
-                    break;
-                case 'ArrowLeft':
-                    this.player.state.left(); // Move left
-                    break;
-                case 'w':
-                    this.player.state.up(); // Move up
-                    break;
-                case 'd':
-                    this.player.state.right(); // Move right
-                    break;
-                case 's':
-                    this.player.state.down(); // Move down
-                    break;
-                case 'a':
-                    this.player.state.left(); // Move left
-                    break;
-            }
-        } else {
-            this.player.state.stop();
-        }
-        this.player.update();
-    }
-
-    playerMovemoment() {
-        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
-        this.frameCount++;
-    
-        // Move the player every 10 frames
-        if (this.frameCount >= this.moveEveryNFrames) {
-            this.update();
-            
-            if (this.#isWin) {
-                this.player.state.reset();
-                // alert('You win!');
-                // this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
-                window.location.reload(); // Reload the page
-            }
-            this.frameCount = 0; // Reset the frame counter
-        }
-        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
-            this.player.animate();
-        }
-
-        requestAnimationFrame(this.playerMovemoment.bind(this));
-        this.renderer.render(this.scene, this.camera);
-    }
-
-    onWindowResize() {
-        window.addEventListener('resize', () => {
-            this.resizeWindow();
-        });
-    }
-
-    resizeWindow() {
-        const aspect = window.innerWidth / window.innerHeight;
-        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize * 1.05;
-        if (window.innerWidth >= window.innerHeight) {
-            this.camera.left = -frustumSize * aspect / 2;
-            this.camera.right = frustumSize * aspect / 2;
-            this.camera.top = frustumSize / 2;
-            this.camera.bottom = -frustumSize / 2;
-        } else {
-            this.camera.left = -frustumSize / 2;
-            this.camera.right = frustumSize / 2;
-            this.camera.top = frustumSize / aspect / 2;
-            this.camera.bottom = -frustumSize / aspect / 2;
-        }
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
     renderMaze() {
         const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x593ac0 }); // Red walls
         const pathTexture = new THREE.TextureLoader().load( "/texture/Stone_Floor_002_COLOR.jpg" );
@@ -195,16 +98,113 @@ class Game {
         this.addBorderWall(-1 - cellMiddle, -1 - cellMiddle, this.maze.cellSize);
     }
 
+    resizeWindow() {
+        const aspect = window.innerWidth / window.innerHeight;
+        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize * 1.05;
+        if (window.innerWidth >= window.innerHeight) {
+            this.camera.left = -frustumSize * aspect / 2;
+            this.camera.right = frustumSize * aspect / 2;
+            this.camera.top = frustumSize / 2;
+            this.camera.bottom = -frustumSize / 2;
+        } else {
+            this.camera.left = -frustumSize / 2;
+            this.camera.right = frustumSize / 2;
+            this.camera.top = frustumSize / aspect / 2;
+            this.camera.bottom = -frustumSize / aspect / 2;
+        }
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    render() {
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    keyboardControls() {
+        window.addEventListener('keydown', (event) => {
+            this.#keyPressed = true;
+            this.#key = event.key;
+        }, false);
+        window.addEventListener('keyup', (event) => {
+            this.#keyPressed = false;
+            this.#key = null;
+        }, false);
+    }
+
+    playerMovemoment() {
+        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
+        this.frameCount++;
+    
+        // Move the player every 10 frames
+        if (this.frameCount >= this.moveEveryNFrames) {
+            this.update();
+            
+            if (this.#isWin) {
+                this.player.state.reset();
+                alert('You win!');
+                // this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
+                window.location.reload(); // Reload the page
+            }
+            this.frameCount = 0; // Reset the frame counter
+        }
+        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
+            this.player.animate();
+        }
+
+        requestAnimationFrame(this.playerMovemoment.bind(this));
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    onWindowResize() {
+        window.addEventListener('resize', () => {
+            this.resizeWindow();
+        });
+    }
+
+    update() {
+        this.#isWin = this.player.state.isWin();
+        if (this.#isWin) {
+            return;
+        }
+        if (this.#keyPressed) {
+            switch (this.#key) {
+                case 'ArrowUp':
+                    this.player.state.up(); // Move up
+                    break;
+                case 'ArrowRight':
+                    this.player.state.right(); // Move right
+                    break;
+                case 'ArrowDown':
+                    this.player.state.down(); // Move down
+                    break;
+                case 'ArrowLeft':
+                    this.player.state.left(); // Move left
+                    break;
+                case 'w':
+                    this.player.state.up(); // Move up
+                    break;
+                case 'd':
+                    this.player.state.right(); // Move right
+                    break;
+                case 's':
+                    this.player.state.down(); // Move down
+                    break;
+                case 'a':
+                    this.player.state.left(); // Move left
+                    break;
+            }
+        } else {
+            this.player.state.stop();
+        }
+        this.player.update();
+    }
+
     addBorderWall(x, y, cellSize) {
         const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black border
         const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
         border.position.set(x, y, 0); // Adjust position
         this.scene.add(border);
-    }
-
-    render() {
-        this.renderer.render(this.scene, this.camera);
     }
 }
 
