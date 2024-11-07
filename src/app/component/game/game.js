@@ -27,7 +27,7 @@ class Game {
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0, this.maze.mazeMap); // Adjust the camera position to look at the maze
-        this.player = new Player([1, 2], [1, 1], this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
+        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
     }
@@ -101,7 +101,7 @@ class Game {
             
             if (this.#isWin) {
                 this.player.state.reset();
-                alert('You win!');
+                // alert('You win!');
                 // this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
                 window.location.reload(); // Reload the page
             }
@@ -114,17 +114,6 @@ class Game {
         requestAnimationFrame(this.playerMovemoment.bind(this));
         this.renderer.render(this.scene, this.camera);
     }
-
-    // 2.5D: top is not needed in this case
-    // #isValidMove(leftX, rightP, topP, bottomY) {
-    //     return (
-    //         leftX >= 0 &&
-    //         bottomY >= 0 &&
-    //         rightP < this.maze.mazeMap[0].length &&
-    //         bottomY < this.maze.mazeMap.length &&
-    //         this.maze.mazeMap[bottomY][leftX] !== 0
-    //     )
-    // }
 
     onWindowResize() {
         window.addEventListener('resize', () => {

@@ -8,9 +8,9 @@ class Player {
     #currentTile;
     #tilesHorizontal;
     #tilesVertical;
-    constructor(characterSize, hitboxSize, mapStartCoord, mapEndCoord, mazeMap) {
+    constructor(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap) {
         // Simple box collision model
-        this.state = new stateMachine(characterSize, hitboxSize, mapStartCoord, mapEndCoord, mazeMap);
+        this.state = new stateMachine(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap);
         // this.#direction = 0; // Direction of the player
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.#leftX, this.rightP, this.topP, this.bottomY);
         this.renderPlayer();
@@ -39,7 +39,7 @@ class Player {
         this.animate();
         let [x, y] = this.state.update();
         if (this.state.isMove()) {
-            console.log("x, y = ", x, y);
+            // console.log("x, y = ", x, y);
             this.visual.position.set(x, y, 2);
         }
     }
