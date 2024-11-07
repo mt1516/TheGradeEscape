@@ -4,6 +4,9 @@ import Player from '../game/player';
 import settings from './settings.json';
 
 class Game {
+    #keyPressed = false;
+    #key = null;
+    #isWin = false;
     constructor(container, mode, difficulty) {
         if (!settings[mode][difficulty]) {
             throw new Error(`Mode "${mode}"; difficulty "${difficulty}"; is not defined in settings.json`);
@@ -23,14 +26,10 @@ class Game {
         container.appendChild(this.renderer.domElement); // Use the container parameter
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
-        this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        let [mapStartX, mapStartY] = this.maze.getStartOfMap()
-        this.player = new Player(mapStartX, mapStartY);
+        this.camera.lookAt(middleX, middleY, 0, this.maze.mazeMap); // Adjust the camera position to look at the maze
+        this.player = new Player([1, 2], [1, 1], this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
-        let [winX, winY] = this.maze.getWinOfMap()
-        this.mapWinX = winX;
-        this.mapWinY = winY;
     }
 
     run() {
@@ -39,47 +38,57 @@ class Game {
         this.resizeWindow();
         this.render();
         this.keyboardControls();
+        this.playerMovemoment();
         this.onWindowResize();
     }
 
     keyboardControls() {
         window.addEventListener('keydown', (event) => {
-            switch (event.key) {
+            this.#keyPressed = true;
+            this.#key = event.key;
+        }, false);
+        window.addEventListener('keyup', (event) => {
+            this.#keyPressed = false;
+            this.#key = null;
+        }, false);
+    }
+
+    update() {
+        this.#isWin = this.player.state.isWin();
+        if (this.#isWin) {
+            return;
+        }
+        if (this.#keyPressed) {
+            switch (this.#key) {
                 case 'ArrowUp':
-                    this.player.changeDirection(1); // Move up
-                    console.log('up')
+                    this.player.state.up(); // Move up
                     break;
                 case 'ArrowRight':
-                    this.player.changeDirection(2); // Move right
-                    console.log('right')
+                    this.player.state.right(); // Move right
                     break;
                 case 'ArrowDown':
-                    this.player.changeDirection(3); // Move down
-                    console.log('down')
+                    this.player.state.down(); // Move down
                     break;
                 case 'ArrowLeft':
-                    this.player.changeDirection(4); // Move left
-                    console.log('left')
+                    this.player.state.left(); // Move left
                     break;
                 case 'w':
-                    this.player.changeDirection(1); // Move up
-                    console.log('up')
+                    this.player.state.up(); // Move up
                     break;
                 case 'd':
-                    this.player.changeDirection(2); // Move right
-                    console.log('right')
+                    this.player.state.right(); // Move right
                     break;
                 case 's':
-                    this.player.changeDirection(3); // Move down
-                    console.log('down')
+                    this.player.state.down(); // Move down
                     break;
                 case 'a':
-                    this.player.changeDirection(4); // Move left
-                    console.log('left')
+                    this.player.state.left(); // Move left
                     break;
             }
-        });
-        this.playerMovemoment();
+        } else {
+            this.player.state.stop();
+        }
+        this.player.update();
     }
 
     playerMovemoment() {
@@ -88,24 +97,14 @@ class Game {
     
         // Move the player every 10 frames
         if (this.frameCount >= this.moveEveryNFrames) {
-            this.player.checkWin(this.maze.getWinOfMap())
-            if (this.player.isWin()) {
-                this.player.reset()
+            this.update();
+            
+            if (this.#isWin) {
+                this.player.state.reset();
                 alert('You win!');
                 // this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
                 window.location.reload(); // Reload the page
             }
-            // if (this.player.isWin(this.mapWinX, this.mapWinY)) {
-            //     alert('You win!');
-            //     this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
-            //     window.location.reload(); // Reload the page
-            // }
-            let [leftX, rightP, topP, bottomY] = this.player.getNextPosition();
-            if (this.#isValidMove(leftX, rightP, topP, bottomY)) {
-                this.player.animate();
-                this.player.move(leftX, rightP, topP, bottomY);
-            }
-            
             this.frameCount = 0; // Reset the frame counter
         }
         if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
@@ -117,15 +116,15 @@ class Game {
     }
 
     // 2.5D: top is not needed in this case
-    #isValidMove(leftX, rightP, topP, bottomY) {
-        return (
-            leftX >= 0 &&
-            bottomY >= 0 &&
-            rightP < this.maze.mazeMap[0].length &&
-            bottomY < this.maze.mazeMap.length &&
-            this.maze.mazeMap[bottomY][leftX] !== 0
-        )
-    }
+    // #isValidMove(leftX, rightP, topP, bottomY) {
+    //     return (
+    //         leftX >= 0 &&
+    //         bottomY >= 0 &&
+    //         rightP < this.maze.mazeMap[0].length &&
+    //         bottomY < this.maze.mazeMap.length &&
+    //         this.maze.mazeMap[bottomY][leftX] !== 0
+    //     )
+    // }
 
     onWindowResize() {
         window.addEventListener('resize', () => {
