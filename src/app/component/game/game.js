@@ -4,9 +4,7 @@ import Player from '../game/player';
 import settings from './settings.json';
 
 class Game {
-    #keyPressed = false;
-    #key = null;
-    #isWin = false;
+    #keyOrder = []
     constructor(container, mode, difficulty) {
         if (!settings[mode][difficulty]) {
             throw new Error(`Mode "${mode}"; difficulty "${difficulty}"; is not defined in settings.json`);
@@ -122,12 +120,44 @@ class Game {
 
     keyboardControls() {
         window.addEventListener('keydown', (event) => {
-            this.#keyPressed = true;
-            this.#key = event.key;
+            switch (event.key) {
+                case 'ArrowUp' || 'w':
+                    if (this.#keyOrder.indexOf('up') === -1) {
+                        this.#keyOrder.push('up');
+                    }
+                    break;
+                case 'ArrowRight' || 'd':
+                    if (this.#keyOrder.indexOf('right') === -1) {
+                        this.#keyOrder.push('right');
+                    }
+                    break;
+                case 'ArrowDown' || 's':
+                    if (this.#keyOrder.indexOf('down') === -1) {
+                        this.#keyOrder.push('down');
+                    }
+                    break;
+                case 'ArrowLeft' || 'a':
+                    if (this.#keyOrder.indexOf('left') === -1) {
+                        this.#keyOrder.push('left');
+                    }
+                    break;
+            }
         }, false);
         window.addEventListener('keyup', (event) => {
-            this.#keyPressed = false;
-            this.#key = null;
+            switch (event.key) {
+                case 'ArrowUp' || 'w':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'up');
+                    break;
+                case 'ArrowRight' || 'd':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'right');
+                    break;
+                case 'ArrowDown' || 's':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'down');
+                    break;
+                case 'ArrowLeft' || 'a':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'left');
+                    break;
+            }
         }, false);
     }
 
@@ -137,14 +167,15 @@ class Game {
     
         // Move the player every 10 frames
         if (this.frameCount >= this.moveEveryNFrames) {
-            this.update();
-            
-            if (this.#isWin) {
+            this.player.state.checkWin();
+            if (this.player.state.isWin()) {
                 this.player.state.reset();
                 alert('You win!');
-                // this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
                 window.location.reload(); // Reload the page
+                return;
             }
+            this.update();
+            
             this.frameCount = 0; // Reset the frame counter
         }
         if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
@@ -162,34 +193,18 @@ class Game {
     }
 
     update() {
-        this.#isWin = this.player.state.isWin();
-        if (this.#isWin) {
-            return;
-        }
-        if (this.#keyPressed) {
-            switch (this.#key) {
-                case 'ArrowUp':
+        if (this.#keyOrder.length > 0) {
+            switch (this.#keyOrder[this.#keyOrder.length - 1]) {
+                case 'up':
                     this.player.state.up(); // Move up
                     break;
-                case 'ArrowRight':
+                case 'right':
                     this.player.state.right(); // Move right
                     break;
-                case 'ArrowDown':
+                case 'down':
                     this.player.state.down(); // Move down
                     break;
-                case 'ArrowLeft':
-                    this.player.state.left(); // Move left
-                    break;
-                case 'w':
-                    this.player.state.up(); // Move up
-                    break;
-                case 'd':
-                    this.player.state.right(); // Move right
-                    break;
-                case 's':
-                    this.player.state.down(); // Move down
-                    break;
-                case 'a':
+                case 'left':
                     this.player.state.left(); // Move left
                     break;
             }

@@ -34,8 +34,8 @@ class Player {
 
     update() {
         this.animate();
-        let [x, y] = this.state.update();
         if (this.state.isMove()) {
+            let [x, y] = this.state.update();
             // console.log("x, y = ", x, y);
             this.visual.position.set(x, y, 2);
         }
