@@ -23,7 +23,7 @@ class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement); // Use the container parameter
         let [middleX, middleY] = this.maze.getMiddleOfMap();
-        this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
+        this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.setting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0, this.maze.mazeMap); // Adjust the camera position to look at the maze
         this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
@@ -79,26 +79,12 @@ class Game {
                 }
             });
         });
-    
-        // Add border walls
-        let cellMiddle = Math.floor(this.maze.cellSize / 2);
-        for (let x=1; x < this.maze.mazeMap.length; x+=this.maze.cellSize) {
-            this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
-            this.addBorderWall(x, -1 - cellMiddle, this.maze.cellSize);
-        }
-        for (let y=1; y<this.maze.mazeMap[0].length; y+=this.maze.cellSize) {
-            this.addBorderWall(this.maze.mazeMap.length + cellMiddle, y, this.maze.cellSize);
-            this.addBorderWall(-1 - cellMiddle, y, this.maze.cellSize);
-        }
-        this.addBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
-        this.addBorderWall(this.maze.mazeMap.length + cellMiddle, -1 - cellMiddle, this.maze.cellSize);
-        this.addBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
-        this.addBorderWall(-1 - cellMiddle, -1 - cellMiddle, this.maze.cellSize);
+        this.addBorder();
     }
 
     resizeWindow() {
         const aspect = window.innerWidth / window.innerHeight;
-        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize * 1.05;
+        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.setting.cellSize * 1.05;
         if (window.innerWidth >= window.innerHeight) {
             this.camera.left = -frustumSize * aspect / 2;
             this.camera.right = frustumSize * aspect / 2;
@@ -213,12 +199,90 @@ class Game {
         }
         this.player.update();
     }
+    
+    addBorder() {
+        // Add border walls
+        let cellMiddle = Math.floor(this.setting.cellSize / 2);
+        for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.setting.cellSize + cellMiddle) {
+            this.#addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+            if (x != cellMiddle) {
+                this.#addBorderWall(x, -0.3, this.setting.cellSize, false, true);
+            }
+        }
+        for (let x=this.setting.cellSize; x<this.maze.mazeMap[0].length; x+=this.setting.cellSize+1) {
+            this.#addPillarBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+            this.#addPillarBorderWall(x, -0.3, this.setting.cellSize, false, true);
+        }
+        for (let y=this.setting.cellSize + cellMiddle; y<this.maze.mazeMap.length; y+=this.setting.cellSize + cellMiddle) {
+            this.#addBorderWall(this.maze.mazeMap.length, y, this.setting.cellSize, true);
+            this.#addBorderWall(-1, y, this.setting.cellSize, true);
+        }
+        for (let y=this.setting.cellSize-1; y < this.maze.mazeMap.length; y += this.setting.cellSize+1) {
+            this.#addPillarBorderWall(this.maze.mazeMap.length, y, this.setting.cellSize, true);
+            this.#addPillarBorderWall(-1, y, this.setting.cellSize, true);
+        }
+        this.#addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+        this.#addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, 1, this.setting.cellSize);
+        this.#addEdgeBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+        this.#addEdgeBorderWall(-1 - cellMiddle, 1, this.setting.cellSize);
+    }
 
-    addBorderWall(x, y, cellSize) {
-        const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black border
+    #addBorderWall(x, y, cellSize, isVertical=false, isBottom=false) {
+        var borderTexture, borderGeometry;
+        if (isVertical) {
+            borderTexture = new THREE.TextureLoader().load('/texture/border-gate-vertical.png');
+            borderGeometry = new THREE.BoxGeometry(1, cellSize, 3);
+        } else {
+            if (isBottom) {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-gate.png');
+                borderGeometry = new THREE.BoxGeometry(cellSize, cellSize - Math.floor(cellSize/2), 3);
+            } else {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-gate.png');
+                borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 3);
+            }
+        }
+        borderTexture.magFilter = THREE.NearestFilter;
+        borderTexture.minFilter = THREE.NearestFilter;
+        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+        borderMaterial.transparent = true;
+        const border = new THREE.Mesh(borderGeometry, borderMaterial);
+        border.position.set(x, y, 3); // Adjust position
+        this.scene.add(border);
+    }
+
+    #addPillarBorderWall(x, y, cellSize, isVertical=false, isBottom=false) {
+        var borderTexture, borderGeometry;
+        if (isVertical) {
+            console.log("vertical");
+            borderTexture = new THREE.TextureLoader().load('/texture/border-pillar-vertical.png');
+            borderGeometry = new THREE.BoxGeometry(1, 1, 1);
+        } else {
+            if (isBottom) {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-pillar.png');
+                borderGeometry = new THREE.BoxGeometry(1, cellSize - Math.floor(cellSize/2), 1);
+            } else {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-pillar.png');
+                borderGeometry = new THREE.BoxGeometry(1, cellSize, 1);
+            }
+        }
+        borderTexture.magFilter = THREE.NearestFilter;
+        borderTexture.minFilter = THREE.NearestFilter;
+        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+        borderMaterial.transparent = true;
+        const border = new THREE.Mesh(borderGeometry, borderMaterial);
+        border.position.set(x, y, 3); // Adjust position
+        this.scene.add(border);
+    }
+
+    #addEdgeBorderWall(x, y, cellSize) {
+        let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
+        borderTexture.magFilter = THREE.NearestFilter;
+        borderTexture.minFilter = THREE.NearestFilter;
+        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+        borderMaterial.transparent = true;
         const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 0); // Adjust position
+        border.position.set(x, y, 3); // Adjust position
         this.scene.add(border);
     }
 }
