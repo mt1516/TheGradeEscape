@@ -1,20 +1,16 @@
 import { getUnvisitedNighbors, addAdjacentCells, union, find } from './utils';
-import settings from './settings.json';
 
 class Maze {
     #compilation;
-    constructor(mode = "default", level = "easy") {
-        if (!settings[mode][level]) {
-            throw new Error(`Mode "${mode}"; Level "${level}"; is not defined in settings.json`);
-        }
-        this.width = settings[mode][level].width;
-        this.height = settings[mode][level].height;
-        this.startRow = settings[mode][level].startRow;
-        this.startCol = settings[mode][level].startCol;
-        this.endRow = settings[mode][level].endRow;
-        this.endCol = settings[mode][level].endCol;
-        this.complexity = settings[mode][level].complexity;
-        this.cellSize = settings[mode][level].cellSize;
+    constructor(setting) {
+        this.width = setting.width;
+        this.height = setting.height;
+        this.startRow = setting.startRow;
+        this.startCol = setting.startCol;
+        this.endRow = setting.endRow;
+        this.endCol = setting.endCol;
+        this.complexity = setting.complexity;
+        this.cellSize = setting.cellSize;
         this.#initMaze();
         this.#scale();
     }

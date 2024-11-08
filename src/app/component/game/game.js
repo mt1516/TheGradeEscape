@@ -1,9 +1,17 @@
 import * as THREE from 'three';
 import Maze from '../maze/maze';
 import Player from '../game/player';
+import settings from './settings.json';
 
 class Game {
+    #keyOrder = []
     constructor(container, mode, difficulty) {
+        if (!settings[mode][difficulty]) {
+            throw new Error(`Mode "${mode}"; difficulty "${difficulty}"; is not defined in settings.json`);
+        }
+        this.setting = settings[mode][difficulty];
+        this.maze = new Maze(this.setting);
+
         this.scene = new THREE.Scene();
         // this.scene.background = new THREE.Color(0x6c6c6c); // Gray background
         const background = new THREE.TextureLoader().load( "/texture/hkust.jpg" );
@@ -14,17 +22,12 @@ class Game {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement); // Use the container parameter
-        this.maze = new Maze(mode, difficulty);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
-        this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize); // Adjust the camera position
-        this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        let [mapStartX, mapStartY] = this.maze.getStartOfMap()
-        this.player = new Player(mapStartX, mapStartY);
+        this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.setting.cellSize); // Adjust the camera position
+        this.camera.lookAt(middleX, middleY, 0, this.maze.mazeMap); // Adjust the camera position to look at the maze
+        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
-        let [winX, winY] = this.maze.getWinOfMap()
-        this.mapWinX = winX;
-        this.mapWinY = winY;
     }
 
     run() {
@@ -33,109 +36,8 @@ class Game {
         this.resizeWindow();
         this.render();
         this.keyboardControls();
-        this.onWindowResize();
-    }
-
-    keyboardControls() {
-        window.addEventListener('keydown', (event) => {
-            switch (event.key) {
-                case 'ArrowUp':
-                    this.player.changeDirection(1); // Move up
-                    console.log('up')
-                    break;
-                case 'ArrowRight':
-                    this.player.changeDirection(2); // Move right
-                    console.log('right')
-                    break;
-                case 'ArrowDown':
-                    this.player.changeDirection(3); // Move down
-                    console.log('down')
-                    break;
-                case 'ArrowLeft':
-                    this.player.changeDirection(4); // Move left
-                    console.log('left')
-                    break;
-                case 'w':
-                    this.player.changeDirection(1); // Move up
-                    console.log('up')
-                    break;
-                case 'd':
-                    this.player.changeDirection(2); // Move right
-                    console.log('right')
-                    break;
-                case 's':
-                    this.player.changeDirection(3); // Move down
-                    console.log('down')
-                    break;
-                case 'a':
-                    this.player.changeDirection(4); // Move left
-                    console.log('left')
-                    break;
-            }
-        });
         this.playerMovemoment();
-    }
-
-    playerMovemoment() {
-        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
-        this.frameCount++;
-    
-        // Move the player every 10 frames
-        if (this.frameCount >= this.moveEveryNFrames) {
-            if (this.player.isWin(this.mapWinX, this.mapWinY)) {
-                alert('You win!');
-                this.player.win()   // make the player hithub disappear from the screen to prevent strange displace
-                window.location.reload(); // Reload the page
-            }
-            let [leftX, rightP, topP, bottomY] = this.player.getNextPosition();
-            if (this.#isValidMove(leftX, rightP, topP, bottomY)) {
-                this.player.animate();
-                this.player.move(leftX, rightP, topP, bottomY);
-            }
-            
-            this.frameCount = 0; // Reset the frame counter
-        }
-        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
-            this.player.animate();
-        }
-
-        requestAnimationFrame(this.playerMovemoment.bind(this));
-        this.renderer.render(this.scene, this.camera);
-    }
-
-    // 2.5D: top is not needed in this case
-    #isValidMove(leftX, rightP, topP, bottomY) {
-        return (
-            leftX >= 0 &&
-            bottomY >= 0 &&
-            rightP < this.maze.mazeMap[0].length &&
-            bottomY < this.maze.mazeMap.length &&
-            this.maze.mazeMap[bottomY][leftX] !== 0
-        )
-    }
-
-    onWindowResize() {
-        window.addEventListener('resize', () => {
-            this.resizeWindow();
-        });
-    }
-
-    resizeWindow() {
-        const aspect = window.innerWidth / window.innerHeight;
-        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.maze.cellSize * 1.05;
-        if (window.innerWidth >= window.innerHeight) {
-            this.camera.left = -frustumSize * aspect / 2;
-            this.camera.right = frustumSize * aspect / 2;
-            this.camera.top = frustumSize / 2;
-            this.camera.bottom = -frustumSize / 2;
-        } else {
-            this.camera.left = -frustumSize / 2;
-            this.camera.right = frustumSize / 2;
-            this.camera.top = frustumSize / aspect / 2;
-            this.camera.bottom = -frustumSize / aspect / 2;
-        }
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.onWindowResize();
     }
 
     renderMaze() {
@@ -177,33 +79,211 @@ class Game {
                 }
             });
         });
-    
-        // Add border walls
-        let cellMiddle = Math.floor(this.maze.cellSize / 2);
-        for (let x=1; x < this.maze.mazeMap.length; x+=this.maze.cellSize) {
-            this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
-            this.addBorderWall(x, -1 - cellMiddle, this.maze.cellSize);
-        }
-        for (let y=1; y<this.maze.mazeMap[0].length; y+=this.maze.cellSize) {
-            this.addBorderWall(this.maze.mazeMap.length + cellMiddle, y, this.maze.cellSize);
-            this.addBorderWall(-1 - cellMiddle, y, this.maze.cellSize);
-        }
-        this.addBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
-        this.addBorderWall(this.maze.mazeMap.length + cellMiddle, -1 - cellMiddle, this.maze.cellSize);
-        this.addBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.maze.cellSize);
-        this.addBorderWall(-1 - cellMiddle, -1 - cellMiddle, this.maze.cellSize);
+        this.addBorder();
     }
 
-    addBorderWall(x, y, cellSize) {
-        const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black border
-        const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
-        const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 0); // Adjust position
-        this.scene.add(border);
+    resizeWindow() {
+        const aspect = window.innerWidth / window.innerHeight;
+        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.setting.cellSize * 1.05;
+        if (window.innerWidth >= window.innerHeight) {
+            this.camera.left = -frustumSize * aspect / 2;
+            this.camera.right = frustumSize * aspect / 2;
+            this.camera.top = frustumSize / 2;
+            this.camera.bottom = -frustumSize / 2;
+        } else {
+            this.camera.left = -frustumSize / 2;
+            this.camera.right = frustumSize / 2;
+            this.camera.top = frustumSize / aspect / 2;
+            this.camera.bottom = -frustumSize / aspect / 2;
+        }
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     render() {
         this.renderer.render(this.scene, this.camera);
+    }
+
+    keyboardControls() {
+        window.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'ArrowUp' || 'w':
+                    if (this.#keyOrder.indexOf('up') === -1) {
+                        this.#keyOrder.push('up');
+                    }
+                    break;
+                case 'ArrowRight' || 'd':
+                    if (this.#keyOrder.indexOf('right') === -1) {
+                        this.#keyOrder.push('right');
+                    }
+                    break;
+                case 'ArrowDown' || 's':
+                    if (this.#keyOrder.indexOf('down') === -1) {
+                        this.#keyOrder.push('down');
+                    }
+                    break;
+                case 'ArrowLeft' || 'a':
+                    if (this.#keyOrder.indexOf('left') === -1) {
+                        this.#keyOrder.push('left');
+                    }
+                    break;
+            }
+        }, false);
+        window.addEventListener('keyup', (event) => {
+            switch (event.key) {
+                case 'ArrowUp' || 'w':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'up');
+                    break;
+                case 'ArrowRight' || 'd':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'right');
+                    break;
+                case 'ArrowDown' || 's':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'down');
+                    break;
+                case 'ArrowLeft' || 'a':
+                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'left');
+                    break;
+            }
+        }, false);
+    }
+
+    playerMovemoment() {
+        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
+        this.frameCount++;
+    
+        // Move the player every 10 frames
+        if (this.frameCount >= this.moveEveryNFrames) {
+            this.player.state.checkWin();
+            if (this.player.state.isWin()) {
+                this.player.state.reset();
+                alert('You win!');
+                window.location.reload(); // Reload the page
+                return;
+            }
+            this.update();
+            
+            this.frameCount = 0; // Reset the frame counter
+        }
+        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
+            this.player.animate();
+        }
+
+        requestAnimationFrame(this.playerMovemoment.bind(this));
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    onWindowResize() {
+        window.addEventListener('resize', () => {
+            this.resizeWindow();
+        });
+    }
+
+    update() {
+        if (this.#keyOrder.length > 0) {
+            switch (this.#keyOrder[this.#keyOrder.length - 1]) {
+                case 'up':
+                    this.player.state.up(); // Move up
+                    break;
+                case 'right':
+                    this.player.state.right(); // Move right
+                    break;
+                case 'down':
+                    this.player.state.down(); // Move down
+                    break;
+                case 'left':
+                    this.player.state.left(); // Move left
+                    break;
+            }
+        } else {
+            this.player.state.stop();
+        }
+        this.player.update();
+    }
+    
+    addBorder() {
+        // Add border walls
+        let cellMiddle = Math.floor(this.setting.cellSize / 2);
+        for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.setting.cellSize + cellMiddle) {
+            this.#addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+            if (x != cellMiddle) {
+                this.#addBorderWall(x, -0.3, this.setting.cellSize, false, true);
+            }
+        }
+        for (let x=this.setting.cellSize; x<this.maze.mazeMap[0].length; x+=this.setting.cellSize+1) {
+            this.#addPillarBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+            this.#addPillarBorderWall(x, -0.3, this.setting.cellSize, false, true);
+        }
+        for (let y=this.setting.cellSize + cellMiddle; y<this.maze.mazeMap.length; y+=this.setting.cellSize + cellMiddle) {
+            this.#addBorderWall(this.maze.mazeMap.length, y, this.setting.cellSize, true);
+            this.#addBorderWall(-1, y, this.setting.cellSize, true);
+        }
+        for (let y=this.setting.cellSize-1; y < this.maze.mazeMap.length; y += this.setting.cellSize+1) {
+            this.#addPillarBorderWall(this.maze.mazeMap.length, y, this.setting.cellSize, true);
+            this.#addPillarBorderWall(-1, y, this.setting.cellSize, true);
+        }
+        this.#addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+        this.#addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, 1, this.setting.cellSize);
+        this.#addEdgeBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+        this.#addEdgeBorderWall(-1 - cellMiddle, 1, this.setting.cellSize);
+    }
+
+    #addBorderWall(x, y, cellSize, isVertical=false, isBottom=false) {
+        var borderTexture, borderGeometry;
+        if (isVertical) {
+            borderTexture = new THREE.TextureLoader().load('/texture/border-gate-vertical.png');
+            borderGeometry = new THREE.BoxGeometry(1, cellSize, 3);
+        } else {
+            if (isBottom) {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-gate.png');
+                borderGeometry = new THREE.BoxGeometry(cellSize, cellSize - Math.floor(cellSize/2), 3);
+            } else {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-gate.png');
+                borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 3);
+            }
+        }
+        borderTexture.magFilter = THREE.NearestFilter;
+        borderTexture.minFilter = THREE.NearestFilter;
+        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+        borderMaterial.transparent = true;
+        const border = new THREE.Mesh(borderGeometry, borderMaterial);
+        border.position.set(x, y, 3); // Adjust position
+        this.scene.add(border);
+    }
+
+    #addPillarBorderWall(x, y, cellSize, isVertical=false, isBottom=false) {
+        var borderTexture, borderGeometry;
+        if (isVertical) {
+            console.log("vertical");
+            borderTexture = new THREE.TextureLoader().load('/texture/border-pillar-vertical.png');
+            borderGeometry = new THREE.BoxGeometry(1, 1, 1);
+        } else {
+            if (isBottom) {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-pillar.png');
+                borderGeometry = new THREE.BoxGeometry(1, cellSize - Math.floor(cellSize/2), 1);
+            } else {
+                borderTexture = new THREE.TextureLoader().load('/texture/border-pillar.png');
+                borderGeometry = new THREE.BoxGeometry(1, cellSize, 1);
+            }
+        }
+        borderTexture.magFilter = THREE.NearestFilter;
+        borderTexture.minFilter = THREE.NearestFilter;
+        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+        borderMaterial.transparent = true;
+        const border = new THREE.Mesh(borderGeometry, borderMaterial);
+        border.position.set(x, y, 3); // Adjust position
+        this.scene.add(border);
+    }
+
+    #addEdgeBorderWall(x, y, cellSize) {
+        let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
+        borderTexture.magFilter = THREE.NearestFilter;
+        borderTexture.minFilter = THREE.NearestFilter;
+        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+        borderMaterial.transparent = true;
+        const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
+        const border = new THREE.Mesh(borderGeometry, borderMaterial);
+        border.position.set(x, y, 3); // Adjust position
+        this.scene.add(border);
     }
 }
 

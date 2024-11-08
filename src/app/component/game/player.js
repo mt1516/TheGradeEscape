@@ -1,30 +1,17 @@
 import * as THREE from 'three';
+import stateMachine from './state-machine';
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 class Player {
-    #width;     // character width
-    #height;    // character height
-    #leftX;     // use for coordinate for checking win
-    #rightP;    // use for coordinate for rendering
-    #topP;      // use for coordinate for rendering
-    #bottomY;   // use for coordinate for checking win
-    #speed;
-    #direction;
     #currentTile;
     #tilesHorizontal;
     #tilesVertical;
-    constructor(mapStartX, mapStartY) {
-        // Simple box collision model
-        this.#width = 1;
-        this.#height = 2;
-        this.#leftX = mapStartX;
-        this.#rightP = mapStartX + Math.floor(this.#width/2);
-        this.#topP = mapStartY + Math.floor(this.#height/2); 
-        this.#bottomY = mapStartY; 
-
-        this.#speed = 1; // Speed of the player
-        this.#direction = 0; // Direction of the player
+    constructor(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap) {
+        this.state = new stateMachine(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap);
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.#leftX, this.rightP, this.topP, this.bottomY);
         this.renderPlayer();
+        this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1]/2), 2);
     }
 
     renderPlayer() {
@@ -45,50 +32,18 @@ class Player {
         this.visual = player;
     }
 
-    changeDirection(direction) {
-        this.#direction = direction;
-    }
-
-    getCurrentPosition() {
-        return [this.#leftX, this.#rightP, this.#topP, this.#bottomY];
-    }
-
-    getNextPosition() {
-        switch (this.#direction) {
-            case 1:
-                return [this.#leftX, this.#rightP, this.#topP + this.#speed, this.#bottomY + this.#speed];
-            case 2:
-                return [this.#leftX + this.#speed, this.#rightP + this.#speed, this.#topP, this.#bottomY];
-            case 3:
-                return [this.#leftX, this.#rightP, this.#topP - this.#speed, this.#bottomY - this.#speed];
-            case 4:
-                return [this.#leftX - this.#speed, this.#rightP - this.#speed, this.#topP, this.#bottomY];
+    update() {
+        this.animate();
+        if (this.state.isMove()) {
+            let [x, y] = this.state.update();
+            // console.log("x, y = ", x, y);
+            this.visual.position.set(x, y, 2);
         }
-        return this.getCurrentPosition();
-    }
-
-    move(leftX, rightP, topP, bottomY) {
-        this.#leftX = leftX;
-        this.#rightP = rightP;
-        this.#topP = topP;
-        this.#bottomY = bottomY;
-        this.visual.position.set(rightP, topP, 1);
-    }
-
-    win(wallX, wallY) {
-        this.changeDirection(0);
-        this.#leftX = wallX;
-        this.#bottomY = wallY;
-        this.visual.position.set(wallX, wallY, -1);
-    }
-
-    isWin(winX, winY) {
-        return (this.#leftX === winX && this.#bottomY === winY);
     }
 
     animate() {
         // console.log("BITCH", this.direction);
-        switch (this.#direction) {
+        switch (this.state.getDirection()) {
             case 1:
                 this.#currentTile = (this.#currentTile >= 9 && this.#currentTile < 11) ? this.#currentTile + 1 : 9;
                 break;
