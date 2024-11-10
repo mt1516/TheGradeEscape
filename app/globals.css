@@ -19,3 +19,16 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.credits {
+  perspective: 100px;
+}
+
+@keyframes crawl {
+  0% {
+    transform:rotateX(20deg) translateY(100%) ;
+  }
+  100% {
+    transform:rotateX(25deg) translateY(-100%);
+  }
+}

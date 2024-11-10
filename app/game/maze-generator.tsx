@@ -1,50 +1,89 @@
-import { getUnvisitedNighbors, addAdjacentCells, union, find } from './utils';
+import { setting } from './game'
 
-class Maze {
-    #compilation;
-    constructor(setting) {
-        this.width = setting.width;
-        this.height = setting.height;
-        this.startRow = setting.startRow;
-        this.startCol = setting.startCol;
-        this.endRow = setting.endRow;
-        this.endCol = setting.endCol;
-        this.complexity = setting.complexity;
-        this.cellSize = setting.cellSize;
-        this.#initMaze();
-        this.#scale();
+export default class Maze {
+    public mazeMap: number[][];
+    private compilation: number[][];
+    private mazeGrid: number[][];
+    private width: number;
+    private height: number;
+    private startRow: number;
+    private startCol: number;
+    private endRow: number;
+    private endCol: number;
+    private complexity: number;
+    private cellSize: number;
+
+    constructor(s: setting) {
+        this.width = s.width;
+        this.height = s.height;
+        this.startRow = s.startRow;
+        this.startCol = s.startCol;
+        this.endRow = s.endRow;
+        this.endCol = s.endCol;
+        this.complexity = s.complexity;
+        this.cellSize = s.cellSize;
+        this.compilation = new Array(this.height).fill(0).map(() => new Array(this.width).fill(0));
+        [this.mazeGrid, this.mazeMap] = this.initGrid();
+        this.generateMaze();
     }
 
-    #initMaze() {
-        this.mazeGrid = new Array(2 * this.height - 1);
-        this.#compilation = new Array(this.height).fill(0).map(() => new Array(this.width).fill(0));
+    // Get the middle coordinate of the cell at x, y
+    public convertToMap(x: number, y: number) {    // maze --> map
+        let cellMiddle = Math.floor(this.cellSize/2);
+        return [x * (this.cellSize + 1) + cellMiddle, y * (this.cellSize + 1) + cellMiddle];
+    }
+    public getStartOfMap() {
+        return this.convertToMap(this.startCol, this.startRow)
+    }
+    public getMiddleOfMap() {
+        return [this.mazeMap[0].length/2, this.mazeMap.length/2];
+    }
+    public getWinOfMap() {
+        return this.convertToMap(this.endCol, this.endRow)
+    }
+
+    private initGrid(): [number[][], number[][]] {
+        var mazeGrid = new Array(2 * this.height - 1);
         for (let i=0; i<2*this.height-1; i++) {
-            this.mazeGrid[i] = new Array(2 * this.width - 1).fill(0);
+            mazeGrid[i] = new Array(2 * this.width - 1).fill(0);
             for (let j=0; j<2*this.width-1; j++) {
                 if (i % 2 === 0 && j % 2 === 0) {
-                    this.mazeGrid[i][j] = 1;
+                    mazeGrid[i][j] = 1;
                 }
             }
         }
-
-        switch (this.complexity) {
-            case 0:
-                this.#primsAlgorithm();
-                break;
-            case 1:
-                this.#ellersAlgorithm();
-                break;
-            case 2:
-                this.#recursiveBacktracing();
-                break;
-            default:
-                this.#recursiveBacktracing();
+        var mazeMap = new Array(this.height - 1 + this.height * this.cellSize)
+        for (let row=0; row<mazeMap.length; row++) {
+            mazeMap[row] = new Array(this.width - 1 + this.width * this.cellSize).fill(1);
+            for (let col=0; col<mazeMap[0].length; col++) {
+                if ((row-this.cellSize) % (this.cellSize + 1) === 0 || (col-this.cellSize) % (this.cellSize + 1) === 0) {
+                    mazeMap[row][col] = 0;
+                }
+            }
         }
+        return [mazeGrid, mazeMap];
     }
 
-    #recursiveBacktracing() {
+    private generateMaze() {
+        switch (this.complexity) {
+            case 0:
+                this.primsAlgorithm();
+                break;
+            case 1:
+                this.ellersAlgorithm();
+                break;
+            case 2:
+                this.recursiveBacktracing();
+                break;
+            default:
+                this.recursiveBacktracing();
+        }
+        this.scale();
+    }
+
+    private recursiveBacktracing() {
         // Step 1: Initialize the maze
-        this.#compilation[this.endRow][this.endCol] = 1; // Mark the start cell
+        this.compilation[this.endRow][this.endCol] = 1; // Mark the start cell
         this.mazeGrid[2*this.endRow][2*this.endCol] = 3; // Mark the start cell
 
         // Step 2: Push the starting cell
@@ -54,17 +93,17 @@ class Maze {
         // Step 3: Start recursion
         while (stack.length>0) {
             // Step 3a: Pop the last cell out
-            const [row, col] = stack.pop();
+            const cell: number[] = stack.pop() as number[];
             // Step 3b: Get all the unvisited neighbours of the current cell
-            const neighbors = getUnvisitedNighbors(this.#compilation, row, col);
+            const neighbors = this.getUnvisitedNighbors(cell);
             // Step 3c: Check if there is any cell not visited, if yes, the path havent reach a dead end, which can be continue to search deeper
             if (neighbors.length > 0) {
                 // Step 3d: Push back from backtracing
-                stack.push([row, col]);
+                stack.push(cell);
                 // Step 3e: Random choose one for searching 
                 const chosenNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                this.#compilation[chosenNeighbor[0]][chosenNeighbor[1]] = 1;
-                this.mazeGrid[row + chosenNeighbor[0]][col + chosenNeighbor[1]] = 1;
+                this.compilation[chosenNeighbor[0]][chosenNeighbor[1]] = 1;
+                this.mazeGrid[cell[0] + chosenNeighbor[0]][cell[1] + chosenNeighbor[1]] = 1;
                 // Step 3f: Push back for next iteration
                 stack.push(chosenNeighbor)
             }
@@ -73,34 +112,34 @@ class Maze {
         this.mazeGrid[2*this.startRow][2*this.startCol] = 2;
     }
 
-    #primsAlgorithm() {
+    private primsAlgorithm() {
         // Step 1: Initialize the maze
-        this.#compilation[this.endRow][this.endCol] = 1; // Mark the start cell
+        this.compilation[this.endRow][this.endCol] = 1; // Mark the start cell
         this.mazeGrid[2*this.endRow][2*this.endCol] = 3; // Mark the start cell
 
-        let adjacentCells = []; // List to hold 2 cells, which shows the wall
+        let adjacentCells: any[] = []; // List to hold 2 cells, which shows the wall
         // Step 2: Push all walls of the starting cell
-        addAdjacentCells(adjacentCells, this.#compilation, [this.endRow, this.endCol]);
+        this.addAdjacentCells(adjacentCells, [this.endRow, this.endCol]);
         // Step 3: Start recursion
         while (adjacentCells.length > 0) {
             // Step 3a: Randomly choose one wall out and remove it from the list
             const cell = adjacentCells[Math.floor(Math.random() * adjacentCells.length)];
             adjacentCells = adjacentCells.filter(c => c !== cell);
             // Step 3b: Skip if the cell is already visited
-            if (this.#compilation[cell[1][0]][cell[1][1]] === 1) {
+            if (this.compilation[cell[1][0]][cell[1][1]] === 1) {
                 continue;
             }
             // Step 3c: Mark visited and break the wall between
-            this.#compilation[cell[1][0]][cell[1][1]] = 1;
+            this.compilation[cell[1][0]][cell[1][1]] = 1;
             this.mazeGrid[cell[0][0] + cell[1][0]][cell[0][1] + cell[1][1]] = 1;
             // Step 3d: Add all walls of the newly visited cell
-            addAdjacentCells(adjacentCells, this.#compilation, cell[1]);
+            this.addAdjacentCells(adjacentCells, cell[1]);
         }
         // Step 4: Mark the end of the maze
         this.mazeGrid[2 * this.startRow][2 * this.startCol] = 2;
     }
 
-    #ellersAlgorithm() {
+    private ellersAlgorithm() {
         // Step 1: Initialize the maze
         let sets = []; // List to hold sets of cells for union-find structure
         this.mazeGrid[2 * this.endRow][2 * this.endCol] = 3; // Mark the start cell
@@ -119,7 +158,7 @@ class Maze {
             // Step 2b: Connect cells within the current row
             for (let col = 2; col < total_col; col+=2) {
                 if (Math.random() < probability) { // Randomly decide whether to connect to the left
-                    union(sets, row, col, row, col - 2);
+                    this.union(sets, [row, col], [row, col - 2]);
                     this.mazeGrid[row][col - 1] = 1;
                 }
             }
@@ -136,8 +175,8 @@ class Maze {
                 order[randomIndex] = order[0];
                 order[0] = temp;
                 for (let col of order) {
-                    if (find(sets, row, col) !== find(sets, row - 2, col)) {
-                        union(sets, row, col, row - 2, col);
+                    if (this.find(sets, [row, col]) !== this.find(sets, [row - 2, col])) {
+                        this.union(sets, [row, col], [row - 2, col]);
                         this.mazeGrid[row - 1][col] = 1;
                     }
                 }
@@ -151,18 +190,7 @@ class Maze {
     // 01 --> 03
     // 02 --> 04-06
     // 03 --> 07
-    #scale() {
-        // console.log("visualize = ", this.grid);
-        this.mazeMap = new Array(this.height - 1 + this.height * this.cellSize)
-        for (let row=0; row<this.mazeMap.length; row++) {
-            this.mazeMap[row] = new Array(this.width - 1 + this.width * this.cellSize).fill(1);
-            for (let col=0; col<this.mazeMap[0].length; col++) {
-                if ((row-this.cellSize) % (this.cellSize + 1) === 0 || (col-this.cellSize) % (this.cellSize + 1) === 0) {
-                    this.mazeMap[row][col] = 0;
-                }
-            }
-        }
-        // console.log("visualizeMaze.size = ", this.visualizeMaze.length, this.visualizeMaze[0].length);
+    private scale() {
         // 1-->3, 3-->7, 5-->11
         // ceil(col/2) * cellSize + floor(col/2)
         // 0-->1, 2-->5, 4-->9
@@ -198,20 +226,50 @@ class Maze {
         this.mazeMap[endY][endX] = 2;
         return;
     }
-    // Get the middle coordinate of the cell at x, y
-    convertToMap(x, y) {    // maze --> map
-        let cellMiddle = Math.floor(this.cellSize/2);
-        return [x * (this.cellSize + 1) + cellMiddle, y * (this.cellSize + 1) + cellMiddle];
+
+    private getUnvisitedNighbors(cell: number[]){
+        const neighbors = [];
+        const direction = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+        for (let [dx, dy] of direction) {
+            const newRow = dx + cell[0];
+            const newCol = dy + cell[1];
+            if (newRow >= 0 && newRow < this.compilation.length && newCol >= 0 && newCol < this.compilation[0].length && this.compilation[newRow][newCol] === 0) {
+                neighbors.push([newRow, newCol]);
+            }
+        }
+        return neighbors;
     }
-    getStartOfMap() {
-        return this.convertToMap(this.startCol, this.startRow)
+
+    private addAdjacentCells(adjacentCells: any[], cell: number[]) {
+        const unvisitedNighbors = this.getUnvisitedNighbors(cell);
+        for (let [row, col] of unvisitedNighbors) {
+            adjacentCells.push([[cell[0], cell[1]], [row, col]]);
+        }
     }
-    getMiddleOfMap() {
-        return [this.mazeMap[0].length/2, this.mazeMap.length/2];
+    
+    private union(sets: any[], cell1: number[], cell2: number[]) {
+        const set1 = this.find(sets, cell1);
+        const set2 = this.find(sets, cell2);
+    
+        if (set1 < 0 || set2 < 0) {
+            return; // Invalid set
+        }
+    
+        if (set1 !== set2) {
+            // Merge two sets
+            sets[set2].cells.forEach((c: number[]) => {
+                sets[set1].cells.push(c);
+            });
+            sets.splice(set2, 1); // Remove the merged set
+        }
     }
-    getWinOfMap() {
-        return this.convertToMap(this.endCol, this.endRow)
+    
+    private find(sets: any[], cell: number[]) {
+        for (let i = 0; i < sets.length; i++) {
+            if (sets[i].cells.some((c: number[]) => c[0] === cell[0] && c[1] === cell[1])) {
+                return i; // Return the index of the set containing the cell
+            }
+        }
+        return -1; // Not found
     }
 }
-
-export default Maze;

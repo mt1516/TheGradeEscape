@@ -1,51 +1,63 @@
+"use client";
+
 import * as THREE from 'three';
-import Maze from '../maze/maze';
-import Player from '../game/player';
+import Maze from './maze-generator';
+import Player from './player/player';
 import settings from './settings.json';
 
-class Game {
-    #keyOrder = []
-    constructor(container, mode, difficulty) {
-        if (!settings[mode][difficulty]) {
-            throw new Error(`Mode "${mode}"; difficulty "${difficulty}"; is not defined in settings.json`);
-        }
-        this.setting = settings[mode][difficulty];
-        this.maze = new Maze(this.setting);
+export type Mode = 'default' | 'DBTW';
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
-        this.scene = new THREE.Scene();
-        // this.scene.background = new THREE.Color(0x6c6c6c); // Gray background
-        const background = new THREE.TextureLoader().load( "/texture/hkust.jpg" );
-        // background.wrapS = THREE.RepeatWrapping;
-        // background.wrapT = THREE.RepeatWrapping;
-        this.scene.background = background;
-        this.camera = new THREE.OrthographicCamera();
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(this.renderer.domElement); // Use the container parameter
+export interface setting {
+    width: number;
+    height: number;
+    startRow: number;
+    startCol: number;
+    endRow: number;
+    endCol: number;
+    complexity: number;
+    cellSize: number;
+};
+
+export default class Game {
+    private keyOrder: string[];
+    private gameSetting: setting;
+    private maze: Maze;
+    private scene: THREE.Scene;
+    private camera: THREE.OrthographicCamera;
+    private sceneRender: THREE.WebGLRenderer;
+    private player: Player;
+    private frameCount: number;
+    private moveEveryNFrames: number;
+    private animationFrameCount: number;
+    constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
+        this.scene = scene;
+        this.camera = camera;
+        this.sceneRender = sceneRender;
+        this.keyOrder = [];
+        this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
+        this.maze = new Maze(this.gameSetting);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
-        this.camera.position.set(middleX, middleY, Math.max(this.maze.width, this.maze.height) * 2 * this.setting.cellSize); // Adjust the camera position
-        this.camera.lookAt(middleX, middleY, 0, this.maze.mazeMap); // Adjust the camera position to look at the maze
+        this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
+        this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
         this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
-    }
-
-    run() {
+        this.animationFrameCount = 0;
         this.scene.add(this.player.visual);
+    }
+    
+    public run() {
         this.renderMaze();
         this.resizeWindow();
-        this.render();
         this.keyboardControls();
         this.playerMovemoment();
         this.onWindowResize();
     }
 
-    renderMaze() {
+    private renderMaze() {
         const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x593ac0 }); // Red walls
         const pathTexture = new THREE.TextureLoader().load( "/texture/Stone_Floor_002_COLOR.jpg" );
-        // pathTexture.wrapS = THREE.RepeatWrapping;
-        // pathTexture.wrapT = THREE.RepeatWrapping;
-        // pathTexture.repeat.set( 1, 1 );
         const pathMaterial = new THREE.MeshBasicMaterial({ map: pathTexture });
         const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
         const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
@@ -82,9 +94,9 @@ class Game {
         this.addBorder();
     }
 
-    resizeWindow() {
+    private resizeWindow() {
         const aspect = window.innerWidth / window.innerHeight;
-        const frustumSize = Math.max(this.maze.width, this.maze.height) * 2 * this.setting.cellSize * 1.05;
+        const frustumSize = Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize * 1.05;
         if (window.innerWidth >= window.innerHeight) {
             this.camera.left = -frustumSize * aspect / 2;
             this.camera.right = frustumSize * aspect / 2;
@@ -97,57 +109,62 @@ class Game {
             this.camera.bottom = -frustumSize / aspect / 2;
         }
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.sceneRender.setSize(window.innerWidth, window.innerHeight);
     }
 
-    render() {
-        this.renderer.render(this.scene, this.camera);
-    }
-
-    keyboardControls() {
+    private keyboardControls() {
         window.addEventListener('keydown', (event) => {
             switch (event.key) {
-                case 'ArrowUp' || 'w':
-                    if (this.#keyOrder.indexOf('up') === -1) {
-                        this.#keyOrder.push('up');
+                case 'ArrowUp':
+                case 'w':
+                    if (this.keyOrder.indexOf('up') === -1) {
+                        this.keyOrder.push('up');
                     }
                     break;
-                case 'ArrowRight' || 'd':
-                    if (this.#keyOrder.indexOf('right') === -1) {
-                        this.#keyOrder.push('right');
+                case 'ArrowRight':
+                case 'd':
+                    if (this.keyOrder.indexOf('right') === -1) {
+                        this.keyOrder.push('right');
                     }
                     break;
-                case 'ArrowDown' || 's':
-                    if (this.#keyOrder.indexOf('down') === -1) {
-                        this.#keyOrder.push('down');
+                case 'ArrowDown':
+                case 's':
+                    if (this.keyOrder.indexOf('down') === -1) {
+                        this.keyOrder.push('down');
                     }
                     break;
-                case 'ArrowLeft' || 'a':
-                    if (this.#keyOrder.indexOf('left') === -1) {
-                        this.#keyOrder.push('left');
+                case 'ArrowLeft':
+                case 'a':
+                    if (this.keyOrder.indexOf('left') === -1) {
+                        this.keyOrder.push('left');
                     }
                     break;
             }
         }, false);
         window.addEventListener('keyup', (event) => {
             switch (event.key) {
-                case 'ArrowUp' || 'w':
-                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'up');
+                case 'ArrowUp':
+                case 'w':
+                    this.keyOrder = this.keyOrder.filter((key) => key !== 'up');
                     break;
-                case 'ArrowRight' || 'd':
-                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'right');
+                
+                case 'ArrowRight':
+                case 'd':
+                    this.keyOrder = this.keyOrder.filter((key) => key !== 'right');
                     break;
-                case 'ArrowDown' || 's':
-                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'down');
+                case 'ArrowDown':
+                case 's':
+                    this.keyOrder = this.keyOrder.filter((key) => key !== 'down');
                     break;
-                case 'ArrowLeft' || 'a':
-                    this.#keyOrder = this.#keyOrder.filter((key) => key !== 'left');
+                case 'ArrowLeft':
+                case 'a':
+                    this.keyOrder = this.keyOrder.filter((key) => key !== 'left');
                     break;
             }
         }, false);
     }
 
-    playerMovemoment() {
+    private playerMovemoment() {
         // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
         this.frameCount++;
     
@@ -157,7 +174,7 @@ class Game {
             if (this.player.state.isWin()) {
                 this.player.state.reset();
                 alert('You win!');
-                window.location.reload(); // Reload the page
+                window.location.href = '/game-level'; // Redirect to the home page
                 return;
             }
             this.update();
@@ -169,18 +186,17 @@ class Game {
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));
-        this.renderer.render(this.scene, this.camera);
     }
 
-    onWindowResize() {
+    private onWindowResize() {
         window.addEventListener('resize', () => {
             this.resizeWindow();
         });
     }
 
-    update() {
-        if (this.#keyOrder.length > 0) {
-            switch (this.#keyOrder[this.#keyOrder.length - 1]) {
+    private update() {
+        if (this.keyOrder.length > 0) {
+            switch (this.keyOrder[this.keyOrder.length - 1]) {
                 case 'up':
                     this.player.state.up(); // Move up
                     break;
@@ -198,36 +214,37 @@ class Game {
             this.player.state.stop();
         }
         this.player.update();
+        this.sceneRender.render(this.scene, this.camera);
     }
     
-    addBorder() {
+    private addBorder() {
         // Add border walls
-        let cellMiddle = Math.floor(this.setting.cellSize / 2);
-        for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.setting.cellSize + cellMiddle) {
-            this.#addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
+        let cellMiddle = Math.floor(this.gameSetting.cellSize / 2);
+        for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize + cellMiddle) {
+            this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
             if (x != cellMiddle) {
-                this.#addBorderWall(x, -0.3, this.setting.cellSize, false, true);
+                this.addBorderWall(x, -0.3, this.gameSetting.cellSize, false, true);
             }
         }
-        for (let x=this.setting.cellSize; x<this.maze.mazeMap[0].length; x+=this.setting.cellSize+1) {
-            this.#addPillarBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
-            this.#addPillarBorderWall(x, -0.3, this.setting.cellSize, false, true);
+        for (let x=this.gameSetting.cellSize; x<this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize+1) {
+            this.addPillarBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+            this.addPillarBorderWall(x, -0.3, this.gameSetting.cellSize, false, true);
         }
-        for (let y=this.setting.cellSize + cellMiddle; y<this.maze.mazeMap.length; y+=this.setting.cellSize + cellMiddle) {
-            this.#addBorderWall(this.maze.mazeMap.length, y, this.setting.cellSize, true);
-            this.#addBorderWall(-1, y, this.setting.cellSize, true);
+        for (let y=this.gameSetting.cellSize + cellMiddle; y<this.maze.mazeMap.length; y+=this.gameSetting.cellSize + cellMiddle) {
+            this.addBorderWall(this.maze.mazeMap.length, y, this.gameSetting.cellSize, true);
+            this.addBorderWall(-1, y, this.gameSetting.cellSize, true);
         }
-        for (let y=this.setting.cellSize-1; y < this.maze.mazeMap.length; y += this.setting.cellSize+1) {
-            this.#addPillarBorderWall(this.maze.mazeMap.length, y, this.setting.cellSize, true);
-            this.#addPillarBorderWall(-1, y, this.setting.cellSize, true);
+        for (let y=this.gameSetting.cellSize-1; y < this.maze.mazeMap.length; y += this.gameSetting.cellSize+1) {
+            this.addPillarBorderWall(this.maze.mazeMap.length, y, this.gameSetting.cellSize, true);
+            this.addPillarBorderWall(-1, y, this.gameSetting.cellSize, true);
         }
-        this.#addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
-        this.#addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, 1, this.setting.cellSize);
-        this.#addEdgeBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.setting.cellSize);
-        this.#addEdgeBorderWall(-1 - cellMiddle, 1, this.setting.cellSize);
+        this.addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, 1, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(-1 - cellMiddle, 1, this.gameSetting.cellSize);
     }
 
-    #addBorderWall(x, y, cellSize, isVertical=false, isBottom=false) {
+    private addBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
         var borderTexture, borderGeometry;
         if (isVertical) {
             borderTexture = new THREE.TextureLoader().load('/texture/border-gate-vertical.png');
@@ -250,10 +267,10 @@ class Game {
         this.scene.add(border);
     }
 
-    #addPillarBorderWall(x, y, cellSize, isVertical=false, isBottom=false) {
+    private addPillarBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
         var borderTexture, borderGeometry;
         if (isVertical) {
-            console.log("vertical");
+            // console.log("vertical");
             borderTexture = new THREE.TextureLoader().load('/texture/border-pillar-vertical.png');
             borderGeometry = new THREE.BoxGeometry(1, 1, 1);
         } else {
@@ -274,7 +291,7 @@ class Game {
         this.scene.add(border);
     }
 
-    #addEdgeBorderWall(x, y, cellSize) {
+    private addEdgeBorderWall(x: number, y: number, cellSize: number) {
         let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
         borderTexture.magFilter = THREE.NearestFilter;
         borderTexture.minFilter = THREE.NearestFilter;
@@ -286,5 +303,3 @@ class Game {
         this.scene.add(border);
     }
 }
-
-export default Game;
