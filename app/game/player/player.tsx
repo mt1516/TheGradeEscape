@@ -2,6 +2,7 @@
 
 import * as THREE from 'three';
 import StateMachine from './state-machine';
+import { Mode } from '../game'
 
 export default class Player {
     public state: StateMachine;
@@ -9,17 +10,17 @@ export default class Player {
     private currentTile: number;
     private tilesHorizontal: number;
     private tilesVertical: number;
-    constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][]) {
+    constructor(gamemode: Mode, characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][]) {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
         this.tilesVertical = 4;
-        this.state = new StateMachine(mazeMap, characterSize, hitboxWidth, mapStartCoord, mapEndCoord);
+        this.state = new StateMachine(gamemode, mazeMap, characterSize, hitboxWidth, mapStartCoord, mapEndCoord);
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.leftX, this.rightP, this.topP, this.bottomY);
         this.visual = this.renderPlayer();
-        this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1]/2), 2);
+        this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 2);
     }
-    
-    public renderPlayer() {
+
+    public renderPlayer(): THREE.Sprite {
         const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;
         const offsetY = (this.tilesVertical - Math.floor(this.currentTile / this.tilesHorizontal)) / this.tilesVertical;
         let playerTexture = new THREE.TextureLoader().load('/texture/student.png');
@@ -34,15 +35,16 @@ export default class Player {
         return player
     }
 
-    public update() {
+    public update(): boolean {
         this.animate();
         if (this.state.isMove()) {
-            const updateResult = this.state.update();
-            if (Array.isArray(updateResult)) {
-                let [x, y] = updateResult;
-                this.visual.position.set(x, y, 2);
+            let [[x, y], pumpWallFlag] = this.state.update();
+            if (pumpWallFlag) {
+                return pumpWallFlag
             }
+            this.visual.position.set(x, y, 2);
         }
+        return false;
     }
 
     public animate() {

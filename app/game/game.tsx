@@ -1,7 +1,7 @@
 "use client";
 
 import * as THREE from 'three';
-import Maze from './maze-generator';
+import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 
@@ -21,6 +21,7 @@ export interface setting {
 
 export default class Game {
     private keyOrder: string[];
+    private pumpedKey: string[];
     private gameSetting: setting;
     private maze: Maze;
     private scene: THREE.Scene;
@@ -35,12 +36,13 @@ export default class Game {
         this.camera = camera;
         this.sceneRender = sceneRender;
         this.keyOrder = [];
+        this.pumpedKey = [];
         this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
+        this.player = new Player(mode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
@@ -64,25 +66,25 @@ export default class Game {
         this.maze.mazeMap.forEach((row, y) => {
             row.forEach((cell, x) => {
                 switch (cell) {
-                    case 0: // Wall
+                    case MAZECELL.WALL:
                         const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const wall = new THREE.Mesh(wallGeometry, wallMaterial);
                         wall.position.set(x, y, 0);
                         this.scene.add(wall);
                         break;
-                    case 1:
+                    case MAZECELL.PATH:
                         const pathGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const path = new THREE.Mesh(pathGeometry, pathMaterial);
                         path.position.set(x, y, 0);
                         this.scene.add(path);
                         break;
-                    case 2:
+                    case MAZECELL.WIN:
                         const winGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const win = new THREE.Mesh(winGeometry, winMaterial);
                         win.position.set(x, y, 0); // Adjust position
                         this.scene.add(win);
                         break;
-                    case 3:
+                    case MAZECELL.START:
                         const startGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const start = new THREE.Mesh(startGeometry, startMaterial);
                         start.position.set(x, y, 0); // Adjust position
@@ -117,25 +119,25 @@ export default class Game {
             switch (event.key) {
                 case 'ArrowUp':
                 case 'w':
-                    if (this.keyOrder.indexOf('up') === -1) {
+                    if (this.keyOrder.indexOf('up') === -1 && this.pumpedKey.indexOf('up') === -1) {
                         this.keyOrder.push('up');
                     }
                     break;
                 case 'ArrowRight':
                 case 'd':
-                    if (this.keyOrder.indexOf('right') === -1) {
+                    if (this.keyOrder.indexOf('right') === -1 && this.pumpedKey.indexOf('right') === -1) {
                         this.keyOrder.push('right');
                     }
                     break;
                 case 'ArrowDown':
                 case 's':
-                    if (this.keyOrder.indexOf('down') === -1) {
+                    if (this.keyOrder.indexOf('down') === -1 && this.pumpedKey.indexOf('down') === -1) {
                         this.keyOrder.push('down');
                     }
                     break;
                 case 'ArrowLeft':
                 case 'a':
-                    if (this.keyOrder.indexOf('left') === -1) {
+                    if (this.keyOrder.indexOf('left') === -1 && this.pumpedKey.indexOf('left') === -1) {
                         this.keyOrder.push('left');
                     }
                     break;
@@ -146,19 +148,23 @@ export default class Game {
                 case 'ArrowUp':
                 case 'w':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'up');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'up');
                     break;
                 
                 case 'ArrowRight':
                 case 'd':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'right');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'right');
                     break;
                 case 'ArrowDown':
                 case 's':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'down');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'down');
                     break;
                 case 'ArrowLeft':
                 case 'a':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'left');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'left');
                     break;
             }
         }, false);
@@ -173,6 +179,7 @@ export default class Game {
             this.player.state.checkWin();
             if (this.player.state.isWin()) {
                 this.player.state.reset();
+                // TODO: Chnage this to popup
                 alert('You win!');
                 window.location.href = '/game-level'; // Redirect to the home page
                 return;
@@ -213,7 +220,13 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        this.player.update();
+        let pumpWallFlag = this.player.update();
+        if (pumpWallFlag) {
+            // console.log(`before: keyOrder = ${this.keyOrder}`)
+            this.pumpedKey = [...this.keyOrder]
+            this.keyOrder = [];
+            // console.log(`after: keyOrder = ${this.keyOrder}`)
+        }
         this.sceneRender.render(this.scene, this.camera);
     }
     
@@ -270,7 +283,6 @@ export default class Game {
     private addPillarBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
         var borderTexture, borderGeometry;
         if (isVertical) {
-            // console.log("vertical");
             borderTexture = new THREE.TextureLoader().load('/texture/border-pillar-vertical.png');
             borderGeometry = new THREE.BoxGeometry(1, 1, 1);
         } else {

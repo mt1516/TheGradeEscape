@@ -1,5 +1,12 @@
 import { setting } from './game'
 
+export enum MAZECELL {
+    WALL = 0,
+    PATH,
+    WIN,
+    START,
+}
+
 export default class Maze {
     public mazeMap: number[][];
     private compilation: number[][];
@@ -22,8 +29,12 @@ export default class Maze {
         this.endCol = s.endCol;
         this.complexity = s.complexity;
         this.cellSize = s.cellSize;
-        this.compilation = new Array(this.height).fill(0).map(() => new Array(this.width).fill(0));
-        [this.mazeGrid, this.mazeMap] = this.initGrid();
+        this.compilation = []
+        if (this.complexity !== 1) {    // skip for eller's algorithm as it doesn't need this array
+            this.compilation = new Array(this.height).fill(0).map(() => new Array(this.width).fill(MAZECELL.WALL));
+        }
+        this.mazeGrid = this.initGrid();
+        this.mazeMap = this.initMap();
         this.generateMaze();
     }
 
@@ -42,26 +53,30 @@ export default class Maze {
         return this.convertToMap(this.endCol, this.endRow)
     }
 
-    private initGrid(): [number[][], number[][]] {
+    private initGrid(): number[][] {
         var mazeGrid = new Array(2 * this.height - 1);
         for (let i=0; i<2*this.height-1; i++) {
-            mazeGrid[i] = new Array(2 * this.width - 1).fill(0);
+            mazeGrid[i] = new Array(2 * this.width - 1).fill(MAZECELL.WALL);
             for (let j=0; j<2*this.width-1; j++) {
                 if (i % 2 === 0 && j % 2 === 0) {
-                    mazeGrid[i][j] = 1;
+                    mazeGrid[i][j] = MAZECELL.PATH;
                 }
             }
         }
+        return mazeGrid;
+    }
+
+    private initMap(): number[][] {
         var mazeMap = new Array(this.height - 1 + this.height * this.cellSize)
         for (let row=0; row<mazeMap.length; row++) {
-            mazeMap[row] = new Array(this.width - 1 + this.width * this.cellSize).fill(1);
+            mazeMap[row] = new Array(this.width - 1 + this.width * this.cellSize).fill(MAZECELL.PATH);
             for (let col=0; col<mazeMap[0].length; col++) {
                 if ((row-this.cellSize) % (this.cellSize + 1) === 0 || (col-this.cellSize) % (this.cellSize + 1) === 0) {
-                    mazeMap[row][col] = 0;
+                    mazeMap[row][col] = MAZECELL.WALL;
                 }
             }
         }
-        return [mazeGrid, mazeMap];
+        return mazeMap;
     }
 
     private generateMaze() {
@@ -83,8 +98,8 @@ export default class Maze {
 
     private recursiveBacktracing() {
         // Step 1: Initialize the maze
-        this.compilation[this.endRow][this.endCol] = 1; // Mark the start cell
-        this.mazeGrid[2*this.endRow][2*this.endCol] = 3; // Mark the start cell
+        this.compilation[this.endRow][this.endCol] = MAZECELL.PATH; // Mark the start cell
+        this.mazeGrid[2*this.endRow][2*this.endCol] = MAZECELL.START; // Mark the start cell
 
         // Step 2: Push the starting cell
         const stack = [] // Stack to hold cells, which can be pop out to be searched later
@@ -102,20 +117,20 @@ export default class Maze {
                 stack.push(cell);
                 // Step 3e: Random choose one for searching 
                 const chosenNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                this.compilation[chosenNeighbor[0]][chosenNeighbor[1]] = 1;
-                this.mazeGrid[cell[0] + chosenNeighbor[0]][cell[1] + chosenNeighbor[1]] = 1;
+                this.compilation[chosenNeighbor[0]][chosenNeighbor[1]] = MAZECELL.PATH;
+                this.mazeGrid[cell[0] + chosenNeighbor[0]][cell[1] + chosenNeighbor[1]] = MAZECELL.PATH;
                 // Step 3f: Push back for next iteration
                 stack.push(chosenNeighbor)
             }
         }
         // Step 4: Mark the end of the maze
-        this.mazeGrid[2*this.startRow][2*this.startCol] = 2;
+        this.mazeGrid[2*this.startRow][2*this.startCol] = MAZECELL.WIN;
     }
 
     private primsAlgorithm() {
         // Step 1: Initialize the maze
-        this.compilation[this.endRow][this.endCol] = 1; // Mark the start cell
-        this.mazeGrid[2*this.endRow][2*this.endCol] = 3; // Mark the start cell
+        this.compilation[this.endRow][this.endCol] = MAZECELL.PATH; // Mark the start cell
+        this.mazeGrid[2*this.endRow][2*this.endCol] = MAZECELL.START; // Mark the start cell
 
         let adjacentCells: any[] = []; // List to hold 2 cells, which shows the wall
         // Step 2: Push all walls of the starting cell
@@ -126,23 +141,23 @@ export default class Maze {
             const cell = adjacentCells[Math.floor(Math.random() * adjacentCells.length)];
             adjacentCells = adjacentCells.filter(c => c !== cell);
             // Step 3b: Skip if the cell is already visited
-            if (this.compilation[cell[1][0]][cell[1][1]] === 1) {
+            if (this.compilation[cell[1][0]][cell[1][1]] === MAZECELL.PATH) {
                 continue;
             }
             // Step 3c: Mark visited and break the wall between
-            this.compilation[cell[1][0]][cell[1][1]] = 1;
-            this.mazeGrid[cell[0][0] + cell[1][0]][cell[0][1] + cell[1][1]] = 1;
+            this.compilation[cell[1][0]][cell[1][1]] = MAZECELL.PATH;
+            this.mazeGrid[cell[0][0] + cell[1][0]][cell[0][1] + cell[1][1]] = MAZECELL.PATH;
             // Step 3d: Add all walls of the newly visited cell
             this.addAdjacentCells(adjacentCells, cell[1]);
         }
         // Step 4: Mark the end of the maze
-        this.mazeGrid[2 * this.startRow][2 * this.startCol] = 2;
+        this.mazeGrid[2 * this.startRow][2 * this.startCol] = MAZECELL.WIN;
     }
 
     private ellersAlgorithm() {
         // Step 1: Initialize the maze
         let sets = []; // List to hold sets of cells for union-find structure
-        this.mazeGrid[2 * this.endRow][2 * this.endCol] = 3; // Mark the start cell
+        this.mazeGrid[2 * this.endRow][2 * this.endCol] = MAZECELL.START; // Mark the start cell
         const total_row = 2 * this.height - 1;
         const total_col = 2 * this.width - 1;
         const probability = 0.5;
@@ -159,7 +174,7 @@ export default class Maze {
             for (let col = 2; col < total_col; col+=2) {
                 if (Math.random() < probability) { // Randomly decide whether to connect to the left
                     this.union(sets, [row, col], [row, col - 2]);
-                    this.mazeGrid[row][col - 1] = 1;
+                    this.mazeGrid[row][col - 1] = MAZECELL.PATH;
                 }
             }
 
@@ -177,14 +192,14 @@ export default class Maze {
                 for (let col of order) {
                     if (this.find(sets, [row, col]) !== this.find(sets, [row - 2, col])) {
                         this.union(sets, [row, col], [row - 2, col]);
-                        this.mazeGrid[row - 1][col] = 1;
+                        this.mazeGrid[row - 1][col] = MAZECELL.PATH;
                     }
                 }
             }
         }
 
         // Step 3: Mark the end of the maze
-        this.mazeGrid[2 * this.startRow][2 * this.startCol] = 2; // Mark the end cell
+        this.mazeGrid[2 * this.startRow][2 * this.startCol] = MAZECELL.WIN; // Mark the end cell
     }
     // 00 --> 00-02
     // 01 --> 03
@@ -198,22 +213,22 @@ export default class Maze {
         let cellMiddle = Math.floor(this.cellSize/2)
         for (let row=0; row<this.mazeGrid.length; row+=2) {
             for (let col=1; col<this.mazeGrid[0].length; col+=2) {
-                if (this.mazeGrid[row][col] === 1) {
+                if (this.mazeGrid[row][col] === MAZECELL.PATH) {
                     let visualRow = row/2 * (this.cellSize + 1) + Math.floor(this.cellSize/2);
                     let visualCol = Math.ceil(col/2) * this.cellSize + Math.floor(col/2);
                     for (let i=visualRow-cellMiddle; i<=visualRow+cellMiddle; i++) {
-                        this.mazeMap[i][visualCol] = 1;
+                        this.mazeMap[i][visualCol] = MAZECELL.PATH;
                     }
                 }
             }
         }
         for (let col=0; col<this.mazeGrid[0].length; col+=2) {
             for (let row=1; row<this.mazeGrid.length; row+=2) {
-                if (this.mazeGrid[row][col] === 1) {
+                if (this.mazeGrid[row][col] === MAZECELL.PATH) {
                     let visualRow = Math.ceil(row/2) * this.cellSize + Math.floor(row/2);
                     let visualCol = col/2 * (this.cellSize + 1) + Math.floor(this.cellSize/2);
                     for (let i=visualCol-cellMiddle; i<=visualCol+cellMiddle; i++) {
-                        this.mazeMap[visualRow][i] = 1;
+                        this.mazeMap[visualRow][i] = MAZECELL.PATH;
                     }
                 }
             }
@@ -221,9 +236,9 @@ export default class Maze {
 
         // 0 --> 0, 1 --> 2, 2 --> 4
         let [startX, startY] = this.convertToMap(this.startCol, this.startRow);
-        this.mazeMap[startY][startX] = 3;
+        this.mazeMap[startY][startX] = MAZECELL.START;
         let [endX, endY] = this.convertToMap(this.endCol, this.endRow);
-        this.mazeMap[endY][endX] = 2;
+        this.mazeMap[endY][endX] = MAZECELL.WIN;
         return;
     }
 
@@ -233,7 +248,7 @@ export default class Maze {
         for (let [dx, dy] of direction) {
             const newRow = dx + cell[0];
             const newCol = dy + cell[1];
-            if (newRow >= 0 && newRow < this.compilation.length && newCol >= 0 && newCol < this.compilation[0].length && this.compilation[newRow][newCol] === 0) {
+            if (newRow >= 0 && newRow < this.compilation.length && newCol >= 0 && newCol < this.compilation[0].length && this.compilation[newRow][newCol] === MAZECELL.WALL) {
                 neighbors.push([newRow, newCol]);
             }
         }
