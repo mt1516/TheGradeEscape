@@ -5,7 +5,7 @@ import Maze from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 
-export type Mode = 'default' | 'DBTW';
+export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface setting {
@@ -19,8 +19,40 @@ export interface setting {
     cellSize: number;
 };
 
+export class Mask {
+    public mask: THREE.Mesh;
+    constructor() {
+        const maskGeometry = new THREE.RingGeometry(10, 200);
+        const maskMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        maskMaterial.opacity = 0;
+        maskMaterial.transparent = true;
+        this.mask = new THREE.Mesh(maskGeometry, maskMaterial);
+        this.mask.position.set(0, 0, 10);
+        this.showMask();
+    }
+
+    public showMask() {
+        this.mask.material.opacity = 1;
+        return this.mask;
+    }
+
+    public thunder(probability: number=0.05) {
+        if (Math.random() < probability) {
+            this.mask.material.opacity = 0.9;
+        } else {
+            this.mask.material.opacity = 1;
+        }
+        return this.mask;
+    }
+
+    // public moveMask(x: number, y: number) {
+    //     this.mask.position.set(x, y, 10);
+    // }
+};
+
 export default class Game {
     private keyOrder: string[];
+    private gamemode: Mode;
     private gameSetting: setting;
     private maze: Maze;
     private scene: THREE.Scene;
@@ -30,11 +62,13 @@ export default class Game {
     private frameCount: number;
     private moveEveryNFrames: number;
     private animationFrameCount: number;
+    private maskPlayerView: Mask;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.scene = scene;
         this.camera = camera;
         this.sceneRender = sceneRender;
         this.keyOrder = [];
+        this.gamemode = mode;
         this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
@@ -45,6 +79,12 @@ export default class Game {
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
         this.scene.add(this.player.visual);
+        this.maskPlayerView = new Mask();
+        if (mode === 'DITD') {
+            this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+            this.maskPlayerView.showMask();
+            this.scene.add(this.maskPlayerView.mask);
+        }
     }
     
     public run() {
@@ -214,6 +254,8 @@ export default class Game {
             this.player.state.stop();
         }
         this.player.update();
+        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+        this.maskPlayerView.thunder();
         this.sceneRender.render(this.scene, this.camera);
     }
     
@@ -302,4 +344,5 @@ export default class Game {
         border.position.set(x, y, 3); // Adjust position
         this.scene.add(border);
     }
+    
 }
