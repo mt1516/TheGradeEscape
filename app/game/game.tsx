@@ -57,8 +57,8 @@ export class Mask {
 
 export default class Game {
     private keyOrder: string[];
-    private gamemode: Mode;
     private pumpedKey: string[];
+    private gamemode: Mode;
     private gameSetting: setting;
     private maze: Maze;
     private scene: THREE.Scene;
@@ -77,19 +77,20 @@ export default class Game {
         this.keyOrder = [];
         this.gamemode = mode;
         this.pumpedKey = [];
-        this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
+        this.gamemode = mode;
+        this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        this.player = new Player(mode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
+        this.player = new Player(this.gamemode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
         this.healthChangeCallbacks = new Set();
         this.scene.add(this.player.visual);
         this.maskPlayerView = new Mask();
-        if (mode === 'DITD') {
+        if (this.gamemode === 'DITD') {
             this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
             this.maskPlayerView.showMask();
             this.scene.add(this.maskPlayerView.mask);
@@ -113,15 +114,6 @@ export default class Game {
 
     public getPlayerHealth() {
         return this.player.getHealth();
-    }
-
-    // private updatePlayerHealth(newHealth: number) {
-    //     this.playerHealth = newHealth;
-    //     this.notifyHealthChange();
-    // }
-
-    private notifyHealthChange() {
-        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
 
     private renderMaze() {
@@ -288,7 +280,6 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        // this.player.update();
         let pumpWallFlag = this.player.update();
         this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
@@ -301,6 +292,10 @@ export default class Game {
             // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
         this.sceneRender.render(this.scene, this.camera);
+    }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
     
     private addBorder() {
@@ -324,10 +319,10 @@ export default class Game {
             this.addPillarBorderWall(this.maze.mazeMap.length, y, this.gameSetting.cellSize, true);
             this.addPillarBorderWall(-1, y, this.gameSetting.cellSize, true);
         }
-        this.addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, 1, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(-1 - cellMiddle, 1, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(this.maze.mazeMap.length, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(this.maze.mazeMap.length, 0, this.gameSetting.cellSize, true);
+        this.addEdgeBorderWall(-1, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(-1, 0, this.gameSetting.cellSize, true);
     }
 
     private addBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
@@ -376,16 +371,28 @@ export default class Game {
         this.scene.add(border);
     }
 
-    private addEdgeBorderWall(x: number, y: number, cellSize: number) {
-        let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
-        borderTexture.magFilter = THREE.NearestFilter;
-        borderTexture.minFilter = THREE.NearestFilter;
-        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
-        borderMaterial.transparent = true;
-        const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
-        const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 3); // Adjust position
-        this.scene.add(border);
+    private addEdgeBorderWall(x: number, y: number, cellSize: number, isBottom: boolean = false) {
+        if (isBottom) {
+            let borderTexture = new THREE.TextureLoader().load('/texture/border-edge-bottom.png');
+            borderTexture.magFilter = THREE.NearestFilter;
+            borderTexture.minFilter = THREE.NearestFilter;
+            const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+            borderMaterial.transparent = true;
+            const borderGeometry = new THREE.BoxGeometry(1, 3, 1);
+            const border = new THREE.Mesh(borderGeometry, borderMaterial);
+            border.position.set(x, y, 3); // Adjust position
+            this.scene.add(border);
+        } else {
+            let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
+            borderTexture.magFilter = THREE.NearestFilter;
+            borderTexture.minFilter = THREE.NearestFilter;
+            const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+            borderMaterial.transparent = true;
+            const borderGeometry = new THREE.BoxGeometry(1, 3, 1);
+            const border = new THREE.Mesh(borderGeometry, borderMaterial);
+            border.position.set(x, y, 3); // Adjust position
+            this.scene.add(border);
+        }
     }
     
 }
