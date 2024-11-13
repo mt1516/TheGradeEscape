@@ -287,11 +287,11 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        this.player.update();
+        // this.player.update();
+        let pumpWallFlag = this.player.update();
         this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         this.maskPlayerView.thunder();
-        let pumpWallFlag = this.player.update();
         if (pumpWallFlag) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
             // start the counting
