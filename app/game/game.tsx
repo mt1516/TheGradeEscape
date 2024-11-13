@@ -23,6 +23,7 @@ export interface setting {
 
 export class Mask {
     public mask: THREE.Mesh;
+    public needMask: boolean;
     public maskOnDuration: number;
     private hurtSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
     constructor() {
@@ -32,6 +33,7 @@ export class Mask {
         maskMaterial.transparent = true;
         this.mask = new THREE.Mesh(maskGeometry, maskMaterial);
         this.mask.position.set(0, 0, 10);
+        this.needMask = false;
         this.maskOnDuration = 0;
         this.showMask();
     }
@@ -120,6 +122,7 @@ export default class Game {
         if (mode === 'DITD') {
             this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
             this.maskPlayerView.showMask();
+            this.maskPlayerView.needMask = true;
             this.scene.add(this.maskPlayerView.mask);
         }
     }
@@ -313,9 +316,11 @@ export default class Game {
         }
         // this.player.update();
         let pumpWallFlag = this.player.update();
-        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
-        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
-        this.maskPlayerView.thunder();
+        if (this.maskPlayerView.needMask) {
+            this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+            this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
+            this.maskPlayerView.thunder();
+        }
         if (pumpWallFlag) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
             // start the counting
