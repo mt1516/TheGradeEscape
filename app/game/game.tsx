@@ -21,6 +21,7 @@ export interface setting {
 
 export class Mask {
     public mask: THREE.Mesh;
+    public maskOnDuration: number;
     constructor() {
         const maskGeometry = new THREE.RingGeometry(10, 200);
         const maskMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -28,6 +29,7 @@ export class Mask {
         maskMaterial.transparent = true;
         this.mask = new THREE.Mesh(maskGeometry, maskMaterial);
         this.mask.position.set(0, 0, 10);
+        this.maskOnDuration = 0;
         this.showMask();
     }
 
@@ -37,12 +39,15 @@ export class Mask {
     }
 
     public thunder(probability: number=0.05) {
+        if (this.maskOnDuration > 0) {
+            return;
+        }
         if (Math.random() < probability) {
-            this.mask.material.opacity = 0.9;
+            this.mask.material.opacity = 0.8
+            this.maskOnDuration = Math.floor(Math.random() * 3) + 1;
         } else {
             this.mask.material.opacity = 1;
         }
-        return this.mask;
     }
 
     // public moveMask(x: number, y: number) {
@@ -255,6 +260,7 @@ export default class Game {
         }
         this.player.update();
         this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         this.maskPlayerView.thunder();
         this.sceneRender.render(this.scene, this.camera);
     }
