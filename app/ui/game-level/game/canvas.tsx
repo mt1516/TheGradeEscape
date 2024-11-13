@@ -14,9 +14,6 @@ export default function Canvas(props: {
     const containerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            // for (let i = containerRef.current?.children.length ?? 0; i > 0; i--) {
-            //     containerRef.current?.removeChild(containerRef.current?.children[i - 1]);
-            // }
             sceneRender.setSize(window.innerWidth, window.innerHeight);
             containerRef.current?.appendChild(sceneRender.domElement);
             const game: Game = new Game(scene, camera, sceneRender, props.mode, props.difficulty);
