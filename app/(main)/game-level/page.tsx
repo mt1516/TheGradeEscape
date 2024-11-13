@@ -11,7 +11,7 @@ export default function Page() {
                 <div>
                     <div className="flex flex-row">
                         <div>
-                            course 1
+                            course 1 (DBTW)
                         </div>
                         <Link
                             href={{
@@ -51,12 +51,16 @@ export default function Page() {
                 <div>
                     <div className="flex flex-row">
                         <div>
-                            course 2
+                            course 2 (DITD)
                         </div>
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                query: { id: "3" }
+                                // query: { id: "3" }
+                                query: {
+                                    mode: "DITD",
+                                    difficulty: "easy"
+                                }
                             }}
                         >
                             Assignment
@@ -64,7 +68,11 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                query: { id: "4" }
+                                // query: { id: "4" }
+                                query: {
+                                    mode: "DITD",
+                                    difficulty: "medium"
+                                }
                             }}
                         >
                             Assignment
@@ -72,7 +80,11 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                query: { id: "5" }
+                                // query: { id: "5" }
+                                query: {
+                                    mode: "DITD",
+                                    difficulty: "hard"
+                                }
                             }}
                         >
                             Assignment

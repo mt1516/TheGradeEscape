@@ -70,4 +70,5 @@ export default class Player {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
     }
+    
 }

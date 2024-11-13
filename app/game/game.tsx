@@ -5,7 +5,7 @@ import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 
-export type Mode = 'default' | 'DBTW';
+export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 var hurtAnimiationResetFrame = 5;
@@ -21,8 +21,45 @@ export interface setting {
     cellSize: number;
 };
 
+export class Mask {
+    public mask: THREE.Mesh;
+    public maskOnDuration: number;
+    constructor() {
+        const maskGeometry = new THREE.RingGeometry(10, 200);
+        const maskMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        maskMaterial.opacity = 0;
+        maskMaterial.transparent = true;
+        this.mask = new THREE.Mesh(maskGeometry, maskMaterial);
+        this.mask.position.set(0, 0, 10);
+        this.maskOnDuration = 0;
+        this.showMask();
+    }
+
+    public showMask() {
+        this.mask.material.opacity = 1;
+        return this.mask;
+    }
+
+    public thunder(probability: number=0.05) {
+        if (this.maskOnDuration > 0) {
+            return;
+        }
+        if (Math.random() < probability) {
+            this.mask.material.opacity = 0.8
+            this.maskOnDuration = Math.floor(Math.random() * 3) + 1;
+        } else {
+            this.mask.material.opacity = 1;
+        }
+    }
+
+    // public moveMask(x: number, y: number) {
+    //     this.mask.position.set(x, y, 10);
+    // }
+};
+
 export default class Game {
     private keyOrder: string[];
+    private gamemode: Mode;
     private pumpedKey: string[];
     private gameSetting: setting;
     private maze: Maze;
@@ -33,6 +70,7 @@ export default class Game {
     private frameCount: number;
     private moveEveryNFrames: number;
     private animationFrameCount: number;
+    private maskPlayerView: Mask;
     private hurtAnimiationFrameCount: number;
     private hurtSound: THREE.Audio;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
@@ -40,6 +78,7 @@ export default class Game {
         this.camera = camera;
         this.sceneRender = sceneRender;
         this.keyOrder = [];
+        this.gamemode = mode;
         this.pumpedKey = [];
         this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
@@ -53,6 +92,12 @@ export default class Game {
         this.hurtAnimiationFrameCount = 0;
         this.hurtSound = new THREE.Audio(new THREE.AudioListener());
         this.scene.add(this.player.visual);
+        this.maskPlayerView = new Mask();
+        if (mode === 'DITD') {
+            this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+            this.maskPlayerView.showMask();
+            this.scene.add(this.maskPlayerView.mask);
+        }
     }
     
     public run() {
@@ -242,6 +287,10 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
+        this.player.update();
+        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
+        this.maskPlayerView.thunder();
         let pumpWallFlag = this.player.update();
         if (pumpWallFlag) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
@@ -339,4 +388,5 @@ export default class Game {
         border.position.set(x, y, 3); // Adjust position
         this.scene.add(border);
     }
+    
 }
