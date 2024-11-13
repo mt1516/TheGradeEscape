@@ -8,6 +8,8 @@ import settings from './settings.json';
 export type Mode = 'default' | 'DBTW';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+var hurtAnimiationResetFrame = 5;
+
 export interface setting {
     width: number;
     height: number;
@@ -31,6 +33,8 @@ export default class Game {
     private frameCount: number;
     private moveEveryNFrames: number;
     private animationFrameCount: number;
+    private hurtAnimiationFrameCount: number;
+    private hurtSound: THREE.Audio;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.scene = scene;
         this.camera = camera;
@@ -46,6 +50,8 @@ export default class Game {
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
+        this.hurtAnimiationFrameCount = 0;
+        this.hurtSound = new THREE.Audio(new THREE.AudioListener());
         this.scene.add(this.player.visual);
     }
     
@@ -187,6 +193,22 @@ export default class Game {
             this.update();
             
             this.frameCount = 0; // Reset the frame counter
+            if (this.hurtAnimiationFrameCount > 0) {
+                if (this.hurtAnimiationFrameCount == 1) {
+                    const audioLoader = new THREE.AudioLoader();
+                    audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
+                        this.hurtSound.setBuffer(buffer);
+                        this.hurtSound.setLoop(false);
+                        this.hurtSound.setVolume(1);
+                        this.hurtSound.play();
+                    });
+                }
+                this.hurtAnimiationFrameCount++;
+                if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
+                    this.hurtAnimiationFrameCount = 0;
+                    this.player.visual.material.color.setHex(0xffffff);
+                }
+            }
         }
         if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
             this.player.animate();
@@ -223,6 +245,9 @@ export default class Game {
         let pumpWallFlag = this.player.update();
         if (pumpWallFlag) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
+            // start the counting
+            this.player.visual.material.color.setHex(0xff0000);
+            this.hurtAnimiationFrameCount = 1;
             this.pumpedKey = [...this.keyOrder]
             this.keyOrder = [];
             // console.log(`after: keyOrder = ${this.keyOrder}`)

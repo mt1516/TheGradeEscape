@@ -40,6 +40,7 @@ export default class Player {
         if (this.state.isMove()) {
             let [[x, y], pumpWallFlag] = this.state.update();
             if (pumpWallFlag) {
+                this.visual.material.color.setHex(0xff0000);
                 return pumpWallFlag
             }
             this.visual.position.set(x, y, 2);
