@@ -69,6 +69,7 @@ export default class Game {
     private moveEveryNFrames: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask;
+    private healthChangeCallbacks: Set<(health: number) => void>;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.scene = scene;
         this.camera = camera;
@@ -85,6 +86,7 @@ export default class Game {
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
+        this.healthChangeCallbacks = new Set();
         this.scene.add(this.player.visual);
         this.maskPlayerView = new Mask();
         if (mode === 'DITD') {
@@ -100,6 +102,26 @@ export default class Game {
         this.keyboardControls();
         this.playerMovemoment();
         this.onWindowResize();
+    }
+
+    public subscribeToPlayerHealthChange(callback: (health: number) => void): () => void {
+        this.healthChangeCallbacks.add(callback);
+        return () => {
+            this.healthChangeCallbacks.delete(callback);
+        };
+    }
+
+    public getPlayerHealth() {
+        return this.player.getHealth();
+    }
+
+    // private updatePlayerHealth(newHealth: number) {
+    //     this.playerHealth = newHealth;
+    //     this.notifyHealthChange();
+    // }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
 
     private renderMaze() {
@@ -273,6 +295,7 @@ export default class Game {
         this.maskPlayerView.thunder();
         if (pumpWallFlag) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
+            this.notifyHealthChange()
             this.pumpedKey = [...this.keyOrder]
             this.keyOrder = [];
             // console.log(`after: keyOrder = ${this.keyOrder}`)

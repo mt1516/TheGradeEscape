@@ -41,6 +41,10 @@ export default class Player {
         return player
     }
 
+    public getHealth() {
+        return this.state.getHealth();
+    }
+
     public update(): boolean {
         this.animate();
         if (this.hurtAnimiationFrameCount > 0) {
@@ -91,5 +95,4 @@ export default class Player {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
     }
-    
 }

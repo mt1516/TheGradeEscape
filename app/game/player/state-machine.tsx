@@ -62,6 +62,10 @@ export default class StateMachine {
         return this.direction;
     }
 
+    public getHealth() {
+        return this.health;
+    }
+
     public checkWin() {
         if (this.currentHitboxCoordinate[0] === this.endCoordinate[0] && this.currentHitboxCoordinate[1] === this.endCoordinate[1]) {
             this.state = STATE.WIN;
@@ -124,12 +128,12 @@ export default class StateMachine {
         let [hitboxCoordinate, renderCoordinate] = this.getNextCoordinate()
         var pumpWallFlag = false;
         if (this.isValidMove(hitboxCoordinate)) {
-            console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
+            // console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.currentHitboxCoordinate = hitboxCoordinate;
             this.currentRenderCoordinate = renderCoordinate;
             return [renderCoordinate, pumpWallFlag];
         } else {
-            console.log("invalid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
+            // console.log("invalid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             pumpWallFlag = this.pumpWallCheck();
         }
         // }
@@ -183,14 +187,14 @@ export default class StateMachine {
         let left = hitboxCoordinate[0] - halfHitbox;
         let right = hitboxCoordinate[0] + halfHitbox;
         if (!this.inBound(left, right, hitboxCoordinate[1])) {
-            console.log("out of bound")
+            // console.log("out of bound")
             return false;
         }
         for (let x = left; x <= right; x++) {
             if (!this.isValidPath(x, hitboxCoordinate[1])) {
-                console.log("wall")
-                console.log("x, y = ", x, hitboxCoordinate[1])
-                console.log("mazeMap = ", this.mazeMap)
+                // console.log("wall")
+                // console.log("x, y = ", x, hitboxCoordinate[1])
+                // console.log("mazeMap = ", this.mazeMap)
                 return false;
             }
         }
