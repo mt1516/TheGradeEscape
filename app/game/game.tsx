@@ -1,12 +1,14 @@
 "use client";
 
 import * as THREE from 'three';
-import Maze from './maze-generator';
+import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 
 export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
+
+var hurtAnimiationResetFrame = 5;
 
 export interface setting {
     width: number;
@@ -58,6 +60,7 @@ export class Mask {
 export default class Game {
     private keyOrder: string[];
     private gamemode: Mode;
+    private pumpedKey: string[];
     private gameSetting: setting;
     private maze: Maze;
     private scene: THREE.Scene;
@@ -68,21 +71,26 @@ export default class Game {
     private moveEveryNFrames: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask;
+    private hurtAnimiationFrameCount: number;
+    private hurtSound: THREE.Audio;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.scene = scene;
         this.camera = camera;
         this.sceneRender = sceneRender;
         this.keyOrder = [];
         this.gamemode = mode;
+        this.pumpedKey = [];
         this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
+        this.player = new Player(mode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
+        this.hurtAnimiationFrameCount = 0;
+        this.hurtSound = new THREE.Audio(new THREE.AudioListener());
         this.scene.add(this.player.visual);
         this.maskPlayerView = new Mask();
         if (mode === 'DITD') {
@@ -109,25 +117,25 @@ export default class Game {
         this.maze.mazeMap.forEach((row, y) => {
             row.forEach((cell, x) => {
                 switch (cell) {
-                    case 0: // Wall
+                    case MAZECELL.WALL:
                         const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const wall = new THREE.Mesh(wallGeometry, wallMaterial);
                         wall.position.set(x, y, 0);
                         this.scene.add(wall);
                         break;
-                    case 1:
+                    case MAZECELL.PATH:
                         const pathGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const path = new THREE.Mesh(pathGeometry, pathMaterial);
                         path.position.set(x, y, 0);
                         this.scene.add(path);
                         break;
-                    case 2:
+                    case MAZECELL.WIN:
                         const winGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const win = new THREE.Mesh(winGeometry, winMaterial);
                         win.position.set(x, y, 0); // Adjust position
                         this.scene.add(win);
                         break;
-                    case 3:
+                    case MAZECELL.START:
                         const startGeometry = new THREE.BoxGeometry(1, 1, 1);
                         const start = new THREE.Mesh(startGeometry, startMaterial);
                         start.position.set(x, y, 0); // Adjust position
@@ -162,25 +170,25 @@ export default class Game {
             switch (event.key) {
                 case 'ArrowUp':
                 case 'w':
-                    if (this.keyOrder.indexOf('up') === -1) {
+                    if (this.keyOrder.indexOf('up') === -1 && this.pumpedKey.indexOf('up') === -1) {
                         this.keyOrder.push('up');
                     }
                     break;
                 case 'ArrowRight':
                 case 'd':
-                    if (this.keyOrder.indexOf('right') === -1) {
+                    if (this.keyOrder.indexOf('right') === -1 && this.pumpedKey.indexOf('right') === -1) {
                         this.keyOrder.push('right');
                     }
                     break;
                 case 'ArrowDown':
                 case 's':
-                    if (this.keyOrder.indexOf('down') === -1) {
+                    if (this.keyOrder.indexOf('down') === -1 && this.pumpedKey.indexOf('down') === -1) {
                         this.keyOrder.push('down');
                     }
                     break;
                 case 'ArrowLeft':
                 case 'a':
-                    if (this.keyOrder.indexOf('left') === -1) {
+                    if (this.keyOrder.indexOf('left') === -1 && this.pumpedKey.indexOf('left') === -1) {
                         this.keyOrder.push('left');
                     }
                     break;
@@ -191,19 +199,23 @@ export default class Game {
                 case 'ArrowUp':
                 case 'w':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'up');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'up');
                     break;
                 
                 case 'ArrowRight':
                 case 'd':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'right');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'right');
                     break;
                 case 'ArrowDown':
                 case 's':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'down');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'down');
                     break;
                 case 'ArrowLeft':
                 case 'a':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'left');
+                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'left');
                     break;
             }
         }, false);
@@ -218,6 +230,7 @@ export default class Game {
             this.player.state.checkWin();
             if (this.player.state.isWin()) {
                 this.player.state.reset();
+                // TODO: Chnage this to popup
                 alert('You win!');
                 window.location.href = '/game-level'; // Redirect to the home page
                 return;
@@ -225,6 +238,22 @@ export default class Game {
             this.update();
             
             this.frameCount = 0; // Reset the frame counter
+            if (this.hurtAnimiationFrameCount > 0) {
+                if (this.hurtAnimiationFrameCount == 1) {
+                    const audioLoader = new THREE.AudioLoader();
+                    audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
+                        this.hurtSound.setBuffer(buffer);
+                        this.hurtSound.setLoop(false);
+                        this.hurtSound.setVolume(1);
+                        this.hurtSound.play();
+                    });
+                }
+                this.hurtAnimiationFrameCount++;
+                if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
+                    this.hurtAnimiationFrameCount = 0;
+                    this.player.visual.material.color.setHex(0xffffff);
+                }
+            }
         }
         if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
             this.player.animate();
@@ -262,6 +291,16 @@ export default class Game {
         this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         this.maskPlayerView.thunder();
+        let pumpWallFlag = this.player.update();
+        if (pumpWallFlag) {
+            // console.log(`before: keyOrder = ${this.keyOrder}`)
+            // start the counting
+            this.player.visual.material.color.setHex(0xff0000);
+            this.hurtAnimiationFrameCount = 1;
+            this.pumpedKey = [...this.keyOrder]
+            this.keyOrder = [];
+            // console.log(`after: keyOrder = ${this.keyOrder}`)
+        }
         this.sceneRender.render(this.scene, this.camera);
     }
     
@@ -318,7 +357,6 @@ export default class Game {
     private addPillarBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
         var borderTexture, borderGeometry;
         if (isVertical) {
-            // console.log("vertical");
             borderTexture = new THREE.TextureLoader().load('/texture/border-pillar-vertical.png');
             borderGeometry = new THREE.BoxGeometry(1, 1, 1);
         } else {
