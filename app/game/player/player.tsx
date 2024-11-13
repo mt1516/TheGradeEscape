@@ -68,7 +68,7 @@ export default class Player {
                 });
                 return pumpWallFlag
             }
-            this.visual.position.set(x, y, 2);
+            this.visual.position.set(x, y, 3);
         }
         return false;
     }

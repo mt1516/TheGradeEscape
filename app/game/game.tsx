@@ -304,12 +304,12 @@ export default class Game {
         for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize + cellMiddle) {
             this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
             if (x != cellMiddle) {
-                this.addBorderWall(x, -0.3, this.gameSetting.cellSize, false, true);
+                this.addBorderWall(x, 0, this.gameSetting.cellSize, false, true);
             }
         }
         for (let x=this.gameSetting.cellSize; x<this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize+1) {
             this.addPillarBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-            this.addPillarBorderWall(x, -0.3, this.gameSetting.cellSize, false, true);
+            this.addPillarBorderWall(x, 0, this.gameSetting.cellSize, false, true);
         }
         for (let y=this.gameSetting.cellSize + cellMiddle; y<this.maze.mazeMap.length; y+=this.gameSetting.cellSize + cellMiddle) {
             this.addBorderWall(this.maze.mazeMap.length, y, this.gameSetting.cellSize, true);
@@ -320,9 +320,9 @@ export default class Game {
             this.addPillarBorderWall(-1, y, this.gameSetting.cellSize, true);
         }
         this.addEdgeBorderWall(this.maze.mazeMap.length, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(this.maze.mazeMap.length, 0, this.gameSetting.cellSize, true);
+        this.addEdgeBorderWall(this.maze.mazeMap.length, 0.2, this.gameSetting.cellSize, true);
         this.addEdgeBorderWall(-1, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(-1, 0, this.gameSetting.cellSize, true);
+        this.addEdgeBorderWall(-1, 0.2, this.gameSetting.cellSize, true);
     }
 
     private addBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
@@ -344,7 +344,11 @@ export default class Game {
         const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
         borderMaterial.transparent = true;
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 3); // Adjust position
+        if (isBottom) {
+            border.position.set(x, y, 5); // Adjust position
+        } else {
+            border.position.set(x, y, 1); // Adjust position
+        }
         this.scene.add(border);
     }
 
@@ -367,7 +371,11 @@ export default class Game {
         const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
         borderMaterial.transparent = true;
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 3); // Adjust position
+        if (isBottom) {
+            border.position.set(x, y, 5); // Adjust position
+        } else {
+            border.position.set(x, y, 1); // Adjust position
+        }
         this.scene.add(border);
     }
 
@@ -378,9 +386,9 @@ export default class Game {
             borderTexture.minFilter = THREE.NearestFilter;
             const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
             borderMaterial.transparent = true;
-            const borderGeometry = new THREE.BoxGeometry(1, 3, 1);
+            const borderGeometry = new THREE.BoxGeometry(1, 2.5, 1);
             const border = new THREE.Mesh(borderGeometry, borderMaterial);
-            border.position.set(x, y, 3); // Adjust position
+            border.position.set(x, y, 5); // Adjust position
             this.scene.add(border);
         } else {
             let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
@@ -390,7 +398,7 @@ export default class Game {
             borderMaterial.transparent = true;
             const borderGeometry = new THREE.BoxGeometry(1, 3, 1);
             const border = new THREE.Mesh(borderGeometry, borderMaterial);
-            border.position.set(x, y, 3); // Adjust position
+            border.position.set(x, y, 1); // Adjust position
             this.scene.add(border);
         }
     }
