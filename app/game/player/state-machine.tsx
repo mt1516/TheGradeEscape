@@ -27,7 +27,7 @@ export default class StateMachine {
     private mazeMap: number[][];
     private characterSize: number[];
     private hitboxWidth: number;
-    private pumpWallFlag: boolean;
+    private bumpWallFlag: boolean;
     private currentHitboxCoordinate: number[];
     private currentRenderCoordinate: number[];
     private endCoordinate: number[];
@@ -38,7 +38,7 @@ export default class StateMachine {
         this.mazeMap = mazeMap;
         this.characterSize = characterSize;
         this.hitboxWidth = hitboxWidth;
-        this.pumpWallFlag = false;
+        this.bumpWallFlag = false;
         this.currentHitboxCoordinate = currentHitboxCoordinate;
         this.currentRenderCoordinate = [currentHitboxCoordinate[0], currentHitboxCoordinate[1] + Math.floor(this.characterSize[1] / 2)];
         this.endCoordinate = endCoordinate;
@@ -62,8 +62,8 @@ export default class StateMachine {
         return this.health;
     }
 
-    public getPumpWallFlag() {
-        return this.pumpWallFlag;
+    public getbumpWallFlag() {
+        return this.bumpWallFlag;
     }
 
     public checkWin() {
@@ -129,13 +129,13 @@ export default class StateMachine {
             return renderCoordinate;
         } else {
             // console.log("invalid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
-            this.pumpWallFlag = true;
+            this.bumpWallFlag = true;
         }
         return this.currentRenderCoordinate;
     }
 
-    public pumpWallUpdate(){
-        this.pumpWallFlag = false;
+    public bumpWallUpdate(){
+        this.bumpWallFlag = false;
         this.health -= 1;
         this.stop();
         if (this.health === 0) {

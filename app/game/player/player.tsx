@@ -53,7 +53,7 @@ export default class Player {
         }
     }
 
-    public pumpWallUpdate(): boolean {
+    public bumpWallUpdate(): boolean {
         if (this.hurtAnimiationFrameCount > 0) {
             this.hurtAnimiationFrameCount++;
             if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
@@ -62,9 +62,9 @@ export default class Player {
             }
             return false;
         }
-        let flag = this.state.getPumpWallFlag()
+        let flag = this.state.getbumpWallFlag()
         if (flag && this.hurtAnimiationFrameCount === 0) {
-            this.state.pumpWallUpdate();
+            this.state.bumpWallUpdate();
             this.visual.material.color.setHex(0xff0000);
             this.hurtAnimiationFrameCount = 1;
             const audioLoader = new THREE.AudioLoader();
