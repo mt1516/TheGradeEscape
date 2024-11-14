@@ -28,10 +28,12 @@ export default class StateMachine {
     private characterSize: number[];
     private hitboxWidth: number;
     private bumpWallFlag: boolean;
+    private steps: number;
+    private limitedSteps: number;
     private currentHitboxCoordinate: number[];
     private currentRenderCoordinate: number[];
     private endCoordinate: number[];
-    constructor(mazeMap: number[][], characterSize: number[], hitboxWidth: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
+    constructor(mazeMap: number[][], characterSize: number[], hitboxWidth: number, limitedSteps: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
         this.state = STATE.IDLE;
         this.direction = DIRECTION.IDLE;
         this.health = 3;
@@ -39,6 +41,8 @@ export default class StateMachine {
         this.characterSize = characterSize;
         this.hitboxWidth = hitboxWidth;
         this.bumpWallFlag = false;
+        this.steps = 0;
+        this.limitedSteps = limitedSteps;
         this.currentHitboxCoordinate = currentHitboxCoordinate;
         this.currentRenderCoordinate = [currentHitboxCoordinate[0], currentHitboxCoordinate[1] + Math.floor(this.characterSize[1] / 2)];
         this.endCoordinate = endCoordinate;
@@ -141,6 +145,15 @@ export default class StateMachine {
         if (this.health === 0) {
             this.state = STATE.DEAD
         }
+    }
+    
+    public limitedStepsCheck(): boolean {
+        this.steps += 1;
+        if (this.steps >= this.limitedSteps) {
+            this.state = STATE.DEAD;
+            return true;
+        }
+        return false;
     }
 
     private getNextCoordinate(): [number[], number[]] {

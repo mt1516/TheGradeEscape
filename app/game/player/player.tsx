@@ -14,12 +14,11 @@ export default class Player {
     private tilesVertical: number;
     private hurtAnimiationFrameCount: number;
     private hurtSound: THREE.Audio;
-    private limitedSteps: number;
-    constructor(gamemode: Mode, characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
+    constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
         this.tilesVertical = 4;
-        this.state = new StateMachine(mazeMap, characterSize, hitboxWidth, mapStartCoord, mapEndCoord);
+        this.state = new StateMachine(mazeMap, characterSize, hitboxWidth, limitedSteps, mapStartCoord, mapEndCoord);
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.leftX, this.rightP, this.topP, this.bottomY);
         this.visual = this.renderPlayer();
         this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 2);
