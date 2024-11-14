@@ -15,7 +15,9 @@ export default function Canvas(props: {
     sceneRender.setClearColor(0x000000);
     sceneRender.setClearAlpha(0);
 
-    const [playerHealth, setPlayerHealth] = useState(3);
+    const [playerHealth, setPlayerHealth] = useState(0);
+    const [playerSteps, setPlayerSteps] = useState(0);
+    const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const game: Game = new Game(scene, camera, sceneRender, props.mode, props.difficulty);
@@ -30,21 +32,46 @@ export default function Canvas(props: {
                     game.resizeWindow([(2 * window.innerWidth / 3), window.innerHeight])
                 }
             };
-
             window.addEventListener('resize', handleResize);
-            game.run();
 
-            const unsubscribe = game.subscribeToPlayerHealthChange((health) => {
-                setPlayerHealth(health);
-                console.log("player health = ", health);
-            });
+            let unsubscribeToHealthChange: () => void;
+            let unsubscribeToMazeSolutionLengthChange: () => void;
+            let unsubscribeToPlayerStepsChange: () => void;
+
+            switch (props.mode) {
+                case 'DBTW':
+                    unsubscribeToHealthChange = game.subscribeToPlayerHealthChange((health) => {
+                        setPlayerHealth(health);
+                    });
+                    break;
+                case 'DTWS':
+                    unsubscribeToMazeSolutionLengthChange = game.subscribeToMazeSolutionLengthChange((length) => {
+                        setMazeSolutionLength(length);
+                    });
+                    unsubscribeToPlayerStepsChange = game.subscribeToPlayerStepsChange((steps) => {
+                        setPlayerSteps(steps);
+                    });
+                    break;
+            }
+
+            game.run();
             return () => {
+                game.end();
                 window.removeEventListener('resize', handleResize);
-                unsubscribe();
+                switch (props.mode) {
+                    case 'DBTW':
+                        unsubscribeToHealthChange();
+                        break;
+                    case 'DTWS':
+                        unsubscribeToMazeSolutionLengthChange();
+                        unsubscribeToPlayerStepsChange();
+                        break;
+                }
                 scene.clear();
                 sceneRender.dispose();
                 camera.clear();
                 containerRef.current?.removeChild(sceneRender.domElement);
+                gameRef.current = null;
             }
         }
     }, []);
@@ -89,9 +116,18 @@ export default function Canvas(props: {
                             Character:
                         </div>
                         <div className="m-5">
-                            Health:
-                            <div className='flex flex-row'>
-                                {renderHearts()}
+                            Player status:
+                            <div className="m-2">
+                                Health:
+                                <div className='flex flex-row'>
+                                    {renderHearts()}
+                                </div>
+                            </div>
+                            <div className="m-2">
+                                Player steps/ Maze solution length:
+                                <div className='flex flex-row'>
+                                    {playerSteps}/{mazeSolutionLength}
+                                </div>
                             </div>
                         </div>
                     </div>

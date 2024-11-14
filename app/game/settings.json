@@ -11,7 +11,6 @@
             "cellSize": 3
         }
     },
-    
     "DBTW": {
         "easy": {
             "width": 10,
@@ -23,7 +22,6 @@
             "complexity": 0,
             "cellSize": 3
         },
-
         "medium": {
             "width": 15,
             "height": 15,
@@ -34,7 +32,6 @@
             "complexity": 1,
             "cellSize": 3
         },
-
         "hard": {
             "width": 20,
             "height": 20,
@@ -45,9 +42,7 @@
             "complexity": 2,
             "cellSize": 3
         }
-
     },
-    
     "DITD": {
         "easy": {
             "width": 10,
@@ -59,7 +54,6 @@
             "complexity": 0,
             "cellSize": 3
         },
-
         "medium": {
             "width": 15,
             "height": 15,
@@ -70,7 +64,6 @@
             "complexity": 1,
             "cellSize": 3
         },
-
         "hard": {
             "width": 20,
             "height": 20,
@@ -81,6 +74,37 @@
             "complexity": 2,
             "cellSize": 3
         }
-
+    },
+    "DTWS": {
+        "easy": {
+            "width": 10,
+            "height": 10,
+            "startRow": 0,
+            "startCol": 0,
+            "endRow": 9,
+            "endCol": 9,
+            "complexity": 0,
+            "cellSize": 3
+        },
+        "medium": {
+            "width": 15,
+            "height": 15,
+            "startRow": 0,
+            "startCol": 0,
+            "endRow": 14,
+            "endCol": 14,
+            "complexity": 1,
+            "cellSize": 3
+        },
+        "hard": {
+            "width": 20,
+            "height": 20,
+            "startRow": 0,
+            "startCol": 0,
+            "endRow": 19,
+            "endCol": 19,
+            "complexity": 2,
+            "cellSize": 3
+        }
     }
 }

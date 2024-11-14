@@ -5,11 +5,12 @@ import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 
-export type Mode = 'default' | 'DBTW' | 'DITD';
+export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
-    ['DITD', 'Dancing In The Dark']
+    ['DITD', 'Dancing In The Dark'],
+    ['DTWS', 'Don\'t Take Wrong Steps'],
 ]);
 
 export interface setting {
@@ -41,7 +42,7 @@ export class Mask {
     }
 
     public showMask() {
-        this.mask.material.opacity = 1;
+        (this.mask.material as THREE.Material).opacity = 1;
         return this.mask;
     }
 
@@ -50,7 +51,7 @@ export class Mask {
             return;
         }
         if (Math.random() < probability) {
-            this.mask.material.opacity = 0.8
+            (this.mask.material as THREE.Material).opacity = 0.8
             this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
             const audioLoader = new THREE.AudioLoader();
             if (this.maskOnDuration <= 2) {
@@ -76,7 +77,7 @@ export class Mask {
                 });
             }
         } else {
-            this.mask.material.opacity = 1;
+            (this.mask.material as THREE.Material).opacity = 1;
         }
     }
 
@@ -94,13 +95,19 @@ export default class Game {
     private gamemode: Mode;
     private gameSetting: setting;
     private maze: Maze;
+    private mazeSolutionLength: number;
     private player: Player;
     private frameCount: number;
     private moveEveryNFrames: number;
     private animationFrameCount: number;
-    private maskPlayerView: Mask;
-    private healthChangeCallbacks: Set<(health: number) => void>;
+    private maskPlayerView: Mask | null;
+    private mazeSolutionLengthCallbacks: Set<(length: number) => void> | null;
+    private playerStepsCallbacks: Set<(steps: number) => void> | null;
+    private healthChangeCallbacks: Set<(health: number) => void> | null;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
+        this.frameCount = 0;
+        this.moveEveryNFrames = 5;
+        this.animationFrameCount = 0;
         this.scene = scene;
         this.camera = camera;
         this.sceneRender = sceneRender;
@@ -110,22 +117,37 @@ export default class Game {
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
+        this.mazeSolutionLength = -1;
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        this.player = new Player(this.gamemode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
-        this.frameCount = 0;
-        this.moveEveryNFrames = 5;
-        this.animationFrameCount = 0;
-        this.healthChangeCallbacks = new Set();
-        this.scene.add(this.player.visual);
-        this.maskPlayerView = new Mask();
-        if (this.gamemode === 'DITD') {
-            this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
-            this.maskPlayerView.showMask();
-            this.maskPlayerView.needMask = true;
-            this.scene.add(this.maskPlayerView.mask);
+        let [startX, startY] = this.maze.getStartOfMap();
+        this.maskPlayerView = null;
+        this.mazeSolutionLengthCallbacks = null;
+        this.playerStepsCallbacks = null;
+        this.healthChangeCallbacks = null;
+        let limitedSteps = -1;
+        switch (this.gamemode) {
+            case 'DBTW':
+                this.healthChangeCallbacks = new Set();
+                break;
+            case 'DITD':
+                this.maskPlayerView = new Mask();
+                this.maskPlayerView.mask.position.set(startX, startY, 10);
+                this.maskPlayerView.showMask();
+                this.maskPlayerView.needMask = true;
+                this.scene.add(this.maskPlayerView.mask);
+                break;
+            case 'DTWS':
+                this.mazeSolutionLength = this.maze.getLengthOfSolution();
+                limitedSteps = Math.ceil(this.mazeSolutionLength * 1.3);
+                this.mazeSolutionLengthCallbacks = new Set();
+                this.playerStepsCallbacks = new Set();
+                break;
         }
+        this.renderMaze();
+        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, limitedSteps);
+        this.scene.add(this.player.visual);
     }
 
     public resizeWindow(windowSize: number[]) {
@@ -147,20 +169,68 @@ export default class Game {
     }
     
     public run() {
-        this.renderMaze();
+        switch (this.gamemode) {
+            case 'DBTW':
+                this.notifyHealthChange();
+                break;
+            case 'DITD':
+                break;
+            case 'DTWS':
+                this.notifytMazeSolutionLengthChange();
+                this.notifyPlayerStepsChange();
+                break;
+        }
         this.keyboardControls();
         this.playerMovemoment();
     }
 
+    public end() {
+        switch (this.gamemode) {
+            case 'DBTW':
+                this.healthChangeCallbacks?.clear();
+                break;
+            case 'DITD':
+                break;
+            case 'DTWS':
+                this.mazeSolutionLengthCallbacks?.clear();
+                this.playerStepsCallbacks?.clear();
+                break;
+        }
+        window.removeEventListener('keydown', () => {});
+        window.removeEventListener('keyup', () => {});
+    }
+
     public subscribeToPlayerHealthChange(callback: (health: number) => void): () => void {
-        this.healthChangeCallbacks.add(callback);
+        this.healthChangeCallbacks?.add(callback);
         return () => {
-            this.healthChangeCallbacks.delete(callback);
+            this.healthChangeCallbacks?.delete(callback);
         };
     }
 
-    public getPlayerHealth() {
-        return this.player.getHealth();
+    public subscribeToMazeSolutionLengthChange(callback: (length: number) => void): () => void {
+        this.mazeSolutionLengthCallbacks?.add(callback);
+        return () => {
+            this.mazeSolutionLengthCallbacks?.delete(callback);
+        };
+    }
+
+    public subscribeToPlayerStepsChange(callback: (steps: number) => void): () => void {
+        this.playerStepsCallbacks?.add(callback);
+        return () => {
+            this.playerStepsCallbacks?.delete(callback);
+        };
+    }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks?.forEach((callback) => callback(this.player.state.getHealth()));
+    }
+
+    private notifytMazeSolutionLengthChange() {
+        this.mazeSolutionLengthCallbacks?.forEach((callback) => callback(this.mazeSolutionLength));
+    }
+
+    private notifyPlayerStepsChange() {
+        this.playerStepsCallbacks?.forEach((callback) => callback(this.player.state.getSteps()));
     }
 
     private renderMaze() {
@@ -200,10 +270,6 @@ export default class Game {
             });
         });
         this.addBorder();
-    }
-
-    private getFrustumSize() {
-        return Math.max(this.gameSetting.width, this.gameSetting.height) * 1.48 * this.gameSetting.cellSize;
     }
 
     private keyboardControls() {
@@ -310,11 +376,8 @@ export default class Game {
         this.player.update();
         this.bumpWallUpdate();
         this.darkModeUpdate();
+        this.limitedStepsUpdate();
         this.sceneRender.render(this.scene, this.camera);
-    }
-
-    private notifyHealthChange() {
-        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
 
     private bumpWallUpdate() {
@@ -334,9 +397,28 @@ export default class Game {
         if (this.gamemode !== 'DITD') {
             return;
         }
-        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
-        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
-        this.maskPlayerView.thunder();
+        this.maskPlayerView?.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+        if (this.maskPlayerView) {
+            this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
+        }
+        this.maskPlayerView?.thunder();
+    }
+
+    private limitedStepsUpdate() {
+        if (this.gamemode !== 'DTWS') {
+            return;
+        }
+        if (this.player.state.isStop()) {
+            this.notifyPlayerStepsChange();
+            return;
+        }
+        if (this.player.limitedStepsUpdate()) {
+            this.notifyPlayerStepsChange();
+        }
+    }
+
+    private getFrustumSize() {
+        return Math.max(this.gameSetting.width, this.gameSetting.height) * 1.48 * this.gameSetting.cellSize;
     }
     
     private addBorder() {
@@ -443,5 +525,4 @@ export default class Game {
             this.scene.add(border);
         }
     }
-    
 }

@@ -28,10 +28,13 @@ export default class StateMachine {
     private characterSize: number[];
     private hitboxWidth: number;
     private bumpWallFlag: boolean;
+    private movedFlag: boolean
+    private steps: number;
+    private limitedSteps: number;
     private currentHitboxCoordinate: number[];
     private currentRenderCoordinate: number[];
     private endCoordinate: number[];
-    constructor(mazeMap: number[][], characterSize: number[], hitboxWidth: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
+    constructor(mazeMap: number[][], characterSize: number[], hitboxWidth: number, limitedSteps: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
         this.state = STATE.IDLE;
         this.direction = DIRECTION.IDLE;
         this.health = 3;
@@ -39,6 +42,9 @@ export default class StateMachine {
         this.characterSize = characterSize;
         this.hitboxWidth = hitboxWidth;
         this.bumpWallFlag = false;
+        this.movedFlag = false;
+        this.steps = 0;
+        this.limitedSteps = limitedSteps;
         this.currentHitboxCoordinate = currentHitboxCoordinate;
         this.currentRenderCoordinate = [currentHitboxCoordinate[0], currentHitboxCoordinate[1] + Math.floor(this.characterSize[1] / 2)];
         this.endCoordinate = endCoordinate;
@@ -62,6 +68,10 @@ export default class StateMachine {
         return this.health;
     }
 
+    public getSteps() {
+        return this.steps;
+    }
+
     public getbumpWallFlag() {
         return this.bumpWallFlag;
     }
@@ -74,6 +84,10 @@ export default class StateMachine {
 
     public isMove() {
         return (this.state === STATE.MOVE);
+    }
+
+    public isStop() {
+        return (this.state === STATE.IDLE);
     }
 
     public isWin() {
@@ -126,21 +140,37 @@ export default class StateMachine {
             // console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.currentHitboxCoordinate = hitboxCoordinate;
             this.currentRenderCoordinate = renderCoordinate;
+            this.movedFlag = true;
             return renderCoordinate;
         } else {
             // console.log("invalid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.bumpWallFlag = true;
         }
+        this.movedFlag = false;
         return this.currentRenderCoordinate;
     }
 
-    public bumpWallUpdate(){
+    public bumpWallUpdate() {
         this.bumpWallFlag = false;
         this.health -= 1;
         this.stop();
         if (this.health === 0) {
             this.state = STATE.DEAD
         }
+    }
+    
+    public limitedStepsUpdate(): boolean {
+        if (this.isMove() && this.movedFlag) {
+            this.steps += 1;
+            // Avoid overflowing the opengl context
+            if (this.steps % 5 === 0) {
+                return true;
+            }
+        }
+        if (this.steps >= this.limitedSteps) {
+            this.state = STATE.DEAD;
+        }
+        return false;
     }
 
     private getNextCoordinate(): [number[], number[]] {
@@ -177,14 +207,10 @@ export default class StateMachine {
         let left = hitboxCoordinate[0] - halfHitbox;
         let right = hitboxCoordinate[0] + halfHitbox;
         if (!this.inBound(left, right, hitboxCoordinate[1])) {
-            // console.log("out of bound")
             return false;
         }
         for (let x = left; x <= right; x++) {
             if (!this.isValidPath(x, hitboxCoordinate[1])) {
-                // console.log("wall")
-                // console.log("x, y = ", x, hitboxCoordinate[1])
-                // console.log("mazeMap = ", this.mazeMap)
                 return false;
             }
         }
