@@ -28,6 +28,7 @@ export default class StateMachine {
     private characterSize: number[];
     private hitboxWidth: number;
     private bumpWallFlag: boolean;
+    private movedFlag: boolean
     private steps: number;
     private limitedSteps: number;
     private currentHitboxCoordinate: number[];
@@ -41,6 +42,7 @@ export default class StateMachine {
         this.characterSize = characterSize;
         this.hitboxWidth = hitboxWidth;
         this.bumpWallFlag = false;
+        this.movedFlag = false;
         this.steps = 0;
         this.limitedSteps = limitedSteps;
         this.currentHitboxCoordinate = currentHitboxCoordinate;
@@ -130,15 +132,17 @@ export default class StateMachine {
             // console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.currentHitboxCoordinate = hitboxCoordinate;
             this.currentRenderCoordinate = renderCoordinate;
+            this.movedFlag = true;
             return renderCoordinate;
         } else {
             // console.log("invalid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.bumpWallFlag = true;
         }
+        this.movedFlag = false;
         return this.currentRenderCoordinate;
     }
 
-    public bumpWallUpdate(){
+    public bumpWallUpdate() {
         this.bumpWallFlag = false;
         this.health -= 1;
         this.stop();
@@ -147,13 +151,14 @@ export default class StateMachine {
         }
     }
     
-    public limitedStepsCheck(): boolean {
-        this.steps += 1;
+    public limitedStepsUpdate() {
+        if (this.isMove() && this.movedFlag) {
+            console.log("this.steps = ", this.steps)
+            this.steps += 1;
+        }
         if (this.steps >= this.limitedSteps) {
             this.state = STATE.DEAD;
-            return true;
         }
-        return false;
     }
 
     private getNextCoordinate(): [number[], number[]] {

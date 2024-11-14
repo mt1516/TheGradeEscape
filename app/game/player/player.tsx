@@ -85,6 +85,10 @@ export default class Player {
         return flag;
     }
 
+    public limitedStepsUpdate() {
+        this.state.limitedStepsUpdate();
+    }
+
     public animate() {
         switch (this.state.getDirection()) {
             case 1:

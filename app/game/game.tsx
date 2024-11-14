@@ -323,6 +323,7 @@ export default class Game {
         this.player.update();
         this.bumpWallUpdate();
         this.darkModeUpdate();
+        this.limitedStepsUpdate();
         this.sceneRender.render(this.scene, this.camera);
     }
 
@@ -350,6 +351,13 @@ export default class Game {
         this.maskPlayerView!.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         this.maskPlayerView!.maskOnDuration = Math.max(0, this.maskPlayerView!.maskOnDuration - 1);
         this.maskPlayerView!.thunder();
+    }
+
+    private limitedStepsUpdate() {
+        if (this.gamemode !== 'DTWS') {
+            return;
+        }
+        this.player.limitedStepsUpdate();
     }
     
     private addBorder() {

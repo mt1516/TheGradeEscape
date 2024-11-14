@@ -56,7 +56,6 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                // query: { id: "3" }
                                 query: {
                                     mode: "DITD",
                                     difficulty: "easy"
@@ -68,7 +67,6 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                // query: { id: "4" }
                                 query: {
                                     mode: "DITD",
                                     difficulty: "medium"
@@ -80,7 +78,6 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                // query: { id: "5" }
                                 query: {
                                     mode: "DITD",
                                     difficulty: "hard"
@@ -94,12 +91,15 @@ export default function Page() {
                 <div>
                     <div className="flex flex-row">
                         <div>
-                            course 3
+                            course 3 (DTWS)
                         </div>
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                query: { id: "6" }
+                                query: { 
+                                    mode: "DTWS",
+                                    difficulty: "easy"
+                                }
                             }}
                         >
                             Assignment
@@ -107,7 +107,10 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                query: { id: "7" }
+                                query: { 
+                                    mode: "DTWS",
+                                    difficulty: "medium"
+                                }
                             }}
                         >
                             Assignment
@@ -115,7 +118,10 @@ export default function Page() {
                         <Link
                             href={{
                                 pathname: "/game-level/game",
-                                query: { id: "8" }
+                                query: { 
+                                    mode: "DTWS",
+                                    difficulty: "hard"
+                                }
                             }}
                         >
                             Assignment
