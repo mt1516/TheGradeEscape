@@ -17,7 +17,7 @@ export default function Canvas(props: {
 
     const [playerHealth, setPlayerHealth] = useState(0);
     const [playerSteps, setPlayerSteps] = useState(0);
-    const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
+    const [limitedSteps, setLimitedSteps] = useState(0);
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const game: Game = new Game(scene, camera, sceneRender, props.mode, props.difficulty);
@@ -45,8 +45,8 @@ export default function Canvas(props: {
                     });
                     break;
                 case 'DTWS':
-                    unsubscribeToMazeSolutionLengthChange = game.subscribeToMazeSolutionLengthChange((length) => {
-                        setMazeSolutionLength(length);
+                    unsubscribeToMazeSolutionLengthChange = game.subscribeToLimitedStepsChange((length) => {
+                        setLimitedSteps(length);
                     });
                     unsubscribeToPlayerStepsChange = game.subscribeToPlayerStepsChange((steps) => {
                         setPlayerSteps(steps);
@@ -77,6 +77,13 @@ export default function Canvas(props: {
     }, []);
 
     const renderHearts = () => {
+        if (props.mode !== 'DBTW') {
+            return [
+                <img key={0} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
+                <img key={1} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
+                <img key={2} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
+            ]
+        }
         const hearts = [];
         for (let i = 0; i < playerHealth; i++) {
           hearts.push(
@@ -124,9 +131,9 @@ export default function Canvas(props: {
                                 </div>
                             </div>
                             <div className="m-2">
-                                Player steps/ Maze solution length:
+                                Player steps/ Limited steps:
                                 <div className='flex flex-row'>
-                                    {playerSteps}/{mazeSolutionLength}
+                                    {playerSteps}/{limitedSteps}
                                 </div>
                             </div>
                         </div>
