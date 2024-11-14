@@ -25,7 +25,9 @@ export interface setting {
 
 export class Mask {
     public mask: THREE.Mesh;
+    public needMask: boolean;
     public maskOnDuration: number;
+    private hurtSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
     constructor() {
         const maskGeometry = new THREE.RingGeometry(10, 200);
         const maskMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -33,6 +35,7 @@ export class Mask {
         maskMaterial.transparent = true;
         this.mask = new THREE.Mesh(maskGeometry, maskMaterial);
         this.mask.position.set(0, 0, 10);
+        this.needMask = false;
         this.maskOnDuration = 0;
         this.showMask();
     }
@@ -48,7 +51,30 @@ export class Mask {
         }
         if (Math.random() < probability) {
             this.mask.material.opacity = 0.8
-            this.maskOnDuration = Math.floor(Math.random() * 3) + 1;
+            this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
+            const audioLoader = new THREE.AudioLoader();
+            if (this.maskOnDuration <= 2) {
+                audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
+                    this.hurtSound.setBuffer(buffer);
+                    this.hurtSound.setLoop(false);
+                    this.hurtSound.setVolume(1);
+                    this.hurtSound.play();
+                });
+            } else if (this.maskOnDuration <= 4) {
+                audioLoader.load('/sounds/MediumThunder.mp3',  (buffer) => {
+                    this.hurtSound.setBuffer(buffer);
+                    this.hurtSound.setLoop(false);
+                    this.hurtSound.setVolume(1);
+                    this.hurtSound.play();
+                });
+            } else {
+                audioLoader.load('/sounds/LoudThunder.mp3',  (buffer) => {
+                    this.hurtSound.setBuffer(buffer);
+                    this.hurtSound.setLoop(false);
+                    this.hurtSound.setVolume(1);
+                    this.hurtSound.play();
+                });
+            }
         } else {
             this.mask.material.opacity = 1;
         }
@@ -97,6 +123,7 @@ export default class Game {
         if (this.gamemode === 'DITD') {
             this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
             this.maskPlayerView.showMask();
+            this.maskPlayerView.needMask = true;
             this.scene.add(this.maskPlayerView.mask);
         }
     }
@@ -303,6 +330,10 @@ export default class Game {
             this.keyOrder = [];
             // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
+    }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
     
     private addBorder() {

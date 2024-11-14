@@ -47,6 +47,13 @@ export default class Player {
 
     public update() {
         this.animate();
+        if (this.hurtAnimiationFrameCount > 0) {
+            this.hurtAnimiationFrameCount++;
+            if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
+                this.hurtAnimiationFrameCount = 0;
+                this.visual.material.color.setHex(0xffffff);
+            }
+        }
         if (this.state.isMove()) {
             let [x, y]= this.state.update();
             this.visual.position.set(x, y, 3);
