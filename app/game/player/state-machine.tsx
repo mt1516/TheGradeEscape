@@ -86,6 +86,10 @@ export default class StateMachine {
         return (this.state === STATE.MOVE);
     }
 
+    public isStop() {
+        return (this.state === STATE.IDLE);
+    }
+
     public isWin() {
         return (this.state === STATE.WIN);
     }
@@ -157,9 +161,11 @@ export default class StateMachine {
     
     public limitedStepsUpdate(): boolean {
         if (this.isMove() && this.movedFlag) {
-            // console.log("this.steps = ", this.steps)
             this.steps += 1;
-            return true;
+            // Avoid overflowing the opengl context
+            if (this.steps % 5 === 0) {
+                return true;
+            }
         }
         if (this.steps >= this.limitedSteps) {
             this.state = STATE.DEAD;
@@ -201,14 +207,10 @@ export default class StateMachine {
         let left = hitboxCoordinate[0] - halfHitbox;
         let right = hitboxCoordinate[0] + halfHitbox;
         if (!this.inBound(left, right, hitboxCoordinate[1])) {
-            // console.log("out of bound")
             return false;
         }
         for (let x = left; x <= right; x++) {
             if (!this.isValidPath(x, hitboxCoordinate[1])) {
-                // console.log("wall")
-                // console.log("x, y = ", x, hitboxCoordinate[1])
-                // console.log("mazeMap = ", this.mazeMap)
                 return false;
             }
         }

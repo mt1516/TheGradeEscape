@@ -41,14 +41,6 @@ export default class Player {
         return player
     }
 
-    public getHealth() {
-        return this.state.getHealth();
-    }
-
-    public getSteps() {
-        return this.state.getSteps();
-    }
-
     public update() {
         this.animate();
         if (this.hurtAnimiationFrameCount > 0) {

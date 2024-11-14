@@ -9,7 +9,8 @@ export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
-    ['DITD', 'Dancing In The Dark']
+    ['DITD', 'Dancing In The Dark'],
+    ['DTWS', 'Don\'t Take Wrong Steps'],
 ]);
 
 export interface setting {
@@ -144,6 +145,7 @@ export default class Game {
                 this.playerStepsCallbacks = new Set();
                 break;
         }
+        this.renderMaze();
         this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, limitedSteps);
         this.scene.add(this.player.visual);
     }
@@ -178,7 +180,6 @@ export default class Game {
                 this.notifyPlayerStepsChange();
                 break;
         }
-        this.renderMaze();
         this.keyboardControls();
         this.playerMovemoment();
     }
@@ -220,28 +221,16 @@ export default class Game {
         };
     }
 
-    // public getPlayerHealth() {
-    //     return this.player.getHealth();
-    // }
-
     private notifyHealthChange() {
-        this.healthChangeCallbacks?.forEach((callback) => callback(this.player.getHealth()));
+        this.healthChangeCallbacks?.forEach((callback) => callback(this.player.state.getHealth()));
     }
-
-    // public getMazeSolutionLength() {
-    //     return this.player.getHealth();
-    // }
 
     private notifytMazeSolutionLengthChange() {
         this.mazeSolutionLengthCallbacks?.forEach((callback) => callback(this.mazeSolutionLength));
     }
 
-    // public getPlayerSteps() {
-    //     return this.player.getHealth();
-    // }
-
     private notifyPlayerStepsChange() {
-        this.playerStepsCallbacks?.forEach((callback) => callback(this.player.getSteps()));
+        this.playerStepsCallbacks?.forEach((callback) => callback(this.player.state.getSteps()));
     }
 
     private renderMaze() {
@@ -281,10 +270,6 @@ export default class Game {
             });
         });
         this.addBorder();
-    }
-
-    private getFrustumSize() {
-        return Math.max(this.gameSetting.width, this.gameSetting.height) * 1.48 * this.gameSetting.cellSize;
     }
 
     private keyboardControls() {
@@ -423,9 +408,17 @@ export default class Game {
         if (this.gamemode !== 'DTWS') {
             return;
         }
+        if (this.player.state.isStop()) {
+            this.notifyPlayerStepsChange();
+            return;
+        }
         if (this.player.limitedStepsUpdate()) {
             this.notifyPlayerStepsChange();
         }
+    }
+
+    private getFrustumSize() {
+        return Math.max(this.gameSetting.width, this.gameSetting.height) * 1.48 * this.gameSetting.cellSize;
     }
     
     private addBorder() {
@@ -532,5 +525,4 @@ export default class Game {
             this.scene.add(border);
         }
     }
-    
 }
