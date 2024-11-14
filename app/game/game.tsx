@@ -308,10 +308,8 @@ export default class Game {
             this.player.state.stop();
         }
         this.player.update();
-        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
-        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
-        this.maskPlayerView.thunder();
         this.bumpWallUpdate();
+        this.darkModeUpdate();
         this.sceneRender.render(this.scene, this.camera);
     }
 
@@ -332,8 +330,13 @@ export default class Game {
         }
     }
 
-    private notifyHealthChange() {
-        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
+    private darkModeUpdate() {
+        if (this.gamemode !== 'DITD') {
+            return;
+        }
+        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
+        this.maskPlayerView.thunder();
     }
     
     private addBorder() {
