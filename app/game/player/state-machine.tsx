@@ -3,6 +3,8 @@
 import { MAZECELL } from '../maze-generator';
 import { Mode } from '../game'
 
+let speed = 1;
+
 enum STATE {
     IDLE = 0,
     MOVE,
@@ -18,43 +20,37 @@ enum DIRECTION {
     LEFT,
 }
 
-// TODO: Add pump wall detection explicitly
-// TODO: Add health system
 export default class StateMachine {
     private state: STATE;
     private direction: DIRECTION;
     private health: number;
-    private gamemode: Mode;
     private mazeMap: number[][];
     private characterSize: number[];
     private hitboxWidth: number;
-    private speed: number;
+    private pumpWallFlag: boolean;
     private currentHitboxCoordinate: number[];
     private currentRenderCoordinate: number[];
     private endCoordinate: number[];
-    constructor(gamemode: Mode, mazeMap: number[][], characterSize: number[], hitboxWidth: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
+    constructor(mazeMap: number[][], characterSize: number[], hitboxWidth: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
         this.state = STATE.IDLE;
         this.direction = DIRECTION.IDLE;
         this.health = 3;
-        this.gamemode = gamemode;
         this.mazeMap = mazeMap;
         this.characterSize = characterSize;
         this.hitboxWidth = hitboxWidth;
-        this.speed = 1;
+        this.pumpWallFlag = false;
         this.currentHitboxCoordinate = currentHitboxCoordinate;
         this.currentRenderCoordinate = [currentHitboxCoordinate[0], currentHitboxCoordinate[1] + Math.floor(this.characterSize[1] / 2)];
         this.endCoordinate = endCoordinate;
     }
+
     public reset() {
         this.state = STATE.IDLE;
         this.direction = DIRECTION.IDLE;
     }
 
-    public update(): [number[], boolean] {
+    public update(): number[] {
         this.checkWin();
-        // if (this.state === STATE.MOVE) {
-        //     return this.move();
-        // }
         return this.move()
     }
 
@@ -66,11 +62,16 @@ export default class StateMachine {
         return this.health;
     }
 
+    public getPumpWallFlag() {
+        return this.pumpWallFlag;
+    }
+
     public checkWin() {
         if (this.currentHitboxCoordinate[0] === this.endCoordinate[0] && this.currentHitboxCoordinate[1] === this.endCoordinate[1]) {
             this.state = STATE.WIN;
         }
     }
+
     public isMove() {
         return (this.state === STATE.MOVE);
     }
@@ -81,7 +82,6 @@ export default class StateMachine {
 
     public left() {
         if (this.state >= STATE.WIN) {
-            // console.log(`state = ${this.state}`)
             return;
         }
         this.state = STATE.MOVE;
@@ -90,7 +90,6 @@ export default class StateMachine {
 
     public right() {
         if (this.state >= STATE.WIN) {
-            // console.log(`state = ${this.state}`)
             return;
         }
         this.state = STATE.MOVE;
@@ -99,7 +98,6 @@ export default class StateMachine {
 
     public up() {
         if (this.state >= STATE.WIN) {
-            // console.log(`state = ${this.state}`)
             return;
         }
         this.state = STATE.MOVE;
@@ -108,7 +106,6 @@ export default class StateMachine {
 
     public down() {
         if (this.state >= STATE.WIN) {
-            // console.log(`state = ${this.state}`)
             return;
         }
         this.state = STATE.MOVE;
@@ -116,64 +113,57 @@ export default class StateMachine {
     }
 
     public stop() {
-        if (this.state === STATE.MOVE) {
-            this.state = STATE.IDLE;
-            this.direction = DIRECTION.IDLE;
+        if (this.state >= STATE.WIN) {
+            return;
         }
+        this.state = STATE.IDLE;
+        this.direction = DIRECTION.IDLE;
     }
 
-    private move(): [number[], boolean] {
-        // NO NEED --> player.tsx already checked move
-        // if (this.state === STATE.MOVE) {
+    private move(): number[] {
         let [hitboxCoordinate, renderCoordinate] = this.getNextCoordinate()
-        var pumpWallFlag = false;
         if (this.isValidMove(hitboxCoordinate)) {
             // console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.currentHitboxCoordinate = hitboxCoordinate;
             this.currentRenderCoordinate = renderCoordinate;
-            return [renderCoordinate, pumpWallFlag];
+            return renderCoordinate;
         } else {
             // console.log("invalid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
-            pumpWallFlag = this.pumpWallCheck();
+            this.pumpWallFlag = true;
         }
-        // }
-        return [this.currentRenderCoordinate, pumpWallFlag];
+        return this.currentRenderCoordinate;
     }
 
-    private pumpWallCheck(): boolean {
-        if (this.gamemode !== 'DBTW') {
-            return false;
-        }
+    public pumpWallUpdate(){
+        this.pumpWallFlag = false;
         this.health -= 1;
-        // console.log(`health = ${this.health}`)
         this.stop();
         if (this.health === 0) {
             this.state = STATE.DEAD
         }
-        return true;
     }
 
     private getNextCoordinate(): [number[], number[]] {
         switch (this.direction) {
             case DIRECTION.UP:
                 return [
-                    [this.currentHitboxCoordinate[0], this.currentHitboxCoordinate[1] + this.speed],
-                    [this.currentRenderCoordinate[0], this.currentRenderCoordinate[1] + this.speed]
+                    [this.currentHitboxCoordinate[0], this.currentHitboxCoordinate[1] + speed],
+                    [this.currentRenderCoordinate[0], this.currentRenderCoordinate[1] + speed]
                 ]
             case DIRECTION.RIGHT:
                 return [
-                    [this.currentHitboxCoordinate[0] + this.speed, this.currentHitboxCoordinate[1]],
-                    [this.currentRenderCoordinate[0] + this.speed, this.currentRenderCoordinate[1]]
+                    [this.currentHitboxCoordinate[0] + speed, this.currentHitboxCoordinate[1]],
+                    [this.currentRenderCoordinate[0] + speed, this.currentRenderCoordinate[1]]
                 ]
             case DIRECTION.DOWN:
                 return [
-                    [this.currentHitboxCoordinate[0], this.currentHitboxCoordinate[1] - this.speed],
-                    [this.currentRenderCoordinate[0], this.currentRenderCoordinate[1] - this.speed]
+                    [this.currentHitboxCoordinate[0], this.currentHitboxCoordinate[1] - speed],
+                    [this.currentRenderCoordinate[0], this.currentRenderCoordinate[1] - speed]
                 ]
             case DIRECTION.LEFT:
                 return [
-                    [this.currentHitboxCoordinate[0] - this.speed, this.currentHitboxCoordinate[1]],
-                    [this.currentRenderCoordinate[0] - this.speed, this.currentRenderCoordinate[1]]
+                    [this.currentHitboxCoordinate[0] - speed, this.currentHitboxCoordinate[1]],
+                    [this.currentRenderCoordinate[0] - speed, this.currentRenderCoordinate[1]]
                 ]
         }
         return [

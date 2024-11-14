@@ -9,7 +9,7 @@ export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
-    ['DITD', 'Darkness In The Dark']
+    ['DITD', 'Dancing In The Dark']
 ]);
 
 export interface setting {
@@ -280,22 +280,29 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        let pumpWallFlag = this.player.update();
+        this.player.update();
         this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         this.maskPlayerView.thunder();
-        if (pumpWallFlag) {
+        this.pumpWallUpdate();
+        this.sceneRender.render(this.scene, this.camera);
+    }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
+    }
+
+    private pumpWallUpdate() {
+        if (this.gamemode !== 'DBTW') {
+            return;
+        }
+        if (this.player.pumpWallUpdate()) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
             this.notifyHealthChange()
             this.pumpedKey = [...this.keyOrder]
             this.keyOrder = [];
             // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
-        this.sceneRender.render(this.scene, this.camera);
-    }
-
-    private notifyHealthChange() {
-        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
     
     private addBorder() {
