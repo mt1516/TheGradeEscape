@@ -9,7 +9,7 @@ export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
-    ['DITD', 'Darkness In The Dark']
+    ['DITD', 'Dancing In The Dark']
 ]);
 
 export interface setting {
@@ -87,7 +87,7 @@ export class Mask {
 
 export default class Game {
     private keyOrder: string[];
-    private pumpedKey: string[];
+    private bumpedKey: string[];
     private scene: THREE.Scene;
     private camera: THREE.OrthographicCamera;
     private sceneRender: THREE.WebGLRenderer;
@@ -106,7 +106,7 @@ export default class Game {
         this.sceneRender = sceneRender;
         this.keyOrder = [];
         this.gamemode = mode;
-        this.pumpedKey = [];
+        this.bumpedKey = [];
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
@@ -211,25 +211,25 @@ export default class Game {
             switch (event.key) {
                 case 'ArrowUp':
                 case 'w':
-                    if (this.keyOrder.indexOf('up') === -1 && this.pumpedKey.indexOf('up') === -1) {
+                    if (this.keyOrder.indexOf('up') === -1 && this.bumpedKey.indexOf('up') === -1) {
                         this.keyOrder.push('up');
                     }
                     break;
                 case 'ArrowRight':
                 case 'd':
-                    if (this.keyOrder.indexOf('right') === -1 && this.pumpedKey.indexOf('right') === -1) {
+                    if (this.keyOrder.indexOf('right') === -1 && this.bumpedKey.indexOf('right') === -1) {
                         this.keyOrder.push('right');
                     }
                     break;
                 case 'ArrowDown':
                 case 's':
-                    if (this.keyOrder.indexOf('down') === -1 && this.pumpedKey.indexOf('down') === -1) {
+                    if (this.keyOrder.indexOf('down') === -1 && this.bumpedKey.indexOf('down') === -1) {
                         this.keyOrder.push('down');
                     }
                     break;
                 case 'ArrowLeft':
                 case 'a':
-                    if (this.keyOrder.indexOf('left') === -1 && this.pumpedKey.indexOf('left') === -1) {
+                    if (this.keyOrder.indexOf('left') === -1 && this.bumpedKey.indexOf('left') === -1) {
                         this.keyOrder.push('left');
                     }
                     break;
@@ -240,23 +240,23 @@ export default class Game {
                 case 'ArrowUp':
                 case 'w':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'up');
-                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'up');
+                    this.bumpedKey = this.bumpedKey.filter((key) => key !== 'up');
                     break;
                 
                 case 'ArrowRight':
                 case 'd':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'right');
-                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'right');
+                    this.bumpedKey = this.bumpedKey.filter((key) => key !== 'right');
                     break;
                 case 'ArrowDown':
                 case 's':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'down');
-                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'down');
+                    this.bumpedKey = this.bumpedKey.filter((key) => key !== 'down');
                     break;
                 case 'ArrowLeft':
                 case 'a':
                     this.keyOrder = this.keyOrder.filter((key) => key !== 'left');
-                    this.pumpedKey = this.pumpedKey.filter((key) => key !== 'left');
+                    this.bumpedKey = this.bumpedKey.filter((key) => key !== 'left');
                     break;
             }
         }, false);
@@ -307,20 +307,29 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        let pumpWallFlag = this.player.update();
-        if (this.maskPlayerView.needMask) {
-            this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
-            this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
-            this.maskPlayerView.thunder();
+        this.player.update();
+        this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
+        this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
+        this.maskPlayerView.thunder();
+        this.bumpWallUpdate();
+        this.sceneRender.render(this.scene, this.camera);
+    }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
+    }
+
+    private bumpWallUpdate() {
+        if (this.gamemode !== 'DBTW') {
+            return;
         }
-        if (pumpWallFlag) {
+        if (this.player.bumpWallUpdate()) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
             this.notifyHealthChange()
-            this.pumpedKey = [...this.keyOrder]
+            this.bumpedKey = [...this.keyOrder]
             this.keyOrder = [];
             // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
-        this.sceneRender.render(this.scene, this.camera);
     }
 
     private notifyHealthChange() {
