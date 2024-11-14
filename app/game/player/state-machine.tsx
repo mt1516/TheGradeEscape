@@ -68,6 +68,10 @@ export default class StateMachine {
         return this.health;
     }
 
+    public getSteps() {
+        return this.steps;
+    }
+
     public getbumpWallFlag() {
         return this.bumpWallFlag;
     }
@@ -151,14 +155,16 @@ export default class StateMachine {
         }
     }
     
-    public limitedStepsUpdate() {
+    public limitedStepsUpdate(): boolean {
         if (this.isMove() && this.movedFlag) {
-            console.log("this.steps = ", this.steps)
+            // console.log("this.steps = ", this.steps)
             this.steps += 1;
+            return true;
         }
         if (this.steps >= this.limitedSteps) {
             this.state = STATE.DEAD;
         }
+        return false;
     }
 
     private getNextCoordinate(): [number[], number[]] {

@@ -45,6 +45,10 @@ export default class Player {
         return this.state.getHealth();
     }
 
+    public getSteps() {
+        return this.state.getSteps();
+    }
+
     public update() {
         this.animate();
         if (this.hurtAnimiationFrameCount > 0) {
@@ -85,8 +89,8 @@ export default class Player {
         return flag;
     }
 
-    public limitedStepsUpdate() {
-        this.state.limitedStepsUpdate();
+    public limitedStepsUpdate(): boolean {
+        return this.state.limitedStepsUpdate();
     }
 
     public animate() {
