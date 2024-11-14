@@ -19,7 +19,6 @@ export default class Maze {
     private endCol: number;
     private complexity: number;
     private cellSize: number;
-
     constructor(s: setting) {
         this.width = s.width;
         this.height = s.height;
@@ -51,6 +50,10 @@ export default class Maze {
     }
     public getWinOfMap() {
         return this.convertToMap(this.endCol, this.endRow)
+    }
+
+    public getLengthOfSolution() {
+        return this.aStarSearch().length;
     }
 
     private initGrid(): number[][] {
@@ -110,7 +113,7 @@ export default class Maze {
             // Step 3a: Pop the last cell out
             const cell: number[] = stack.pop() as number[];
             // Step 3b: Get all the unvisited neighbours of the current cell
-            const neighbors = this.getUnvisitedNighbors(cell);
+            const neighbors = this.getNighbors(cell);
             // Step 3c: Check if there is any cell not visited, if yes, the path havent reach a dead end, which can be continue to search deeper
             if (neighbors.length > 0) {
                 // Step 3d: Push back from backtracing
@@ -201,11 +204,11 @@ export default class Maze {
         // Step 3: Mark the end of the maze
         this.mazeGrid[2 * this.startRow][2 * this.startCol] = MAZECELL.WIN; // Mark the end cell
     }
-    // 00 --> 00-02
-    // 01 --> 03
-    // 02 --> 04-06
-    // 03 --> 07
     private scale() {
+        // 00 --> 00-02
+        // 01 --> 03
+        // 02 --> 04-06
+        // 03 --> 07
         // 1-->3, 3-->7, 5-->11
         // ceil(col/2) * cellSize + floor(col/2)
         // 0-->1, 2-->5, 4-->9
@@ -242,21 +245,31 @@ export default class Maze {
         return;
     }
 
-    private getUnvisitedNighbors(cell: number[]){
+    // isMap is a flag to switch this function on different usage
+    // isMap = true: support A-star search
+    // isMap = false: support maze generation
+    private getNighbors(cell: number[], isMap: boolean = false) {
         const neighbors = [];
         const direction = [[0, 1], [0, -1], [1, 0], [-1, 0]];
         for (let [dx, dy] of direction) {
             const newRow = dx + cell[0];
             const newCol = dy + cell[1];
-            if (newRow >= 0 && newRow < this.compilation.length && newCol >= 0 && newCol < this.compilation[0].length && this.compilation[newRow][newCol] === MAZECELL.WALL) {
-                neighbors.push([newRow, newCol]);
+            if (isMap) {
+                if (newRow >= 0 && newRow < this.mazeMap.length && newCol >= 0 && newCol < this.mazeMap[0].length && 
+                    this.mazeMap[newRow][newCol] !== MAZECELL.WALL) {
+                    neighbors.push([newRow, newCol]);
+                }
+            } else {
+                if (newRow >= 0 && newRow < this.height && newCol >= 0 && newCol < this.width && this.compilation[newRow][newCol] === MAZECELL.WALL) {
+                    neighbors.push([newRow, newCol]);
+                }
             }
         }
         return neighbors;
     }
 
     private addAdjacentCells(adjacentCells: any[], cell: number[]) {
-        const unvisitedNighbors = this.getUnvisitedNighbors(cell);
+        const unvisitedNighbors = this.getNighbors(cell);
         for (let [row, col] of unvisitedNighbors) {
             adjacentCells.push([[cell[0], cell[1]], [row, col]]);
         }
@@ -286,5 +299,71 @@ export default class Maze {
             }
         }
         return -1; // Not found
+    }
+
+    private aStarSearch() {
+        const start = this.getStartOfMap();
+        const end = this.getWinOfMap();
+        const openSet = new Set<string>();
+        const closedSet = new Set<string>();
+        const cameFrom = new Map<string, string>();
+        const gScore = new Map<string, number>();
+        const fScore = new Map<string, number>();
+    
+        openSet.add(start.toString());
+        gScore.set(start.toString(), 0);
+        fScore.set(start.toString(), this.heuristic(start, end));
+    
+        while (openSet.size > 0) {
+            let current = start;
+            let currentFScore = Infinity;
+            for (let cell of openSet) {
+                let cellFScore = fScore.get(cell) ?? Infinity;
+                if (cellFScore < currentFScore) {
+                    current = cell.split(',').map(Number);
+                    currentFScore = cellFScore;
+                }
+            }
+    
+            if (current.toString() === end.toString()) {
+                return this.reconstructPath(cameFrom, current);
+            }
+    
+            openSet.delete(current.toString());
+            closedSet.add(current.toString());
+    
+            let neighbors = this.getNighbors(current, true);
+            for (let neighbor of neighbors) {
+                if (closedSet.has(neighbor.toString())) {
+                    continue;
+                }
+    
+                let tentativeGScore = (gScore.get(current.toString()) ?? Infinity) + 1;
+                if (!openSet.has(neighbor.toString())) {
+                    openSet.add(neighbor.toString());
+                } else if (tentativeGScore >= (gScore.get(neighbor.toString()) ?? Infinity)) {
+                    continue;
+                }
+    
+                cameFrom.set(neighbor.toString(), current.toString());
+                gScore.set(neighbor.toString(), tentativeGScore);
+                fScore.set(neighbor.toString(), tentativeGScore + this.heuristic(neighbor, end));
+            }
+        }
+        return [];
+    }
+
+    private heuristic(cell1: number[], cell2: number[]): number {
+        // Euclidean distance heuristic, tested with Manhattan distance, but there is no need in saving that computation time
+        return Math.sqrt((cell1[0] - cell1[0]) ** 2 + (cell1[1] - cell2[1]) ** 2);
+    }
+
+    private reconstructPath(cameFrom: Map<string, string>, current: number[]) {
+        const path = [current];
+        while (cameFrom.has(current.toString())) {
+            current = cameFrom.get(current.toString())?.split(',').map(Number) ?? [];
+            path.push(current);
+        }
+        return path.reverse();
     }
 }
