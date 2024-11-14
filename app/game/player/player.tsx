@@ -14,7 +14,8 @@ export default class Player {
     private tilesVertical: number;
     private hurtAnimiationFrameCount: number;
     private hurtSound: THREE.Audio;
-    constructor(gamemode: Mode, characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][]) {
+    private limitedSteps: number;
+    constructor(gamemode: Mode, characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
         this.tilesVertical = 4;
