@@ -18,7 +18,7 @@ export default class Player {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
         this.tilesVertical = 4;
-        this.state = new StateMachine(gamemode, mazeMap, characterSize, hitboxWidth, mapStartCoord, mapEndCoord);
+        this.state = new StateMachine(mazeMap, characterSize, hitboxWidth, mapStartCoord, mapEndCoord);
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.leftX, this.rightP, this.topP, this.bottomY);
         this.visual = this.renderPlayer();
         this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 2);
@@ -45,7 +45,7 @@ export default class Player {
         return this.state.getHealth();
     }
 
-    public update(): boolean {
+    public update() {
         this.animate();
         if (this.hurtAnimiationFrameCount > 0) {
             this.hurtAnimiationFrameCount++;
@@ -55,26 +55,37 @@ export default class Player {
             }
         }
         if (this.state.isMove()) {
-            let [[x, y], pumpWallFlag] = this.state.update();
-            if (pumpWallFlag) {
-                this.visual.material.color.setHex(0xff0000);
-                this.hurtAnimiationFrameCount = 1;
-                const audioLoader = new THREE.AudioLoader();
-                audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
-                });
-                return pumpWallFlag
-            }
+            let [x, y]= this.state.update();
             this.visual.position.set(x, y, 3);
         }
-        return false;
+    }
+
+    public bumpWallUpdate(): boolean {
+        if (this.hurtAnimiationFrameCount > 0) {
+            this.hurtAnimiationFrameCount++;
+            if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
+                this.hurtAnimiationFrameCount = 0;
+                this.visual.material.color.setHex(0xffffff);
+            }
+            return false;
+        }
+        let flag = this.state.getbumpWallFlag()
+        if (flag && this.hurtAnimiationFrameCount === 0) {
+            this.state.bumpWallUpdate();
+            this.visual.material.color.setHex(0xff0000);
+            this.hurtAnimiationFrameCount = 1;
+            const audioLoader = new THREE.AudioLoader();
+            audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
+                this.hurtSound.setBuffer(buffer);
+                this.hurtSound.setLoop(false);
+                this.hurtSound.setVolume(1);
+                this.hurtSound.play();
+            });
+        }
+        return flag;
     }
 
     public animate() {
-        // console.log("BITCH", this.direction);
         switch (this.state.getDirection()) {
             case 1:
                 this.currentTile = (this.currentTile >= 9 && this.currentTile < 11) ? this.currentTile + 1 : 9;
