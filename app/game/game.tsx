@@ -7,6 +7,10 @@ import settings from './settings.json';
 
 export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
+export let Mode2Name = new Map<Mode, string>([
+    ['DBTW', 'Don\'t Break The Wall'],
+    ['DITD', 'Darkness In The Dark']
+]);
 
 export interface setting {
     width: number;
@@ -58,12 +62,12 @@ export class Mask {
 export default class Game {
     private keyOrder: string[];
     private pumpedKey: string[];
-    private gamemode: Mode;
-    private gameSetting: setting;
-    private maze: Maze;
     private scene: THREE.Scene;
     private camera: THREE.OrthographicCamera;
     private sceneRender: THREE.WebGLRenderer;
+    private gamemode: Mode;
+    private gameSetting: setting;
+    private maze: Maze;
     private player: Player;
     private frameCount: number;
     private moveEveryNFrames: number;
@@ -96,13 +100,29 @@ export default class Game {
             this.scene.add(this.maskPlayerView.mask);
         }
     }
+
+    public resizeWindow(windowSize: number[]) {
+        let frustumSize = this.getFrustumSize();
+        const aspect = windowSize[0] / windowSize[1];
+        if (windowSize[0] >= windowSize[1]) {
+            this.camera.left = -frustumSize * aspect / 2;
+            this.camera.right = frustumSize * aspect / 2;
+            this.camera.top = frustumSize / 2;
+            this.camera.bottom = -frustumSize / 2;
+        } else {
+            this.camera.left = -frustumSize / 2;
+            this.camera.right = frustumSize / 2;
+            this.camera.top = frustumSize / aspect / 2;
+            this.camera.bottom = -frustumSize / aspect / 2;
+        }
+        this.camera.updateProjectionMatrix();
+        this.sceneRender.setSize(windowSize[0], windowSize[1]);
+    }
     
     public run() {
         this.renderMaze();
-        this.resizeWindow();
         this.keyboardControls();
         this.playerMovemoment();
-        this.onWindowResize();
     }
 
     public subscribeToPlayerHealthChange(callback: (health: number) => void): () => void {
@@ -155,22 +175,8 @@ export default class Game {
         this.addBorder();
     }
 
-    private resizeWindow() {
-        const aspect = window.innerWidth / window.innerHeight;
-        const frustumSize = Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize * 1.05;
-        if (window.innerWidth >= window.innerHeight) {
-            this.camera.left = -frustumSize * aspect / 2;
-            this.camera.right = frustumSize * aspect / 2;
-            this.camera.top = frustumSize / 2;
-            this.camera.bottom = -frustumSize / 2;
-        } else {
-            this.camera.left = -frustumSize / 2;
-            this.camera.right = frustumSize / 2;
-            this.camera.top = frustumSize / aspect / 2;
-            this.camera.bottom = -frustumSize / aspect / 2;
-        }
-        this.camera.updateProjectionMatrix();
-        this.sceneRender.setSize(window.innerWidth, window.innerHeight);
+    private getFrustumSize() {
+        return Math.max(this.gameSetting.width, this.gameSetting.height) * 1.48 * this.gameSetting.cellSize;
     }
 
     private keyboardControls() {
@@ -253,12 +259,6 @@ export default class Game {
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));
-    }
-
-    private onWindowResize() {
-        window.addEventListener('resize', () => {
-            this.resizeWindow();
-        });
     }
 
     private update() {
@@ -386,7 +386,7 @@ export default class Game {
             borderTexture.minFilter = THREE.NearestFilter;
             const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
             borderMaterial.transparent = true;
-            const borderGeometry = new THREE.BoxGeometry(1, 2.5, 1);
+            const borderGeometry = new THREE.BoxGeometry(0.9, 2.5, 1);
             const border = new THREE.Mesh(borderGeometry, borderMaterial);
             border.position.set(x, y, 5); // Adjust position
             this.scene.add(border);
