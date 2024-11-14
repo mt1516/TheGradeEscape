@@ -7,8 +7,10 @@ import settings from './settings.json';
 
 export type Mode = 'default' | 'DBTW' | 'DITD';
 export type Difficulty = 'easy' | 'medium' | 'hard';
-
-var hurtAnimiationResetFrame = 5;
+export let Mode2Name = new Map<Mode, string>([
+    ['DBTW', 'Don\'t Break The Wall'],
+    ['DITD', 'Darkness In The Dark']
+]);
 
 export interface setting {
     width: number;
@@ -59,20 +61,19 @@ export class Mask {
 
 export default class Game {
     private keyOrder: string[];
-    private gamemode: Mode;
     private pumpedKey: string[];
-    private gameSetting: setting;
-    private maze: Maze;
     private scene: THREE.Scene;
     private camera: THREE.OrthographicCamera;
     private sceneRender: THREE.WebGLRenderer;
+    private gamemode: Mode;
+    private gameSetting: setting;
+    private maze: Maze;
     private player: Player;
     private frameCount: number;
     private moveEveryNFrames: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask;
-    private hurtAnimiationFrameCount: number;
-    private hurtSound: THREE.Audio;
+    private healthChangeCallbacks: Set<(health: number) => void>;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.scene = scene;
         this.camera = camera;
@@ -80,32 +81,59 @@ export default class Game {
         this.keyOrder = [];
         this.gamemode = mode;
         this.pumpedKey = [];
-        this.gameSetting = (settings[mode] as Record<Difficulty, setting>)[difficulty];
+        this.gamemode = mode;
+        this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
-        this.player = new Player(mode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
+        this.player = new Player(this.gamemode, [1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap);
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
-        this.hurtAnimiationFrameCount = 0;
-        this.hurtSound = new THREE.Audio(new THREE.AudioListener());
+        this.healthChangeCallbacks = new Set();
         this.scene.add(this.player.visual);
         this.maskPlayerView = new Mask();
-        if (mode === 'DITD') {
+        if (this.gamemode === 'DITD') {
             this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
             this.maskPlayerView.showMask();
             this.scene.add(this.maskPlayerView.mask);
         }
     }
+
+    public resizeWindow(windowSize: number[]) {
+        let frustumSize = this.getFrustumSize();
+        const aspect = windowSize[0] / windowSize[1];
+        if (windowSize[0] >= windowSize[1]) {
+            this.camera.left = -frustumSize * aspect / 2;
+            this.camera.right = frustumSize * aspect / 2;
+            this.camera.top = frustumSize / 2;
+            this.camera.bottom = -frustumSize / 2;
+        } else {
+            this.camera.left = -frustumSize / 2;
+            this.camera.right = frustumSize / 2;
+            this.camera.top = frustumSize / aspect / 2;
+            this.camera.bottom = -frustumSize / aspect / 2;
+        }
+        this.camera.updateProjectionMatrix();
+        this.sceneRender.setSize(windowSize[0], windowSize[1]);
+    }
     
     public run() {
         this.renderMaze();
-        this.resizeWindow();
         this.keyboardControls();
         this.playerMovemoment();
-        this.onWindowResize();
+    }
+
+    public subscribeToPlayerHealthChange(callback: (health: number) => void): () => void {
+        this.healthChangeCallbacks.add(callback);
+        return () => {
+            this.healthChangeCallbacks.delete(callback);
+        };
+    }
+
+    public getPlayerHealth() {
+        return this.player.getHealth();
     }
 
     private renderMaze() {
@@ -147,22 +175,8 @@ export default class Game {
         this.addBorder();
     }
 
-    private resizeWindow() {
-        const aspect = window.innerWidth / window.innerHeight;
-        const frustumSize = Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize * 1.05;
-        if (window.innerWidth >= window.innerHeight) {
-            this.camera.left = -frustumSize * aspect / 2;
-            this.camera.right = frustumSize * aspect / 2;
-            this.camera.top = frustumSize / 2;
-            this.camera.bottom = -frustumSize / 2;
-        } else {
-            this.camera.left = -frustumSize / 2;
-            this.camera.right = frustumSize / 2;
-            this.camera.top = frustumSize / aspect / 2;
-            this.camera.bottom = -frustumSize / aspect / 2;
-        }
-        this.camera.updateProjectionMatrix();
-        this.sceneRender.setSize(window.innerWidth, window.innerHeight);
+    private getFrustumSize() {
+        return Math.max(this.gameSetting.width, this.gameSetting.height) * 1.48 * this.gameSetting.cellSize;
     }
 
     private keyboardControls() {
@@ -238,34 +252,13 @@ export default class Game {
             this.update();
             
             this.frameCount = 0; // Reset the frame counter
-            if (this.hurtAnimiationFrameCount > 0) {
-                if (this.hurtAnimiationFrameCount == 1) {
-                    const audioLoader = new THREE.AudioLoader();
-                    audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
-                        this.hurtSound.setBuffer(buffer);
-                        this.hurtSound.setLoop(false);
-                        this.hurtSound.setVolume(1);
-                        this.hurtSound.play();
-                    });
-                }
-                this.hurtAnimiationFrameCount++;
-                if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
-                    this.hurtAnimiationFrameCount = 0;
-                    this.player.visual.material.color.setHex(0xffffff);
-                }
-            }
+            
         }
         if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
             this.player.animate();
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));
-    }
-
-    private onWindowResize() {
-        window.addEventListener('resize', () => {
-            this.resizeWindow();
-        });
     }
 
     private update() {
@@ -287,21 +280,22 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        // this.player.update();
         let pumpWallFlag = this.player.update();
         this.maskPlayerView.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         this.maskPlayerView.thunder();
         if (pumpWallFlag) {
             // console.log(`before: keyOrder = ${this.keyOrder}`)
-            // start the counting
-            this.player.visual.material.color.setHex(0xff0000);
-            this.hurtAnimiationFrameCount = 1;
+            this.notifyHealthChange()
             this.pumpedKey = [...this.keyOrder]
             this.keyOrder = [];
             // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
         this.sceneRender.render(this.scene, this.camera);
+    }
+
+    private notifyHealthChange() {
+        this.healthChangeCallbacks.forEach((callback) => callback(this.player.getHealth()));
     }
     
     private addBorder() {
@@ -310,12 +304,12 @@ export default class Game {
         for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize + cellMiddle) {
             this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
             if (x != cellMiddle) {
-                this.addBorderWall(x, -0.3, this.gameSetting.cellSize, false, true);
+                this.addBorderWall(x, 0, this.gameSetting.cellSize, false, true);
             }
         }
         for (let x=this.gameSetting.cellSize; x<this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize+1) {
             this.addPillarBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-            this.addPillarBorderWall(x, -0.3, this.gameSetting.cellSize, false, true);
+            this.addPillarBorderWall(x, 0, this.gameSetting.cellSize, false, true);
         }
         for (let y=this.gameSetting.cellSize + cellMiddle; y<this.maze.mazeMap.length; y+=this.gameSetting.cellSize + cellMiddle) {
             this.addBorderWall(this.maze.mazeMap.length, y, this.gameSetting.cellSize, true);
@@ -325,10 +319,10 @@ export default class Game {
             this.addPillarBorderWall(this.maze.mazeMap.length, y, this.gameSetting.cellSize, true);
             this.addPillarBorderWall(-1, y, this.gameSetting.cellSize, true);
         }
-        this.addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(this.maze.mazeMap.length + cellMiddle, 1, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(-1 - cellMiddle, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
-        this.addEdgeBorderWall(-1 - cellMiddle, 1, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(this.maze.mazeMap.length, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(this.maze.mazeMap.length, 0.2, this.gameSetting.cellSize, true);
+        this.addEdgeBorderWall(-1, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);
+        this.addEdgeBorderWall(-1, 0.2, this.gameSetting.cellSize, true);
     }
 
     private addBorderWall(x: number, y: number, cellSize: number, isVertical: boolean = false, isBottom: boolean = false) {
@@ -350,7 +344,11 @@ export default class Game {
         const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
         borderMaterial.transparent = true;
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 3); // Adjust position
+        if (isBottom) {
+            border.position.set(x, y, 5); // Adjust position
+        } else {
+            border.position.set(x, y, 1); // Adjust position
+        }
         this.scene.add(border);
     }
 
@@ -373,20 +371,36 @@ export default class Game {
         const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
         borderMaterial.transparent = true;
         const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 3); // Adjust position
+        if (isBottom) {
+            border.position.set(x, y, 5); // Adjust position
+        } else {
+            border.position.set(x, y, 1); // Adjust position
+        }
         this.scene.add(border);
     }
 
-    private addEdgeBorderWall(x: number, y: number, cellSize: number) {
-        let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
-        borderTexture.magFilter = THREE.NearestFilter;
-        borderTexture.minFilter = THREE.NearestFilter;
-        const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
-        borderMaterial.transparent = true;
-        const borderGeometry = new THREE.BoxGeometry(cellSize, cellSize, 1);
-        const border = new THREE.Mesh(borderGeometry, borderMaterial);
-        border.position.set(x, y, 3); // Adjust position
-        this.scene.add(border);
+    private addEdgeBorderWall(x: number, y: number, cellSize: number, isBottom: boolean = false) {
+        if (isBottom) {
+            let borderTexture = new THREE.TextureLoader().load('/texture/border-edge-bottom.png');
+            borderTexture.magFilter = THREE.NearestFilter;
+            borderTexture.minFilter = THREE.NearestFilter;
+            const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+            borderMaterial.transparent = true;
+            const borderGeometry = new THREE.BoxGeometry(0.9, 2.5, 1);
+            const border = new THREE.Mesh(borderGeometry, borderMaterial);
+            border.position.set(x, y, 5); // Adjust position
+            this.scene.add(border);
+        } else {
+            let borderTexture = new THREE.TextureLoader().load('/texture/border-edge.png');
+            borderTexture.magFilter = THREE.NearestFilter;
+            borderTexture.minFilter = THREE.NearestFilter;
+            const borderMaterial = new THREE.MeshBasicMaterial({ map: borderTexture });
+            borderMaterial.transparent = true;
+            const borderGeometry = new THREE.BoxGeometry(1, 3, 1);
+            const border = new THREE.Mesh(borderGeometry, borderMaterial);
+            border.position.set(x, y, 1); // Adjust position
+            this.scene.add(border);
+        }
     }
     
 }

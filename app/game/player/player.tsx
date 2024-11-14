@@ -4,12 +4,16 @@ import * as THREE from 'three';
 import StateMachine from './state-machine';
 import { Mode } from '../game'
 
+var hurtAnimiationResetFrame = 5;
+
 export default class Player {
     public state: StateMachine;
     public visual: THREE.Sprite;
     private currentTile: number;
     private tilesHorizontal: number;
     private tilesVertical: number;
+    private hurtAnimiationFrameCount: number;
+    private hurtSound: THREE.Audio;
     constructor(gamemode: Mode, characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][]) {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
@@ -18,6 +22,8 @@ export default class Player {
         // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.leftX, this.rightP, this.topP, this.bottomY);
         this.visual = this.renderPlayer();
         this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 2);
+        this.hurtAnimiationFrameCount = 0;
+        this.hurtSound = new THREE.Audio(new THREE.AudioListener());
     }
 
     public renderPlayer(): THREE.Sprite {
@@ -35,15 +41,34 @@ export default class Player {
         return player
     }
 
+    public getHealth() {
+        return this.state.getHealth();
+    }
+
     public update(): boolean {
         this.animate();
+        if (this.hurtAnimiationFrameCount > 0) {
+            this.hurtAnimiationFrameCount++;
+            if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
+                this.hurtAnimiationFrameCount = 0;
+                this.visual.material.color.setHex(0xffffff);
+            }
+        }
         if (this.state.isMove()) {
             let [[x, y], pumpWallFlag] = this.state.update();
             if (pumpWallFlag) {
                 this.visual.material.color.setHex(0xff0000);
+                this.hurtAnimiationFrameCount = 1;
+                const audioLoader = new THREE.AudioLoader();
+                audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
+                    this.hurtSound.setBuffer(buffer);
+                    this.hurtSound.setLoop(false);
+                    this.hurtSound.setVolume(1);
+                    this.hurtSound.play();
+                });
                 return pumpWallFlag
             }
-            this.visual.position.set(x, y, 2);
+            this.visual.position.set(x, y, 3);
         }
         return false;
     }
@@ -70,5 +95,4 @@ export default class Player {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
     }
-    
 }
