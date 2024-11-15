@@ -22,53 +22,71 @@ export default function Page() {
                     <div className="grid grid-rows-3 gap-5 h-4/6 w-fit justify-self-center">
                         <div className="grid grid-cols-3 gap-4 mx-4 w-11/12 justify-self-center">
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                    href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "easy" } }}
+                                >
                                     Assignment
-                                </div>
+                                </Link>
                             </div>
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "medium" } }}
+                                >
                                     Quiz
-                                </div>
+                                </Link>
                             </div>
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "hard" } }}
+                                >
                                     Midterm
-                                </div>
+                                </Link>
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-4 mx-4 w-11/12 justify-self-center">
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DITD", difficulty: "easy" } }}
+                                >
                                     Assignment
-                                </div>
+                                </Link>
                             </div>
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DITD", difficulty: "medium" } }}
+                                >
                                     Quiz
-                                </div>
+                                </Link>
                             </div>
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DITD", difficulty: "hard" } }}
+                                >
                                     Midterm
-                                </div>
+                                </Link>
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-4 mx-4 w-11/12 justify-self-center">
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DBTW", difficulty: "easy" } }}
+                                >
                                     Assignment
-                                </div>
+                                </Link>
                             </div>
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DBTW", difficulty: "medium" } }}
+                                >
                                     Quiz
-                                </div>
+                                </Link>
                             </div>
                             <div className="container flex flex-col justify-center items-center">
-                                <div className="container px-6 py-4 flex flex-col items-center bg-slate-500">
+                                <Link className="container px-6 py-4 flex flex-col items-center bg-slate-500"
+                                href={{ pathname: "/game-level/game", query: { mode: "DBTW", difficulty: "hard" } }}
+                                >
                                     Midterm
-                                </div>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -80,126 +98,3 @@ export default function Page() {
         </div>
     );
 }
-
-{/* <div className="grid grid-rows-1 gap-4 w-3/6">
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            course 1 (DBTW)
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DBTW",  
-                                    difficulty: "easy"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DBTW",
-                                    difficulty: "medium"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DBTW",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            course 2 (DITD)
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DITD",
-                                    difficulty: "easy"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DITD",
-                                    difficulty: "medium"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DITD",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            course 3 (DTWS)
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DTWS",
-                                    difficulty: "easy"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DTWS",
-                                    difficulty: "medium"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DTWS",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                    </div>
-                </div>
-            </div> */}
