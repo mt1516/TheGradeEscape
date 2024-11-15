@@ -10,13 +10,5 @@ export default function Close() {
                 <Image src="/white-cross.svg" alt="Close" width={24} height={24} />
             </Link>
         </div>
-
-        // <div className="absolute top-2 left-0 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex justify-center items-center focus:outline-none">
-        //     <Link
-        //         className="w-full h-full rounded-full flex items-center justify-center"
-        //         href="/">
-        //         <Image src="/white-cross.svg" alt="Close" width={24} height={24} />
-        //     </Link>
-        // </div>
     );
 }
