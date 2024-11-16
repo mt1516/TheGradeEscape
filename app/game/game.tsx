@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
-import Boss from './boss/boss';
+// import Boss from './boss/boss';
+import Boss from './player/boss';
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -150,7 +151,8 @@ export default class Game {
                 this.playerStepsCallbacks = new Set();
                 break;
             case 'Final':
-                this.boss = new Boss(this.player, new THREE.Vector3(startX, startY, 0));
+                // this.boss = new Boss(this.player, new THREE.Vector3(startX, startY, 0));
+                this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
                 this.scene.add(this.boss.visual);
                 break;
         }
@@ -383,7 +385,7 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        this.player.update();
+        this.player.update(1);
         this.bumpWallUpdate();
         this.darkModeUpdate();
         this.limitedStepsUpdate();
