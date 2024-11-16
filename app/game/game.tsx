@@ -4,8 +4,9 @@ import * as THREE from 'three';
 import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
+import Boss from './boss/boss';
 
-export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
+export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
@@ -104,6 +105,7 @@ export default class Game {
     private mazeSolutionLengthCallbacks: Set<(length: number) => void> | null;
     private playerStepsCallbacks: Set<(steps: number) => void> | null;
     private healthChangeCallbacks: Set<(health: number) => void> | null;
+    private boss: Boss | null;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.frameCount = 0;
         this.moveEveryNFrames = 5;
@@ -127,6 +129,9 @@ export default class Game {
         this.playerStepsCallbacks = null;
         this.healthChangeCallbacks = null;
         let limitedSteps = -1;
+        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, limitedSteps);
+        this.scene.add(this.player.visual);
+        this.boss = null;
         switch (this.gamemode) {
             case 'DBTW':
                 this.healthChangeCallbacks = new Set();
@@ -144,10 +149,12 @@ export default class Game {
                 this.mazeSolutionLengthCallbacks = new Set();
                 this.playerStepsCallbacks = new Set();
                 break;
+            case 'Final':
+                this.boss = new Boss(this.player, new THREE.Vector3(startX, startY, 0));
+                this.scene.add(this.boss.visual);
+                break;
         }
         this.renderMaze();
-        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, limitedSteps);
-        this.scene.add(this.player.visual);
     }
 
     public resizeWindow(windowSize: number[]) {
@@ -179,6 +186,8 @@ export default class Game {
                 this.notifytMazeSolutionLengthChange();
                 this.notifyPlayerStepsChange();
                 break;
+            case 'Final':
+                break;
         }
         this.keyboardControls();
         this.playerMovemoment();
@@ -194,6 +203,8 @@ export default class Game {
             case 'DTWS':
                 this.mazeSolutionLengthCallbacks?.clear();
                 this.playerStepsCallbacks?.clear();
+                break;
+            case 'Final':
                 break;
         }
         window.removeEventListener('keydown', () => {});
@@ -343,7 +354,6 @@ export default class Game {
                 return;
             }
             this.update();
-            
             this.frameCount = 0; // Reset the frame counter
             
         }
@@ -377,6 +387,12 @@ export default class Game {
         this.bumpWallUpdate();
         this.darkModeUpdate();
         this.limitedStepsUpdate();
+        if (this.boss) {
+            const newProjectile = this.boss.update(this.moveEveryNFrames);
+            if (newProjectile) {
+                this.scene.add(newProjectile)
+            }
+        }
         this.sceneRender.render(this.scene, this.camera);
     }
 

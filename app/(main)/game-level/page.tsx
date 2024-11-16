@@ -128,6 +128,24 @@ export default function Page() {
                         </Link>
                     </div>
                 </div>
+                <div>
+                    <div className="flex flex-row">
+                        <div>
+                            Final Exam
+                        </div>
+                        <Link
+                            href={{
+                                pathname: "/game-level/game",
+                                query: { 
+                                    mode: "Final",
+                                    difficulty: "hard"
+                                }
+                            }}
+                        >
+                            Exam
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
     );
