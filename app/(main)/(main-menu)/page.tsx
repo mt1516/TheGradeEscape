@@ -1,12 +1,11 @@
-import { initializeStorage } from '@/app/game/storage';
+'use client';
+
 import Link from 'next/link';
+import { resetStorage } from '@/app/game/storage';
 
 export default function Home() {
-  // if (typeof window !== 'undefined') {
-  //   console.log(localStorage.getItem('currentCharacter'));
-  // }
   return (
-    <div className='flex flex-row justify-center items-center h-screen'>
+    <div className='flex flex-row justify-center items-center h-screen w-screen'>
       <div className="bg-white rounded-lg shadow-lg w-8/12 h-4/6">
         <h1 className="text-7xl font-bold text-center my-12 p-3 animate-[title_0.7s_linear_infinite] text-black">The Grade Escape</h1>
         <div className="grid grid-cols-1 gap-4 w-3/6 relative">
@@ -31,11 +30,17 @@ export default function Home() {
               Credits
             </Link>
           </div>
-          <div className="flex flex-row justify-center">
+          <div className="flex flex-row justify-center my-4">
+            <button className="w-3/6 font-bold py-3 px-4 rounded text-center bg-gray-500 hover:bg-gray-600 text-white"
+            onClick={resetStorage}>
+              Reset
+            </button>
+          </div>
+          {/* <div className="flex flex-row justify-center">
             <div className="text-black">
               V.I
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

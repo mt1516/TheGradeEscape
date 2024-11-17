@@ -10,7 +10,7 @@ export enum GAMEMODE_DIFFICULTY {
     DBTW_HARD = 'DBTW-hard'
 }
 
-export function initializeStorage() {
+export function resetStorage() {
     if (typeof window !== 'undefined') {
         console.log('Initializing storage');
         localStorage.setItem('DTWS-easy', '0');
