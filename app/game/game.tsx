@@ -337,12 +337,17 @@ export default class Game {
         // Move the player every 10 frames
         if (this.frameCount >= moveEveryNFrames) {
             this.player.state.checkWin();
+            // TODO: Chnage this to popup
             if (this.player.state.isWin()) {
-                this.player.state.reset();
-                // TODO: Chnage this to popup
-                setPlayed(this.gamemode, this.difficulty);
+                this.player.state.reset(); 
                 promoteGrade();
+                setPlayed(this.gamemode, this.difficulty);
                 alert('You win!');
+                window.location.href = '/game-level'; // Redirect to the home page
+                return;
+            } else if (this.player.state.isDead()) {
+                this.player.state.reset(); 
+                alert('You lost!');
                 window.location.href = '/game-level'; // Redirect to the home page
                 return;
             }

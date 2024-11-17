@@ -94,6 +94,10 @@ export default class StateMachine {
         return (this.state === STATE.WIN);
     }
 
+    public isDead() {
+        return (this.state === STATE.DEAD);
+    }
+
     public left() {
         if (this.state >= STATE.WIN) {
             return;
