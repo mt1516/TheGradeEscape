@@ -1,22 +1,11 @@
+import { initializeStorage } from '@/app/game/storage';
 import Link from 'next/link';
-
-export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '1') : 1;
-
-export function setCurrentCharacter(c: number) {
-  currentCharacter = c;
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('currentCharacter', c.toString());
-  }
-}
-
-export function getCurrentCharacter() {
-  return currentCharacter;
-}
 
 export default function Home() {
   if (typeof window !== 'undefined') {
     console.log(localStorage.getItem('currentCharacter'));
   }
+  initializeStorage();
   return (
     <div className='flex flex-row justify-center items-center h-screen'>
       <div className="bg-white rounded-lg shadow-lg w-8/12 h-4/6">

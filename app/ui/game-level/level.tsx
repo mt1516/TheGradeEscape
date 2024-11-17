@@ -1,6 +1,19 @@
+import { checkPlayed, GAMEMODE_DIFFICULTY } from "@/app/game/storage";
 import Link from "next/link";
 
 export default function Level() {
+    var DTWS_EASY =
+        <Link className="container px-5 py-4 flex flex-col items-center bg-blue-400 text-lg"
+            href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "easy" } }}
+        >
+            Assignment
+        </Link>
+    if (checkPlayed(GAMEMODE_DIFFICULTY.DTWS_EASY)) {
+        DTWS_EASY =
+        <div className="container px-5 py-4 flex flex-col items-center bg-green-500 text-lg">
+            Assignment
+        </div>
+    }
     return (
         <div className="flex flex-col w-fit h-full flex-wrap">
             <div className="grid grid-rows-3 gap-5 h-4/6 w-fit items-center justify-self-start">
@@ -17,11 +30,12 @@ export default function Level() {
             <div className="grid grid-rows-3 gap-5 h-4/6 w-10/12 justify-self-center">
                 <div className="grid grid-cols-3 gap-4 mx-3 w-11/12 justify-self-center">
                     <div className="container flex flex-col justify-center items-center">
-                        <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
+                        {DTWS_EASY}
+                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
                             href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "easy" } }}
                         >
                             Assignment
-                        </Link>
+                        </Link> */}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
