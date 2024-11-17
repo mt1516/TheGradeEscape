@@ -17,7 +17,7 @@ export default function Canvas(props: {
 
     const [playerHealth, setPlayerHealth] = useState(0);
     const [playerSteps, setPlayerSteps] = useState(0);
-    const [limitedSteps, setLimitedSteps] = useState(0);
+    const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const game: Game = new Game(scene, camera, sceneRender, props.mode, props.difficulty);
@@ -45,8 +45,8 @@ export default function Canvas(props: {
                     });
                     break;
                 case 'DTWS':
-                    unsubscribeToMazeSolutionLengthChange = game.subscribeToLimitedStepsChange((length) => {
-                        setLimitedSteps(length);
+                    unsubscribeToMazeSolutionLengthChange = game.subscribeToMazeSolutionLengthChange((length) => {
+                        setMazeSolutionLength(length);
                     });
                     unsubscribeToPlayerStepsChange = game.subscribeToPlayerStepsChange((steps) => {
                         setPlayerSteps(steps);

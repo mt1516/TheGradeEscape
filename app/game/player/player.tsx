@@ -9,9 +9,9 @@ var hurtAnimiationResetFrame = 5;
 export default class Player {
     public state: StateMachine;
     public visual: THREE.Sprite;
-    private currentTile: number;
-    private tilesHorizontal: number;
-    private tilesVertical: number;
+    protected currentTile: number;
+    protected tilesHorizontal: number;
+    protected tilesVertical: number;
     private hurtAnimiationFrameCount: number;
     private hurtSound: THREE.Audio;
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
@@ -41,7 +41,7 @@ export default class Player {
         return player
     }
 
-    public update() {
+    public update(tick: number): void {
         this.animate();
         if (this.hurtAnimiationFrameCount > 0) {
             this.hurtAnimiationFrameCount++;

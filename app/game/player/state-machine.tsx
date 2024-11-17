@@ -233,4 +233,13 @@ export default class StateMachine {
     private isValidPath(x: number, y: number): boolean {
         return this.mazeMap[y][x] !== MAZECELL.WALL;
     }
+
+    public setDirection(direction: DIRECTION) {
+        this.direction = direction;
+    }
+
+    public dead() {
+        return (this.state === STATE.DEAD);
+    }
+
 }

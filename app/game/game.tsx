@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
+import Boss, { updateMessage } from './player/boss';
 import { promoteGrade, setPlayed } from './storage';
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
@@ -12,6 +13,7 @@ export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
     ['DITD', 'Dancing In The Dark'],
     ['DTWS', 'Don\'t Take Wrong Steps'],
+    ['Final', 'Final Boss']
 ]);
 
 let moveEveryNFrames = 5;
@@ -99,17 +101,18 @@ export default class Game {
     private difficulty: Difficulty;
     private gameSetting: setting;
     private maze: Maze;
+    private mazeSolutionLength: number;
     private player: Player;
     private limitedSteps: number;
     private frameCount: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask | null;
-    private limitedStepsCallbacks: Set<(length: number) => void> | null;
+    private mazeSolutionLengthCallbacks: Set<(length: number) => void> | null;
     private playerStepsCallbacks: Set<(steps: number) => void> | null;
     private healthChangeCallbacks: Set<(health: number) => void> | null;
+    private boss: Boss | null;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.frameCount = 0;
-        
         this.animationFrameCount = 0;
         this.scene = scene;
         this.camera = camera;
@@ -121,15 +124,19 @@ export default class Game {
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
+        this.mazeSolutionLength = -1;
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
         let [startX, startY] = this.maze.getStartOfMap();
         this.maskPlayerView = null;
-        this.limitedStepsCallbacks = null;
+        this.mazeSolutionLengthCallbacks = null;
         this.playerStepsCallbacks = null;
         this.healthChangeCallbacks = null;
-        this.limitedSteps = -1;
+        let limitedSteps = -1;
+        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, limitedSteps);
+        this.scene.add(this.player.visual);
+        this.boss = null;
         switch (this.gamemode) {
             case 'DBTW':
                 this.healthChangeCallbacks = new Set();
@@ -142,14 +149,18 @@ export default class Game {
                 this.scene.add(this.maskPlayerView.mask);
                 break;
             case 'DTWS':
-                this.limitedSteps = Math.ceil(this.maze.getLengthOfSolution() * 1.3);
-                this.limitedStepsCallbacks = new Set();
+                this.mazeSolutionLength = this.maze.getLengthOfSolution();
+                limitedSteps = Math.ceil(this.mazeSolutionLength * 1.3);
+                this.mazeSolutionLengthCallbacks = new Set();
                 this.playerStepsCallbacks = new Set();
+                break;
+            case 'Final':
+                this.healthChangeCallbacks = new Set();
+                this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
+                this.scene.add(this.boss.visual);
                 break;
         }
         this.renderMaze();
-        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.limitedSteps);
-        this.scene.add(this.player.visual);
     }
 
     public resizeWindow(windowSize: number[]) {
@@ -181,6 +192,9 @@ export default class Game {
                 this.notifytMazeSolutionLengthChange();
                 this.notifyPlayerStepsChange();
                 break;
+            case 'Final':
+                this.notifyHealthChange();
+                break;
         }
         this.keyboardControls();
         this.playerMovemoment();
@@ -194,8 +208,11 @@ export default class Game {
             case 'DITD':
                 break;
             case 'DTWS':
-                this.limitedStepsCallbacks?.clear();
+                this.mazeSolutionLengthCallbacks?.clear();
                 this.playerStepsCallbacks?.clear();
+                break;
+            case 'Final':
+                this.healthChangeCallbacks?.clear();
                 break;
         }
         window.removeEventListener('keydown', () => {});
@@ -209,10 +226,10 @@ export default class Game {
         };
     }
 
-    public subscribeToLimitedStepsChange(callback: (length: number) => void): () => void {
-        this.limitedStepsCallbacks?.add(callback);
+    public subscribeToMazeSolutionLengthChange(callback: (length: number) => void): () => void {
+        this.mazeSolutionLengthCallbacks?.add(callback);
         return () => {
-            this.limitedStepsCallbacks?.delete(callback);
+            this.mazeSolutionLengthCallbacks?.delete(callback);
         };
     }
 
@@ -228,7 +245,7 @@ export default class Game {
     }
 
     private notifytMazeSolutionLengthChange() {
-        this.limitedStepsCallbacks?.forEach((callback) => callback(this.limitedSteps));
+        this.mazeSolutionLengthCallbacks?.forEach((callback) => callback(this.mazeSolutionLength));
     }
 
     private notifyPlayerStepsChange() {
@@ -352,7 +369,6 @@ export default class Game {
                 return;
             }
             this.update();
-            
             this.frameCount = 0; // Reset the frame counter
             
         }
@@ -382,10 +398,11 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        this.player.update();
+        this.player.update(1);
         this.bumpWallUpdate();
         this.darkModeUpdate();
         this.limitedStepsUpdate();
+        this.bossUpdate();
         this.sceneRender.render(this.scene, this.camera);
     }
 
@@ -423,6 +440,21 @@ export default class Game {
         }
         if (this.player.limitedStepsUpdate()) {
             this.notifyPlayerStepsChange();
+        }
+    }
+
+    private bossUpdate() {
+        if (this.gamemode !== 'Final') {
+            return;
+        }
+        if (this.boss) {
+            const message: updateMessage = this.boss.update(this.moveEveryNFrames);
+            if (message.hasNewProjectile) {
+                this.scene.add(message.projectile.visual);
+            }
+            if (message.playerHit) {
+                this.notifyHealthChange();
+            }
         }
     }
 
