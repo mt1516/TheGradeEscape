@@ -2,8 +2,6 @@
 
 import Level from "@/app/ui/game-level/level";
 import Close from "@/app/ui/button";
-import { currentCharacter } from "../(main-menu)/page";
-
 
 export default function Page() {
     return (

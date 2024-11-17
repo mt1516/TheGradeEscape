@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
-import { setPlayed } from './storage';
+import { promoteGrade, setPlayed } from './storage';
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -341,6 +341,7 @@ export default class Game {
                 this.player.state.reset();
                 // TODO: Chnage this to popup
                 setPlayed(this.gamemode, this.difficulty);
+                promoteGrade();
                 alert('You win!');
                 window.location.href = '/game-level'; // Redirect to the home page
                 return;
