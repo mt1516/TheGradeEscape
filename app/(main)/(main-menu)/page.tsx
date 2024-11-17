@@ -2,10 +2,9 @@ import { initializeStorage } from '@/app/game/storage';
 import Link from 'next/link';
 
 export default function Home() {
-  if (typeof window !== 'undefined') {
-    console.log(localStorage.getItem('currentCharacter'));
-  }
-  initializeStorage();
+  // if (typeof window !== 'undefined') {
+  //   console.log(localStorage.getItem('currentCharacter'));
+  // }
   return (
     <div className='flex flex-row justify-center items-center h-screen'>
       <div className="bg-white rounded-lg shadow-lg w-8/12 h-4/6">

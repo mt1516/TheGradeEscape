@@ -12,6 +12,7 @@ export enum GAMEMODE_DIFFICULTY {
 
 export function initializeStorage() {
     if (typeof window !== 'undefined') {
+        console.log('Initializing storage');
         localStorage.setItem('DTWS-easy', '0');
         localStorage.setItem('DTWS-medium', '0');
         localStorage.setItem('DTWS-hard', '0');
@@ -32,6 +33,18 @@ export function checkPlayed(mode: GAMEMODE_DIFFICULTY): boolean {
 
 export function setPlayed(mode: string, difficulty: string) {
     localStorage.setItem(mode + '-' + difficulty, '1');
+}
+
+export function canPlayMedium(): boolean {
+    return compareGrade('C') > 0;
+}
+
+export function canPlayHard(): boolean {
+    return compareGrade('B') > 0;
+}
+
+export function canPlayFinal(): boolean {
+    return compareGrade('A') > 0;
 }
 
 export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '1') : 1;
@@ -90,5 +103,5 @@ export function getCurrentGrade() {
 
 export function compareGrade(grade: string): number {
     var grades = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
-    return grades.indexOf(grade) - grades.indexOf(currentGrade);
+    return grades.indexOf(getCurrentGrade()) - grades.indexOf(grade);
 }

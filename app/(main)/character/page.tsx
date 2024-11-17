@@ -3,7 +3,7 @@
 import Close from '@/app/ui/button';
 import Choose from '@/app/ui/character/choose';
 import { useEffect, useState } from 'react';
-import { getCurrentCharacter, setCurrentCharacter } from '../(main-menu)/page';
+import { getCurrentCharacter, setCurrentCharacter } from '@/app/game/storage';
 
 export enum CHARACTER {
     NORM = 0,

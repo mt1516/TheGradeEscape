@@ -3,8 +3,10 @@
 import { useEffect } from "react";
 import Credit from "@/app/ui/credits/credit";
 import Close from "@/app/ui/credits/button";
+import { initializeStorage } from "@/app/game/storage";
 
 export default function Page() {
+    initializeStorage();
     useEffect(() => {
         setTimeout(function () {
             location.href = "/";
