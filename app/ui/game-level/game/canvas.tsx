@@ -77,17 +77,24 @@ export default function Canvas(props: {
     }, []);
 
     const renderHearts = () => {
+        if (props.mode !== 'DBTW') {
+            return [
+                <img key={0} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
+                <img key={1} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
+                <img key={2} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
+            ]
+        }
         const hearts = [];
         for (let i = 0; i < playerHealth; i++) {
-          hearts.push(
-            <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
-          );
+            hearts.push(
+                <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
+            );
         }
         return hearts;
-      };
+    };
 
     return (
-        <div className="flex flex-row w-full h-screen bg-cover bg-center bg-no-repeat"
+        <div className="flex flex-row w-screen h-screen bg-cover bg-center bg-no-repeat"
             style={{
                 backgroundImage: 'url("/texture/hkust.jpg")',
             }}
@@ -96,39 +103,16 @@ export default function Canvas(props: {
                 ref={containerRef}
             >
             </div>
-            <div className="flex justify-start items-center w-full h-full">
-                <div className="bg-gray-500 border-2 border-black p-9 w-11/12 h-4/6">
-                    <h1 className="text-2xl my-5">Game Information</h1>
-                    <div className="grid grid-cols-1 text-black border-2">
-                        <div className="m-5">
-                            Gamemode:
-                            <div>
-                                {Mode2Name.get(props.mode)}
-                            </div>
-                        </div>
-                        <div className="m-5">
-                            Difficulty:
-                            <div>
-                                {props.difficulty}
-                            </div>
-                        </div>
-                        <div className="m-5">
-                            Character:
-                        </div>
-                        <div className="m-5">
-                            Player status:
-                            <div className="m-2">
-                                Health:
-                                <div className='flex flex-row'>
-                                    {renderHearts()}
-                                </div>
-                            </div>
-                            <div className="m-2">
-                                Player steps/ Maze solution length:
-                                <div className='flex flex-row'>
-                                    {playerSteps}/{mazeSolutionLength}
-                                </div>
-                            </div>
+            <div className="flex justify-start items-center w-4/12 h-full">
+                <div className="continaer bg-gray-500 border-2 border-black p-9 w-11/12 h-4/6">
+                    <h1 className="text-3xl h-[12%]">Game Information</h1>
+                    <div className="container border-2 h-[88%]">
+                        <div className='grid grid-rows-5 w-full h-full p-4 text-lg text-black'>
+                            <div className='h-fit'> Gamemode: <br /> {Mode2Name.get(props.mode)} </div>
+                            <div className='h-fit'> Difficulty: <br />{props.difficulty} </div>
+                            <div className='h-fit'> Character: </div>
+                            <div className='h-fit'> Health: <div className='h-fit flex flex-row'> {renderHearts()} </div> </div>
+                            <div className='h-fit'> Player steps/ Limited steps: <br /> {playerSteps}/{limitedSteps} </div>
                         </div>
                     </div>
                 </div>

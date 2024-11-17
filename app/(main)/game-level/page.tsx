@@ -1,151 +1,17 @@
 "use client";
 
-import Link from "next/link"
+import Level from "@/app/ui/game-level/level";
+import Close from "@/app/ui/button";
 
 export default function Page() {
     return (
-        <div className="bg-sky-400 w-full h-full">
-            <h1 className="text-3xl font-bold mb-6 text-center">Course Syllabus</h1>
-
-            <div className="grid grid-rows-1 gap-4 w-3/6">
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            course 1 (DBTW)
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DBTW",  
-                                    difficulty: "easy"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DBTW",
-                                    difficulty: "medium"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DBTW",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                    </div>
+        <div className='contianer flex flex-row justify-center items-center h-screen w-screen'>
+            <div className="container flex flex-col bg-gray-50 rounded-lg shadow-lg h-5/6 p-10">
+                <div className="container flex flex-row">
+                    <Close />
+                        <h1 className="text-7xl font-bold text-black w-full text-center justify-self-center">Course Syllabus</h1>
                 </div>
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            course 2 (DITD)
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DITD",
-                                    difficulty: "easy"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DITD",
-                                    difficulty: "medium"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: {
-                                    mode: "DITD",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            course 3 (DTWS)
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DTWS",
-                                    difficulty: "easy"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DTWS",
-                                    difficulty: "medium"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "DTWS",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Assignment
-                        </Link>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex flex-row">
-                        <div>
-                            Final Exam
-                        </div>
-                        <Link
-                            href={{
-                                pathname: "/game-level/game",
-                                query: { 
-                                    mode: "Final",
-                                    difficulty: "hard"
-                                }
-                            }}
-                        >
-                            Exam
-                        </Link>
-                    </div>
-                </div>
+                <Level />
             </div>
         </div>
     );

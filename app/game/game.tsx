@@ -5,8 +5,9 @@ import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 import Boss, { updateMessage } from './player/boss';
+import { promoteGrade, setPlayed } from './storage';
 
-export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
+export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
@@ -14,6 +15,8 @@ export let Mode2Name = new Map<Mode, string>([
     ['DTWS', 'Don\'t Take Wrong Steps'],
     ['Final', 'Final Boss']
 ]);
+
+let moveEveryNFrames = 5;
 
 export interface setting {
     width: number;
@@ -95,12 +98,13 @@ export default class Game {
     private camera: THREE.OrthographicCamera;
     private sceneRender: THREE.WebGLRenderer;
     private gamemode: Mode;
+    private difficulty: Difficulty;
     private gameSetting: setting;
     private maze: Maze;
     private mazeSolutionLength: number;
     private player: Player;
+    private limitedSteps: number;
     private frameCount: number;
-    private moveEveryNFrames: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask | null;
     private mazeSolutionLengthCallbacks: Set<(length: number) => void> | null;
@@ -109,13 +113,13 @@ export default class Game {
     private boss: Boss | null;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.frameCount = 0;
-        this.moveEveryNFrames = 5;
         this.animationFrameCount = 0;
         this.scene = scene;
         this.camera = camera;
         this.sceneRender = sceneRender;
         this.keyOrder = [];
         this.gamemode = mode;
+        this.difficulty = difficulty;
         this.bumpedKey = [];
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
@@ -348,12 +352,19 @@ export default class Game {
         this.frameCount++;
     
         // Move the player every 10 frames
-        if (this.frameCount >= this.moveEveryNFrames) {
+        if (this.frameCount >= moveEveryNFrames) {
             this.player.state.checkWin();
+            // TODO: Chnage this to popup
             if (this.player.state.isWin()) {
-                this.player.state.reset();
-                // TODO: Chnage this to popup
+                this.player.state.reset(); 
+                promoteGrade();
+                setPlayed(this.gamemode, this.difficulty);
                 alert('You win!');
+                window.location.href = '/game-level'; // Redirect to the home page
+                return;
+            } else if (this.player.state.isDead()) {
+                this.player.state.reset(); 
+                alert('You lost!');
                 window.location.href = '/game-level'; // Redirect to the home page
                 return;
             }
@@ -361,7 +372,7 @@ export default class Game {
             this.frameCount = 0; // Reset the frame counter
             
         }
-        if (this.animationFrameCount == this.moveEveryNFrames / 2 || this.animationFrameCount == this.moveEveryNFrames) {
+        if (this.animationFrameCount == moveEveryNFrames / 2 || this.animationFrameCount == moveEveryNFrames) {
             this.player.animate();
         }
 
