@@ -72,6 +72,7 @@ export default class Boss extends Player {
             // }
 
             // through walls
+            console.log("this.state.isMove() = ", this.state.isMove());
             this.chasePlayer(0.2);
         }
         

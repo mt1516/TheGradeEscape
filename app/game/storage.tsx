@@ -7,7 +7,8 @@ export enum GAMEMODE_DIFFICULTY {
     DITD_HARD = 'DITD-hard',
     DBTW_EASY = 'DBTW-easy',
     DBTW_MEDIUM = 'DBTW-medium',
-    DBTW_HARD = 'DBTW-hard'
+    DBTW_HARD = 'DBTW-hard',
+    FINAL_HARD = 'final-hard'
 }
 
 export function resetStorage() {
@@ -21,6 +22,7 @@ export function resetStorage() {
         localStorage.setItem('DBTW-easy', '0');
         localStorage.setItem('DBTW-medium', '0');
         localStorage.setItem('DBTW-hard', '0');
+        localStorage.setItem('final-hard', '0');
         localStorage.setItem('currentCharacter', '1');
         localStorage.setItem('currentGrade', 'F');
         window.location.reload();

@@ -7,7 +7,7 @@ import settings from './settings.json';
 import Boss, { updateMessage } from './player/boss';
 import { promoteGrade, setPlayed } from './storage';
 
-export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
+export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
@@ -103,7 +103,6 @@ export default class Game {
     private maze: Maze;
     private mazeSolutionLength: number;
     private player: Player;
-    private limitedSteps: number;
     private frameCount: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask | null;
@@ -448,7 +447,7 @@ export default class Game {
             return;
         }
         if (this.boss) {
-            const message: updateMessage = this.boss.update(this.moveEveryNFrames);
+            const message: updateMessage = this.boss.update(moveEveryNFrames);
             if (message.hasNewProjectile) {
                 this.scene.add(message.projectile.visual);
             }

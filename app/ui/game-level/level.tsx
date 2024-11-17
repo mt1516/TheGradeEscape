@@ -11,6 +11,7 @@ export default function Level() {
     var DBTW_EASY = checkPlayed(GAMEMODE_DIFFICULTY.DBTW_EASY) ? DBTW_EASY_PLAYED : DBTW_EASY_NOT_PLAYED;
     var DBTW_MEDIUM = canPlayMedium() ? (checkPlayed(GAMEMODE_DIFFICULTY.DBTW_MEDIUM) ? DBTW_MEDIUM_PLAYED : DBTW_MEDIUM_NOT_PLAYED) : DBTW_MEDIUM_UNAVAILABLE;
     var DBTW_HARD = canPlayHard() ? (checkPlayed(GAMEMODE_DIFFICULTY.DBTW_HARD) ? DBTW_HARD_PLAYED : DBTW_HARD_NOT_PLAYED) : DBTW_HARD_UNAVAILABLE;
+    var FINAL_EXAM = checkPlayed(GAMEMODE_DIFFICULTY.FINAL_HARD) ? FINAL_EXAM_PLAYED : FINAL_EXAM_NOT_PLAYED;
     return (
         <div className="container flex flex-row w-full h-full flex-wrap justify-around">
             <div className="grid grid-rows-3 gap-5 h-full w-1/5 items-center">
@@ -59,11 +60,12 @@ export default function Level() {
                     </div>
                 </div>
             </div>
-            <div className="container flex flex-col h-full w-1/6 bg-red-500 justify-center items-center">
+            {FINAL_EXAM}
+            {/* <div className="container flex flex-col h-full w-1/6 bg-red-500 justify-center items-center">
             <div className="text-2xl font-bold text-black text-wrap w-fit h-fit">
                 FINAL EXAM
             </div>
-            </div>
+            </div> */}
         </div>
     );
 }
@@ -181,4 +183,18 @@ let DBTW_HARD_NOT_PLAYED =
 let DBTW_HARD_UNAVAILABLE =
     <div className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg">
         Midterm
+    </div>
+let FINAL_EXAM_PLAYED =
+    <div className="container flex flex-col h-full w-1/6 bg-green-500 justify-center items-center">
+        Final Exam
+    </div>
+let FINAL_EXAM_NOT_PLAYED =
+    <Link className="container flex flex-col h-full w-1/6 bg-blue-400 justify-center items-center"
+        href={{ pathname: "/game-level/game", query: { mode: "Final", difficulty: "hard" } }}
+    >
+        Final Exam
+    </Link>
+let FINAL_EXAM_UNAVAILABLE =
+    <div className="container flex flex-col h-full w-1/6 bg-slate-500 justify-center items-center">
+        Final Exam
     </div>
