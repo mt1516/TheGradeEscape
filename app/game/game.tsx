@@ -4,8 +4,7 @@ import * as THREE from 'three';
 import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
-// import Boss from './boss/boss';
-import Boss from './player/boss';
+import Boss, { updateMessage } from './player/boss';
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -13,6 +12,7 @@ export let Mode2Name = new Map<Mode, string>([
     ['DBTW', 'Don\'t Break The Wall'],
     ['DITD', 'Dancing In The Dark'],
     ['DTWS', 'Don\'t Take Wrong Steps'],
+    ['Final', 'Final Boss']
 ]);
 
 export interface setting {
@@ -151,7 +151,7 @@ export default class Game {
                 this.playerStepsCallbacks = new Set();
                 break;
             case 'Final':
-                // this.boss = new Boss(this.player, new THREE.Vector3(startX, startY, 0));
+                this.healthChangeCallbacks = new Set();
                 this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
                 this.scene.add(this.boss.visual);
                 break;
@@ -189,6 +189,7 @@ export default class Game {
                 this.notifyPlayerStepsChange();
                 break;
             case 'Final':
+                this.notifyHealthChange();
                 break;
         }
         this.keyboardControls();
@@ -207,6 +208,7 @@ export default class Game {
                 this.playerStepsCallbacks?.clear();
                 break;
             case 'Final':
+                this.healthChangeCallbacks?.clear();
                 break;
         }
         window.removeEventListener('keydown', () => {});
@@ -389,12 +391,7 @@ export default class Game {
         this.bumpWallUpdate();
         this.darkModeUpdate();
         this.limitedStepsUpdate();
-        if (this.boss) {
-            const newProjectile = this.boss.update(this.moveEveryNFrames);
-            if (newProjectile) {
-                this.scene.add(newProjectile)
-            }
-        }
+        this.bossUpdate();
         this.sceneRender.render(this.scene, this.camera);
     }
 
@@ -432,6 +429,21 @@ export default class Game {
         }
         if (this.player.limitedStepsUpdate()) {
             this.notifyPlayerStepsChange();
+        }
+    }
+
+    private bossUpdate() {
+        if (this.gamemode !== 'Final') {
+            return;
+        }
+        if (this.boss) {
+            const message: updateMessage = this.boss.update(this.moveEveryNFrames);
+            if (message.hasNewProjectile) {
+                this.scene.add(message.projectile.visual);
+            }
+            if (message.playerHit) {
+                this.notifyHealthChange();
+            }
         }
     }
 

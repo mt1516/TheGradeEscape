@@ -2,15 +2,13 @@ import * as THREE from 'three';
 
 export default class Projectile {
     public visual: THREE.Sprite;
-    private hitbox: number[];
     private direction: THREE.Vector3;
     private speed: number;
 
-    constructor(position: THREE.Vector3, direction: THREE.Vector3, hitboxSize: number[]) {
+    constructor(position: THREE.Vector3, direction: THREE.Vector3) {
         this.visual = this.renderProjectile();
         this.visual.position.copy(position);
         this.direction = direction;
-        this.hitbox = hitboxSize;
         this.speed = 0.3;
     }
 
