@@ -31,11 +31,14 @@ export default function CharacterPage() {
     }, [c]);
 
     return (
-        <div className='flex flex-row justify-center items-center h-screen'>
-            <div className="bg-gray-50 rounded-lg shadow-lg w-8/12 h-4/6">
-                <Close />
-                <div className="text-7xl font-bold text-black justify-self-center w-fit">Character Selection</div>
-                <Choose current={c}/>
+        <div className='contianer flex flex-row justify-center items-center h-screen w-screen'>
+            <div className="container flex flex-col bg-gray-50 rounded-lg shadow-lg h-5/6 p-10">
+                <div className="container flex flex-row">
+                    <Close />
+                    <h1 className="text-7xl font-bold text-black w-full text-center justify-self-center">Character Selection</h1>
+                </div>
+
+                <Choose current={c} />
             </div>
         </div>
     );
