@@ -12,95 +12,57 @@ export default function Level() {
     var DBTW_MEDIUM = canPlayMedium() ? (checkPlayed(GAMEMODE_DIFFICULTY.DBTW_MEDIUM) ? DBTW_MEDIUM_PLAYED : DBTW_MEDIUM_NOT_PLAYED) : DBTW_MEDIUM_UNAVAILABLE;
     var DBTW_HARD = canPlayHard() ? (checkPlayed(GAMEMODE_DIFFICULTY.DBTW_HARD) ? DBTW_HARD_PLAYED : DBTW_HARD_NOT_PLAYED) : DBTW_HARD_UNAVAILABLE;
     return (
-        <div className="flex flex-col w-fit h-full flex-wrap">
-            <div className="grid grid-rows-3 gap-5 h-4/6 w-fit items-center justify-self-start">
-                <div className="container px-6 py-3 text-black text-wrap w-fit justify-self-start text-lg">
+        <div className="container flex flex-row w-full h-full flex-wrap justify-around">
+            <div className="grid grid-rows-3 gap-5 h-full w-1/5 items-center">
+                <div className="container py-3 text-black text-wrap w-fit justify-self-start text-lg">
                     Don't Take Wrong Steps
                 </div>
-                <div className="container px-6 py-3 text-black text-wrap w-fit justify-self-start text-lg">
+                <div className="container py-3 text-black text-wrap w-fit justify-self-start text-lg">
                     Dancing in the Dark
                 </div>
-                <div className="container px-6 py-3 text-black text-wrap w-fit justify-self-start text-lg">
+                <div className="container py-3 text-black text-wrap w-fit justify-self-start text-lg">
                     Don't Bump the Wall
                 </div>
             </div>
-            <div className="grid grid-rows-3 gap-5 h-4/6 w-10/12 justify-self-center">
-                <div className="grid grid-cols-3 gap-4 mx-3 w-11/12 justify-self-center">
+            <div className="grid grid-rows-3 gap-5 h-full w-1/2">
+                <div className="grid grid-cols-3 gap-4 w-full justify-self-center">
                     <div className="container flex flex-col justify-center items-center">
                         {DTWS_EASY}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         {DTWS_MEDIUM}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "medium" } }}
-                        >
-                            Quiz
-                        </Link> */}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         {DTWS_HARD}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DTWS", difficulty: "hard" } }}
-                        >
-                            Midterm
-                        </Link> */}
                     </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 mx-3 w-11/12 justify-self-center">
+                <div className="grid grid-cols-3 gap-4 w-full justify-self-center">
                     <div className="container flex flex-col justify-center items-center">
                         {DITD_EASY}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DITD", difficulty: "easy" } }}
-                        >
-                            Assignment
-                        </Link> */}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         {DITD_MEDIUM}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DITD", difficulty: "medium" } }}
-                        >
-                            Quiz
-                        </Link> */}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         {DITD_HARD}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DITD", difficulty: "hard" } }}
-                        >
-                            Midterm
-                        </Link> */}
                     </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 mx-3 w-11/12 justify-self-center">
+                <div className="grid grid-cols-3 gap-4 w-full justify-self-center">
                     <div className="container flex flex-col justify-center items-center">
                         {DBTW_EASY}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DBTW", difficulty: "easy" } }}
-                        >
-                            Assignment
-                        </Link> */}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         {DBTW_MEDIUM}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DBTW", difficulty: "medium" } }}
-                        >
-                            Quiz
-                        </Link> */}
                     </div>
                     <div className="container flex flex-col justify-center items-center">
                         {DBTW_HARD}
-                        {/* <Link className="container px-5 py-4 flex flex-col items-center bg-slate-500 text-lg"
-                            href={{ pathname: "/game-level/game", query: { mode: "DBTW", difficulty: "hard" } }}
-                        >
-                            Midterm
-                        </Link> */}
                     </div>
                 </div>
             </div>
-            <div className="h-4/6 mx-5 text-2xl font-bold text-black content-center">
+            <div className="container flex flex-col h-full w-1/6 bg-red-500 justify-center items-center">
+            <div className="text-2xl font-bold text-black text-wrap w-fit h-fit">
                 FINAL EXAM
+            </div>
             </div>
         </div>
     );

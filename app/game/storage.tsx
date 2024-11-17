@@ -12,7 +12,6 @@ export enum GAMEMODE_DIFFICULTY {
 
 export function resetStorage() {
     if (typeof window !== 'undefined') {
-        console.log('Initializing storage');
         localStorage.setItem('DTWS-easy', '0');
         localStorage.setItem('DTWS-medium', '0');
         localStorage.setItem('DTWS-hard', '0');
@@ -24,6 +23,7 @@ export function resetStorage() {
         localStorage.setItem('DBTW-hard', '0');
         localStorage.setItem('currentCharacter', '1');
         localStorage.setItem('currentGrade', 'F');
+        window.location.reload();
     }
 }
 
