@@ -11,9 +11,11 @@ export default function Page() {
         }, 20 * 1000);
     })
     return (
-        <>
+        <div className="relative">
             <Close />
-            <Credit/>
-        </>
+            <div className="flex justify-center items-center h-screen">
+                <Credit />
+            </div>
+        </div>
     );
 }

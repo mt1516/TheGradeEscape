@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
+import { promoteGrade, setPlayed } from './storage';
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -95,6 +96,7 @@ export default class Game {
     private camera: THREE.OrthographicCamera;
     private sceneRender: THREE.WebGLRenderer;
     private gamemode: Mode;
+    private difficulty: Difficulty;
     private gameSetting: setting;
     private maze: Maze;
     private player: Player;
@@ -114,6 +116,7 @@ export default class Game {
         this.sceneRender = sceneRender;
         this.keyOrder = [];
         this.gamemode = mode;
+        this.difficulty = difficulty;
         this.bumpedKey = [];
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
@@ -334,10 +337,17 @@ export default class Game {
         // Move the player every 10 frames
         if (this.frameCount >= moveEveryNFrames) {
             this.player.state.checkWin();
+            // TODO: Chnage this to popup
             if (this.player.state.isWin()) {
-                this.player.state.reset();
-                // TODO: Chnage this to popup
+                this.player.state.reset(); 
+                promoteGrade();
+                setPlayed(this.gamemode, this.difficulty);
                 alert('You win!');
+                window.location.href = '/game-level'; // Redirect to the home page
+                return;
+            } else if (this.player.state.isDead()) {
+                this.player.state.reset(); 
+                alert('You lost!');
                 window.location.href = '/game-level'; // Redirect to the home page
                 return;
             }
