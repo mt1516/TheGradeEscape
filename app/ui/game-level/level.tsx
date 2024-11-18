@@ -1,4 +1,4 @@
-import { canPlayHard, canPlayMedium, checkPlayed, GAMEMODE_DIFFICULTY } from "@/app/game/storage";
+import { canPlayFinal, canPlayHard, canPlayMedium, checkPlayed, GAMEMODE_DIFFICULTY } from "@/app/game/storage";
 import Link from "next/link";
 
 export default function Level() {
@@ -11,7 +11,7 @@ export default function Level() {
     var DBTW_EASY = checkPlayed(GAMEMODE_DIFFICULTY.DBTW_EASY) ? DBTW_EASY_PLAYED : DBTW_EASY_NOT_PLAYED;
     var DBTW_MEDIUM = canPlayMedium() ? (checkPlayed(GAMEMODE_DIFFICULTY.DBTW_MEDIUM) ? DBTW_MEDIUM_PLAYED : DBTW_MEDIUM_NOT_PLAYED) : DBTW_MEDIUM_UNAVAILABLE;
     var DBTW_HARD = canPlayHard() ? (checkPlayed(GAMEMODE_DIFFICULTY.DBTW_HARD) ? DBTW_HARD_PLAYED : DBTW_HARD_NOT_PLAYED) : DBTW_HARD_UNAVAILABLE;
-    var FINAL_EXAM = checkPlayed(GAMEMODE_DIFFICULTY.FINAL_HARD) ? FINAL_EXAM_PLAYED : FINAL_EXAM_NOT_PLAYED;
+    var FINAL_EXAM = canPlayFinal()? (checkPlayed(GAMEMODE_DIFFICULTY.FINAL_HARD) ? FINAL_EXAM_PLAYED : FINAL_EXAM_NOT_PLAYED) : FINAL_EXAM_UNAVAILABLE;
     return (
         <div className="container flex flex-row w-full h-full flex-wrap justify-around">
             <div className="grid grid-rows-3 gap-5 h-full w-1/5 items-center">

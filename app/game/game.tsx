@@ -101,7 +101,7 @@ export default class Game {
     private difficulty: Difficulty;
     private gameSetting: setting;
     private maze: Maze;
-    private mazeSolutionLength: number;
+    private stepLimit: number;
     private player: Player;
     private frameCount: number;
     private animationFrameCount: number;
@@ -123,7 +123,7 @@ export default class Game {
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
-        this.mazeSolutionLength = -1;
+        this.stepLimit = -1;
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
@@ -132,9 +132,7 @@ export default class Game {
         this.mazeSolutionLengthCallbacks = null;
         this.playerStepsCallbacks = null;
         this.healthChangeCallbacks = null;
-        let limitedSteps = -1;
-        this.player = new Player([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, limitedSteps);
-        this.scene.add(this.player.visual);
+        this.stepLimit = -1;
         this.boss = null;
         switch (this.gamemode) {
             case 'DBTW':
@@ -148,17 +146,18 @@ export default class Game {
                 this.scene.add(this.maskPlayerView.mask);
                 break;
             case 'DTWS':
-                this.mazeSolutionLength = this.maze.getLengthOfSolution();
-                limitedSteps = Math.ceil(this.mazeSolutionLength * 1.3);
+                this.stepLimit = Math.ceil(this.maze.getLengthOfSolution() * 1.3);
                 this.mazeSolutionLengthCallbacks = new Set();
                 this.playerStepsCallbacks = new Set();
                 break;
-            case 'Final':
-                this.healthChangeCallbacks = new Set();
-                this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
-                this.scene.add(this.boss.visual);
-                break;
         }
+        this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
+        if (this.gamemode === 'Final') {
+            this.healthChangeCallbacks = new Set();
+            this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
+            this.scene.add(this.boss.visual);
+        }
+        this.scene.add(this.player.visual);
         this.renderMaze();
     }
 
@@ -244,7 +243,7 @@ export default class Game {
     }
 
     private notifytMazeSolutionLengthChange() {
-        this.mazeSolutionLengthCallbacks?.forEach((callback) => callback(this.mazeSolutionLength));
+        this.mazeSolutionLengthCallbacks?.forEach((callback) => callback(this.stepLimit));
     }
 
     private notifyPlayerStepsChange() {
