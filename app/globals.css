@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.credits {
+  perspective: 100px;
+}
+
+@keyframes crawl {
+  0% {
+    transform:rotateX(20deg) translateY(100%) ;
+  }
+  100% {
+    transform:rotateX(25deg) translateY(-100%);
+  }
+}
+
+@keyframes title {
+  /* 0% {transform: scale(0.875) rotate(-20deg);}
+  100% {transform: scale(1) rotate(-20deg);} */
+  0%, 100% {
+    scale: 1;
+  }
+  25%, 75% {
+    scale: 1.1;
+  }
+  50% {
+    scale: 1.2;
+  }
+}
