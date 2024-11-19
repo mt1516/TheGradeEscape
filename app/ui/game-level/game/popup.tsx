@@ -7,11 +7,14 @@ export default function Gameend(props: {
     if (props.state == 1) {
         return (
             <Popup open={true} closeOnDocumentClick={false} closeOnEscape={false} className="justify-center items-center">
-                <div className="container flex flex-col bg-gray-500 border-2 border-black w-80 h-52 justify-center items-center">
+                <div className="container flex flex-col bg-gray-500 border-2 border-black w-80 h-52 justify-center items-center bg-cover bg-center bg-no-repeat"
+                style={{
+                    backgroundImage: 'url("/background/high-five-cat.gif")',
+                }}>
                     <h1 className="text-3xl h-1/4 w-full text-center m-2">Congrets!</h1>
                     <div className="container border-2 h-3/4 w-3/4 m-4">
                         <div className='grid grid-rows-2 w-full h-full text-lg text-black justify-center'>
-                            <div className='text-xl'> You win! </div>
+                            <div className='text-xl text-white'> You win! </div>
                             <button className='bg-green-400 border-2 my-2 px-2'
                             onClick={props.handleClosePopup}>Close
                             </button>
@@ -23,11 +26,14 @@ export default function Gameend(props: {
     } else {
         return (
             <Popup open={true} closeOnDocumentClick={false} closeOnEscape={false} className="justify-center items-center">
-                <div className="container flex flex-col bg-gray-500 border-2 border-black w-80 h-52 justify-center items-center">
+                <div className="container flex flex-col bg-gray-500 border-2 border-black w-80 h-52 justify-center items-center bg-cover bg-center bg-no-repeat"
+                style={{
+                    backgroundImage: 'url("/background/laughing-cat.gif")',
+                }}>
                     <h1 className="text-3xl h-1/4 w-full text-center m-2"> Skill Issue!!! </h1>
                     <div className="container border-2 h-3/4 w-3/4 m-4">
                         <div className='grid grid-rows-2 w-full h-full text-lg text-black justify-center'>
-                            <div className='text-xl text-center'> Pathetic </div>
+                            <div className='text-xl text-center text-white'> Pathetic </div>
                             <button className='bg-red-400 border-2 my-2 px-2'
                             onClick={props.handleClosePopup}>Never give up
                             </button>
