@@ -3,6 +3,7 @@
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import Canvas from "@/app/ui/game-level/game/canvas";
 import { Mode, Difficulty } from "@/app/game/game";
+import Close from "@/app/ui/game-level/game/button";
 
 export default function Page() {
     const searchParams: ReadonlyURLSearchParams = useSearchParams()
@@ -10,8 +11,11 @@ export default function Page() {
     const difficulty: Difficulty = (searchParams.get("difficulty") as Difficulty) ?? "null";
     // TODO: Add error.tsx to handle error
     return (
-        <div className="flex justify-center items-center h-screen">
-            <Canvas mode={mode} difficulty={difficulty} />
-        </div>
+        <>
+            <Close />
+            <div className="flex justify-center items-center h-screen">
+                <Canvas mode={mode} difficulty={difficulty} />
+            </div>
+        </>
     );
 }

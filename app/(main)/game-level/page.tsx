@@ -9,7 +9,7 @@ export default function Page() {
             <div className="container flex flex-col bg-gray-50 rounded-lg shadow-lg h-5/6 p-10">
                 <div className="container flex flex-row">
                     <Close />
-                        <h1 className="text-7xl font-bold text-black w-full text-center justify-self-center">Course Syllabus</h1>
+                    <h1 className="text-7xl font-bold text-black w-full text-center justify-self-center">Course Syllabus</h1>
                 </div>
                 <Level />
             </div>
