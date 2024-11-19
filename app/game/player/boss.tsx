@@ -57,7 +57,7 @@ export default class Boss extends Player {
         return boss;
     }
 
-    public update(tick: number): Projectile | null {
+    public update(tick: number): updateMessage {
         const message = new updateMessage(null, false, false);
         if (this.player.state.dead() === true) {
             return message;
@@ -72,8 +72,8 @@ export default class Boss extends Player {
             // }
 
             // through walls
-            console.log("this.state.isMove() = ", this.state.isMove());
-            this.chasePlayer(0.2);
+            // console.log("this.state.isMove() = ", this.state.isMove());
+            // this.chasePlayer(0.2);
         }
         
         this.lastProjectileUpdate -= tick;
@@ -113,22 +113,23 @@ export default class Boss extends Player {
         this.projectiles.forEach((projectile) => {
             projectile.update(tick)
             // check if projectile hitbox has hit player hitbox
-            if (projectile.hasHitPlayer(this.player)) {
+            if (projectile.hasHitPlayer(this.player.visual)) {
+                playerHit = true;
                 projectile.visual.material.opacity = 0;
                 remove.push(this.projectiles.indexOf(projectile));
-                this.player.bumpWallUpdate();
-                playerHit = true;
+                // this.player.bumpWallUpdate();
             }
             // check if projectile has exited the map
-            // if (projectile.visual.position.x < -100 || projectile.visual.position.y < -100 || projectile.visual.position.x > 100 || projectile.visual.position.y > 100) {
-            //     projectile.opacity = 0;
-            //     remove.push(this.projectiles.indexOf(projectile));
-            // }
+            if (projectile.visual.position.x < -100 || projectile.visual.position.y < -100 || projectile.visual.position.x > 100 || projectile.visual.position.y > 100) {
+                remove.push(this.projectiles.indexOf(projectile));
+            }
 
         });
-        remove.forEach((index) => {
-            this.projectiles.splice(index, 1);
-        });
+        if (remove.length > 0) {
+            remove.forEach((index) => {
+                this.projectiles.splice(index, 1);
+            });
+        }
         this.lastProjectileUpdate = 5;
         return playerHit;
     }

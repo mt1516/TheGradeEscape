@@ -27,11 +27,10 @@ export default class Projectile {
         this.visual.position.add(this.direction.clone().multiplyScalar(this.speed * deltaTime));
     }
 
-    public hasHitPlayer(player: THREE.Sprite): boolean {
-        // Check if projectile has hit player
-        let playerHitbox = player.visual.scale.clone();
+    public hasHitPlayer(playerVisual: THREE.Sprite): boolean {
+        let playerHitbox = playerVisual.scale.clone();
         let projectileHitbox = this.visual.scale.clone();
-        let playerPos = player.visual.position.clone();
+        let playerPos = playerVisual.position.clone();
         let projectilePos = this.visual.position.clone();
         let playerLeft = playerPos.x - playerHitbox.x / 2;
         let playerRight = playerPos.x + playerHitbox.x / 2;

@@ -238,6 +238,10 @@ export default class StateMachine {
         this.direction = direction;
     }
 
+    public setHealth(health: number) {
+        this.health = health;
+    }
+
     public dead() {
         return (this.state === STATE.DEAD);
     }

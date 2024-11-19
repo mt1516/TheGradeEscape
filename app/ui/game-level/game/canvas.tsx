@@ -18,6 +18,8 @@ export default function Canvas(props: {
     const [playerHealth, setPlayerHealth] = useState(0);
     const [playerSteps, setPlayerSteps] = useState(0);
     const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(0);
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const game: Game = new Game(scene, camera, sceneRender, props.mode, props.difficulty);
@@ -37,6 +39,7 @@ export default function Canvas(props: {
             let unsubscribeToHealthChange: () => void;
             let unsubscribeToMazeSolutionLengthChange: () => void;
             let unsubscribeToPlayerStepsChange: () => void;
+            let unsubscribeToTimer: () => void;
 
             switch (props.mode) {
                 case 'DBTW':
@@ -52,7 +55,16 @@ export default function Canvas(props: {
                         setPlayerSteps(steps);
                     });
                     break;
+                case 'Final':
+                    unsubscribeToHealthChange = game.subscribeToPlayerHealthChange((health) => {
+                        setPlayerHealth(health);
+                    });
+                    break;
             }
+
+            unsubscribeToTimer = game.subscribeToTimer((time) => {
+                setTimeLeft(Math.ceil(time)); // Display time in seconds
+            });
 
             game.run();
             return () => {
@@ -66,7 +78,11 @@ export default function Canvas(props: {
                         unsubscribeToMazeSolutionLengthChange();
                         unsubscribeToPlayerStepsChange();
                         break;
+                    case 'Final':
+                        unsubscribeToHealthChange();
+                        break;
                 }
+                unsubscribeToTimer?.();
                 scene.clear();
                 sceneRender.dispose();
                 camera.clear();
@@ -77,18 +93,13 @@ export default function Canvas(props: {
     }, []);
 
     const renderHearts = () => {
-        if (props.mode !== 'DBTW') {
-            return [
-                <img key={0} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
-                <img key={1} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
-                <img key={2} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />,
-            ]
-        }
         const hearts = [];
-        for (let i = 0; i < playerHealth; i++) {
-            hearts.push(
-                <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
-            );
+        if (props.mode !== 'DBTW') {
+            for (let i = 0; i < playerHealth; i++) {
+                hearts.push(
+                    <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
+                );
+            }
         }
         return hearts;
     };
@@ -113,6 +124,7 @@ export default function Canvas(props: {
                             <div className='h-fit'> Character: </div>
                             <div className='h-fit'> Health: <div className='h-fit flex flex-row'> {renderHearts()} </div> </div>
                             <div className='h-fit'> Player steps/ Limited steps: <br /> {playerSteps}/{mazeSolutionLength} </div>
+                            <div className='h-fit'> Time Left: {timeLeft} seconds </div>
                         </div>
                     </div>
                 </div>

@@ -110,6 +110,12 @@ export default class Game {
     private playerStepsCallbacks: Set<(steps: number) => void> | null;
     private healthChangeCallbacks: Set<(health: number) => void> | null;
     private boss: Boss | null;
+    private timeLimit: number;
+    private startTime: number;
+    private lastCall: number;
+    private timerCallbacks: Set<(time: number) => void> | null;
+    // private immunityPeriod: number;
+    // private lastHitTime: number;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.frameCount = 0;
         this.animationFrameCount = 0;
@@ -134,9 +140,18 @@ export default class Game {
         this.healthChangeCallbacks = null;
         this.stepLimit = -1;
         this.boss = null;
+        this.startTime = Date.now();
+        this.lastCall = Date.now();
+        this.timerCallbacks = new Set();
+        // this.immunityPeriod = 5000; // 5 seconds
+        // this.lastHitTime = 0;
+        const stepsRequired = this.maze.getLengthOfSolution();
+        this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
+        this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
         switch (this.gamemode) {
             case 'DBTW':
                 this.healthChangeCallbacks = new Set();
+                this.timeLimit = this.timeLimit * 0.8;
                 break;
             case 'DITD':
                 this.maskPlayerView = new Mask();
@@ -149,14 +164,23 @@ export default class Game {
                 this.stepLimit = Math.ceil(this.maze.getLengthOfSolution() * 1.3);
                 this.mazeSolutionLengthCallbacks = new Set();
                 this.playerStepsCallbacks = new Set();
+                this.timeLimit = Math.ceil(this.timeLimit * 0.9);
+                break;
+            case 'Final':
+                this.healthChangeCallbacks = new Set();
+                this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
+                this.player.state.setHealth(5); // Set number of hearts to 5
+                this.scene.add(this.boss.visual);
+                this.scene.add(this.player.immunityMask);
                 break;
         }
-        this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
-        if (this.gamemode === 'Final') {
-            this.healthChangeCallbacks = new Set();
-            this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
-            this.scene.add(this.boss.visual);
-        }
+        // this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
+        // if (this.gamemode === 'Final') {
+        //     this.healthChangeCallbacks = new Set();
+        //     this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
+        //     this.player.state.setHealth(5); // Set number of hearts to 5
+        //     this.scene.add(this.boss.visual);
+        // }
         this.scene.add(this.player.visual);
         this.renderMaze();
     }
@@ -238,6 +262,13 @@ export default class Game {
         };
     }
 
+    public subscribeToTimer(callback: (time: number) => void): () => void {
+        this.timerCallbacks?.add(callback);
+        return () => {
+            this.timerCallbacks?.delete(callback);
+        };
+    }
+
     private notifyHealthChange() {
         this.healthChangeCallbacks?.forEach((callback) => callback(this.player.state.getHealth()));
     }
@@ -248,6 +279,10 @@ export default class Game {
 
     private notifyPlayerStepsChange() {
         this.playerStepsCallbacks?.forEach((callback) => callback(this.player.state.getSteps()));
+    }
+
+    private notifyTimer(elapsedTime: number) {
+        this.timerCallbacks?.forEach((callback) => callback(this.timeLimit - elapsedTime));
     }
 
     private renderMaze() {
@@ -401,7 +436,23 @@ export default class Game {
         this.darkModeUpdate();
         this.limitedStepsUpdate();
         this.bossUpdate();
+        this.updateTimer();
         this.sceneRender.render(this.scene, this.camera);
+    }
+
+    private updateTimer() {
+        const currentTime = Date.now();
+        if (currentTime - this.lastCall < 1000) {
+            return;
+        }
+        this.lastCall = currentTime;
+        const elapsedTime = (currentTime - this.startTime) / 1000; // Convert to seconds
+        this.notifyTimer(elapsedTime);
+        if (elapsedTime >= this.timeLimit) {
+            alert('Time is up! You lost!');
+            window.location.href = '/game-level'; // Redirect to the home page
+            return;
+        }
     }
 
     private bumpWallUpdate() {
@@ -409,11 +460,9 @@ export default class Game {
             return;
         }
         if (this.player.bumpWallUpdate()) {
-            // console.log(`before: keyOrder = ${this.keyOrder}`)
-            this.notifyHealthChange()
-            this.bumpedKey = [...this.keyOrder]
+            this.notifyHealthChange();
+            this.bumpedKey = [...this.keyOrder];
             this.keyOrder = [];
-            // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
     }
 
@@ -451,7 +500,19 @@ export default class Game {
                 this.scene.add(message.projectile.visual);
             }
             if (message.playerHit) {
-                this.notifyHealthChange();
+                // this.player.hitByBoss();
+                const hit = this.player.hitByBoss();
+                if (hit) {
+                    this.notifyHealthChange();
+                }
+                // const currentTime = Date.now();
+                // if (currentTime - this.lastHitTime < this.immunityPeriod) {
+                //     return;
+                // }
+                // this.player.bumpWallUpdate();
+                // this.notifyHealthChange();
+                // this.lastHitTime = Date.now();
+                // this.player.startImmunity();
             }
         }
     }
