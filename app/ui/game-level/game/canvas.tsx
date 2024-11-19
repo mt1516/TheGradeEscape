@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { useState, useEffect, useRef } from "react";
 import Game, { Mode, Difficulty, Mode2Name } from '@/app/game/game';
+import React from 'react';
+import Gameend from './popup'
 
 export default function Canvas(props: {
     mode: Mode;
@@ -15,6 +17,7 @@ export default function Canvas(props: {
     sceneRender.setClearColor(0x000000);
     sceneRender.setClearAlpha(0);
 
+    const [gameState, setGameState] = useState(0);
     const [playerHealth, setPlayerHealth] = useState(0);
     const [playerSteps, setPlayerSteps] = useState(0);
     const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
@@ -34,9 +37,14 @@ export default function Canvas(props: {
             };
             window.addEventListener('resize', handleResize);
 
+            let unsubscribeToGameState: () => void;
             let unsubscribeToHealthChange: () => void;
             let unsubscribeToMazeSolutionLengthChange: () => void;
             let unsubscribeToPlayerStepsChange: () => void;
+
+            unsubscribeToGameState = game.subscribeToGameState((state) => {
+                setGameState(state);
+            });
 
             switch (props.mode) {
                 case 'DBTW':
@@ -58,6 +66,7 @@ export default function Canvas(props: {
             return () => {
                 game.end();
                 window.removeEventListener('resize', handleResize);
+                unsubscribeToGameState();
                 switch (props.mode) {
                     case 'DBTW':
                         unsubscribeToHealthChange();
@@ -75,6 +84,11 @@ export default function Canvas(props: {
             }
         }
     }, []);
+
+    const handleClosePopup = () => {
+        setGameState(0);
+        window.location.href = '/game-level';
+    };
 
     const renderHearts = () => {
         if (props.mode !== 'DBTW') {
@@ -104,6 +118,7 @@ export default function Canvas(props: {
             >
             </div>
             <div className="flex justify-start items-center w-4/12 h-full">
+            {gameState !== 0 && <Gameend state={gameState} handleClosePopup={handleClosePopup}/>}
                 <div className="continaer bg-gray-500 border-2 border-black p-9 w-11/12 h-4/6">
                     <h1 className="text-3xl h-[12%]">Game Information</h1>
                     <div className="container border-2 h-[88%]">
