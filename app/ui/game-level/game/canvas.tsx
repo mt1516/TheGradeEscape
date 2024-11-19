@@ -110,7 +110,7 @@ export default function Canvas(props: {
     return (
         <div className="flex flex-row w-screen h-screen bg-cover bg-center bg-no-repeat"
             style={{
-                backgroundImage: 'url("/texture/hkust.jpg")',
+                backgroundImage: 'url("/background/hkust.jpg")',
             }}
         >
             <div className="flex justify-start w-8/12 h-full"
