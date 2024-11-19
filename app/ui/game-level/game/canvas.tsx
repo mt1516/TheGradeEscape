@@ -117,8 +117,8 @@ export default function Canvas(props: {
                 ref={containerRef}
             >
             </div>
-            <div className="flex justify-start items-center w-4/12 h-full">
             {gameState !== 0 && <Gameend state={gameState} handleClosePopup={handleClosePopup}/>}
+            <div className="flex justify-start items-center w-4/12 h-full">
                 <div className="continaer bg-gray-500 border-2 border-black p-9 w-11/12 h-4/6">
                     <h1 className="text-3xl h-[12%]">Game Information</h1>
                     <div className="container border-2 h-[88%]">
