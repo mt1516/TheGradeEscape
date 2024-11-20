@@ -9,43 +9,38 @@ export default function Home() {
       <div className="container flex flex-col bg-gray-50 rounded-lg shadow-lg h-5/6 p-10">
         <h1 className="container text-7xl font-bold text-center h-1/6 animate-[title_0.7s_linear_infinite] text-black">The Grade Escape</h1>
         <div className="container flex flex-col h-5/6 w-full justify-center">
-        <div className="container flex flex-col h-5/6 w-1/2 justify-self-start items-center">
-          <div className="grid grid-rows-4 gap-12 w-1/2 h-full justify-center">
-            <div className="container h-4/5 w-52 flex flex-row justify-center">
-              <Link
-                className="w-full h-full font-bold rounded text-center content-center text-2xl bg-green-500 hover:bg-green-600 text-white "
-                href="/game-level">
-                Hell Start
-              </Link>
-            </div>
-            <div className="container h-4/5 w-52 flex flex-row justify-center">
-              <Link
-                className="w-full h-full font-bold rounded text-center content-center text-2xl bg-red-500 hover:bg-red-600 text-white"
-                href="/character">
-                Character
-              </Link>
-            </div>
-            <div className="container h-4/5 w-52 flex flex-row justify-center">
-              <Link
-                className="w-full h-full font-bold rounded text-center content-center text-2xl bg-blue-500 hover:bg-blue-600 text-white"
-                href="/credits">
-                Credits
-              </Link>
-            </div>
-            <div className="container h-4/5 w-52 flex flex-row justify-center">
-              <button className="w-full h-full font-bold rounded text-center content-center text-2xl bg-gray-500 hover:bg-gray-600 text-white"
-                onClick={resetStorage}>
-                Reset
-              </button>
+          <div className="container flex flex-col h-5/6 w-1/2 justify-self-start items-center">
+            <div className="grid grid-rows-4 gap-12 w-1/2 h-full justify-center">
+              <div className="container h-4/5 w-52 flex flex-row justify-center">
+                <Link
+                  className="w-full h-full font-bold rounded text-center content-center text-2xl bg-green-500 hover:bg-green-600 text-white "
+                  href="/game-level">
+                  Hell Start
+                </Link>
+              </div>
+              <div className="container h-4/5 w-52 flex flex-row justify-center">
+                <Link
+                  className="w-full h-full font-bold rounded text-center content-center text-2xl bg-red-500 hover:bg-red-600 text-white"
+                  href="/character">
+                  Character
+                </Link>
+              </div>
+              <div className="container h-4/5 w-52 flex flex-row justify-center">
+                <Link
+                  className="w-full h-full font-bold rounded text-center content-center text-2xl bg-blue-500 hover:bg-blue-600 text-white"
+                  href="/credits">
+                  Credits
+                </Link>
+              </div>
+              <div className="container h-4/5 w-52 flex flex-row justify-center">
+                <Link
+                  className="w-full h-full font-bold rounded text-center content-center text-2xl bg-yellow-500 hover:bg-yellow-600 text-white"
+                  href="/scoreboard">
+                  Score Board
+                </Link>
+              </div>
             </div>
           </div>
-
-          {/* <div className="flex flex-row justify-center">
-            <div className="text-black">
-              V.I
-            </div>
-          </div> */}
-        </div>
         </div>
       </div>
     </div>
