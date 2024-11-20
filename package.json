@@ -9,12 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@react-three/fiber": "^8.17.10",
-    "again": "^0.0.1",
-    "next": "15.0.1",
-    "react": "19.0.0-rc-69d4b800-20241021",
-    "react-dom": "19.0.0-rc-69d4b800-20241021",
-    "three": "^0.169.0"
+    "next": "15.0.3",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "reactjs-popup": "^2.0.6",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@types/three": "^0.169.0",
