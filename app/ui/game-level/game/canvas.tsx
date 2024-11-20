@@ -108,13 +108,13 @@ export default function Canvas(props: {
 
     const renderHearts = () => {
         const hearts = [];
-        if (props.mode !== 'DBTW') {
+        // if (props.mode !== 'DBTW') {
             for (let i = 0; i < playerHealth; i++) {
                 hearts.push(
                     <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
                 );
             }
-        }
+        // }
         return hearts;
     };
 

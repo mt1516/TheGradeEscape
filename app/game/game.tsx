@@ -130,7 +130,6 @@ export default class Game {
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
-        this.stepLimit = -1;
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
@@ -140,7 +139,6 @@ export default class Game {
         this.mazeSolutionLengthCallbacks = null;
         this.playerStepsCallbacks = null;
         this.healthChangeCallbacks = null;
-        this.stepLimit = -1;
         this.boss = null;
         this.startTime = Date.now();
         this.lastCall = Date.now();
@@ -148,6 +146,7 @@ export default class Game {
         // this.immunityPeriod = 5000; // 5 seconds
         // this.lastHitTime = 0;
         const stepsRequired = this.maze.getLengthOfSolution();
+        this.stepLimit = Math.ceil(stepsRequired * 1.3)
         this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
         this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
         switch (this.gamemode) {
@@ -163,7 +162,6 @@ export default class Game {
                 this.scene.add(this.maskPlayerView.mask);
                 break;
             case 'DTWS':
-                this.stepLimit = Math.ceil(this.maze.getLengthOfSolution() * 1.3);
                 this.mazeSolutionLengthCallbacks = new Set();
                 this.playerStepsCallbacks = new Set();
                 this.timeLimit = Math.ceil(this.timeLimit * 0.9);
@@ -176,13 +174,6 @@ export default class Game {
                 this.scene.add(this.player.immunityMask);
                 break;
         }
-        // this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
-        // if (this.gamemode === 'Final') {
-        //     this.healthChangeCallbacks = new Set();
-        //     this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
-        //     this.player.state.setHealth(5); // Set number of hearts to 5
-        //     this.scene.add(this.boss.visual);
-        // }
         this.scene.add(this.player.visual);
         this.renderMaze();
     }
@@ -241,6 +232,7 @@ export default class Game {
         }
         window.removeEventListener('keydown', () => {});
         window.removeEventListener('keyup', () => {});
+        this.boss = null;
     }
 
     public subscribeToGameState(callback: (state: number) => void): () => void {
@@ -280,13 +272,6 @@ export default class Game {
 
     private notifyGameState(state: number) {
         this.stateCallbacks.forEach((callback) => callback(state));
-    }
-
-    public subscribeToTimer(callback: (time: number) => void): () => void {
-        this.timerCallbacks?.add(callback);
-        return () => {
-            this.timerCallbacks?.delete(callback);
-        };
     }
 
     private notifyHealthChange() {

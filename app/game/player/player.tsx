@@ -30,7 +30,7 @@ export default class Player {
         this.hurtAnimiationFrameCount = 0;
         this.hurtSound = new THREE.Audio(new THREE.AudioListener());
         // this.immunity = false;
-        this.immunityPeriod = 2500; // 2.5 seconds
+        this.immunityPeriod = 2000; // 2.5 seconds
         // const radius = 2;
         this.immunityMask = new THREE.Mesh(new THREE.CircleGeometry(2), new THREE.MeshBasicMaterial({ color: 0xffd500, transparent: true, opacity: 0 }));
         this.immunityMask.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 5);
@@ -54,6 +54,7 @@ export default class Player {
 
     public update(tick: number): void {
         this.animate();
+        this.hurtAnimation();
         if (this.hurtAnimiationFrameCount > 0) {
             this.hurtAnimiationFrameCount++;
             if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
@@ -62,33 +63,42 @@ export default class Player {
             }
         }
         if (this.state.isMove()) {
-            let [x, y]= this.state.update();
+            let [x, y] = this.state.update();
             this.visual.position.set(x, y, 3);
         }
         this.immunityMask.position.set(this.visual.position.x, this.visual.position.y, 5);
     }
 
-    public bumpWallUpdate(): boolean {
+    private startHurtAnimation() {
+        this.visual.material.color.setHex(0xff0000);
+        this.hurtAnimiationFrameCount = 1;
+        this.audioLoader.load('/sounds/hurtsound.mp3', (buffer) => {
+            this.hurtSound.setBuffer(buffer);
+            this.hurtSound.setLoop(false);
+            this.hurtSound.setVolume(1);
+            this.hurtSound.play();
+        });
+    }
+
+    private hurtAnimation() {
         if (this.hurtAnimiationFrameCount > 0) {
             this.hurtAnimiationFrameCount++;
-            if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
-                this.hurtAnimiationFrameCount = 0;
-                this.visual.material.color.setHex(0xffffff);
-            }
-            return false;
+            this.hurtAnimationCallback()
         }
+    }
+
+    private hurtAnimationCallback() {
+        if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
+            this.hurtAnimiationFrameCount = 0;
+            this.visual.material.color.setHex(0xffffff);
+        }
+    }
+
+    public bumpWallUpdate(): boolean {
         let flag = this.state.getbumpWallFlag()
         if (flag && this.hurtAnimiationFrameCount === 0) {
             this.state.bumpWallUpdate();
-            this.visual.material.color.setHex(0xff0000);
-            this.hurtAnimiationFrameCount = 1;
-            // const audioLoader = new THREE.AudioLoader();
-            this.audioLoader.load('/sounds/hurtsound.mp3',  (buffer) => {
-                this.hurtSound.setBuffer(buffer);
-                this.hurtSound.setLoop(false);
-                this.hurtSound.setVolume(1);
-                this.hurtSound.play();
-            });
+            this.startHurtAnimation();
         }
         return flag;
     }
@@ -143,7 +153,7 @@ export default class Player {
         }
         // this.lastHitTime = currentTime;
         console.log("Player is hit", this.lastHitTime, currentTime);
-        this.bumpWallUpdate();
+        this.startHurtAnimation();
         this.lastHitTime = currentTime;
         this.startImmunity();
         return true;

@@ -46,7 +46,7 @@ export function canPlayHard(): boolean {
 }
 
 export function canPlayFinal(): boolean {
-    return compareGrade('A') > 0;
+    return compareGrade('A') >= 0;
 }
 
 export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '1') : 1;
