@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { resetStorage } from '@/app/game/storage';
+import { initStorage } from '@/app/game/storage';
 
 export default function Home() {
   return (

@@ -11,7 +11,15 @@ export enum GAMEMODE_DIFFICULTY {
     FINAL_HARD = 'final-hard'
 }
 
-export function resetStorage() {
+export function initStorage() {
+    resetCurrentGame(false);
+    resetScoreBoard(false);
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('currentCharacter', '1');
+    }
+}
+
+export function resetCurrentGame(reload: boolean = true) {
     if (typeof window !== 'undefined') {
         localStorage.setItem('DTWS-easy', '0');
         localStorage.setItem('DTWS-medium', '0');
@@ -23,10 +31,71 @@ export function resetStorage() {
         localStorage.setItem('DBTW-medium', '0');
         localStorage.setItem('DBTW-hard', '0');
         localStorage.setItem('final-hard', '0');
-        localStorage.setItem('currentCharacter', '1');
         localStorage.setItem('currentGrade', 'F');
-        window.location.reload();
+        if (reload) {
+            window.location.reload();
+        }
     }
+}
+
+export function resetScoreBoard(reload: boolean = true) {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('top-1-s', '0');
+        localStorage.setItem('top-2-s', '0');
+        localStorage.setItem('top-3-s', '0');
+        localStorage.setItem('top-4-s', '0');
+        localStorage.setItem('top-5-s', '0');
+        localStorage.setItem('top-6-s', '0');
+        localStorage.setItem('top-7-s', '0');
+        localStorage.setItem('top-8-s', '0');
+        localStorage.setItem('top-9-s', '0');
+        localStorage.setItem('top-10-s', '0');
+        localStorage.setItem('top-1-g', 'F');
+        localStorage.setItem('top-2-g', 'F');
+        localStorage.setItem('top-3-g', 'F');
+        localStorage.setItem('top-4-g', 'F');
+        localStorage.setItem('top-5-g', 'F');
+        localStorage.setItem('top-6-g', 'F');
+        localStorage.setItem('top-7-g', 'F');
+        localStorage.setItem('top-8-g', 'F');
+        localStorage.setItem('top-9-g', 'F');
+        localStorage.setItem('top-10-g', 'F');
+        if (reload) {
+            window.location.reload();
+        }
+    }
+}
+
+export function updateScoreBoard(score: number, grade = 'F') {
+    if (typeof window === 'undefined') return;
+    var scores = [];
+    for (var i = 1; i <= 10; i++) {
+        scores.push(parseInt(localStorage.getItem('top-' + i) || '0'));
+    }
+    var grades = [];
+    for (var i = 1; i <= 10; i++) {
+        grades.push(localStorage.getItem('top-' + i + '-g') || 'F');
+    }
+    scores.push(score);
+    grades.push(grade);
+    scores.sort((a, b) => b - a);
+    grades.sort((a, b) => compareGrade(b) - compareGrade(a));
+    for (var i = 1; i <= 10; i++) {
+        localStorage.setItem('top-' + i, scores[i - 1].toString());
+        localStorage.setItem('top-' + i + '-g', grades[i - 1]);
+    }
+}
+
+export function getScoreBoard(): { score: number, grade: string }[] {
+    if (typeof window === 'undefined') return [];
+    var scores = [];
+    for (var i = 1; i <= 10; i++) {
+        scores.push({
+            score: parseInt(localStorage.getItem('top-' + i) || '0'),
+            grade: localStorage.getItem('top-' + i + '-g') || 'F'
+        });
+    }
+    return scores;
 }
 
 export function checkPlayed(mode: GAMEMODE_DIFFICULTY): boolean {
@@ -37,16 +106,8 @@ export function setPlayed(mode: string, difficulty: string) {
     localStorage.setItem(mode + '-' + difficulty, '1');
 }
 
-export function canPlayMedium(): boolean {
-    return compareGrade('C') > 0;
-}
-
-export function canPlayHard(): boolean {
-    return compareGrade('B') > 0;
-}
-
 export function canPlayFinal(): boolean {
-    return compareGrade('A') > 0;
+    return compareGrade('A') >= 0;
 }
 
 export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '1') : 1;
