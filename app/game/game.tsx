@@ -106,6 +106,7 @@ export default class Game {
     private frameCount: number;
     private animationFrameCount: number;
     private maskPlayerView: Mask | null;
+    private stateCallbacks: Set<(state: number) => void>;
     private mazeSolutionLengthCallbacks: Set<(length: number) => void> | null;
     private playerStepsCallbacks: Set<(steps: number) => void> | null;
     private healthChangeCallbacks: Set<(health: number) => void> | null;
@@ -129,6 +130,7 @@ export default class Game {
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
         let [startX, startY] = this.maze.getStartOfMap();
         this.maskPlayerView = null;
+        this.stateCallbacks = new Set();
         this.mazeSolutionLengthCallbacks = null;
         this.playerStepsCallbacks = null;
         this.healthChangeCallbacks = null;
@@ -217,6 +219,13 @@ export default class Game {
         window.removeEventListener('keyup', () => {});
     }
 
+    public subscribeToGameState(callback: (state: number) => void): () => void {
+        this.stateCallbacks.add(callback);
+        return () => {
+            this.stateCallbacks.delete(callback);
+        };
+    }
+
     public subscribeToPlayerHealthChange(callback: (health: number) => void): () => void {
         this.healthChangeCallbacks?.add(callback);
         return () => {
@@ -236,6 +245,10 @@ export default class Game {
         return () => {
             this.playerStepsCallbacks?.delete(callback);
         };
+    }
+
+    private notifyGameState(state: number) {
+        this.stateCallbacks.forEach((callback) => callback(state));
     }
 
     private notifyHealthChange() {
@@ -357,13 +370,11 @@ export default class Game {
                 this.player.state.reset(); 
                 promoteGrade();
                 setPlayed(this.gamemode, this.difficulty);
-                alert('You win!');
-                window.location.href = '/game-level'; // Redirect to the home page
+                this.notifyGameState(1);
                 return;
             } else if (this.player.state.isDead()) {
                 this.player.state.reset(); 
-                alert('You lost!');
-                window.location.href = '/game-level'; // Redirect to the home page
+                this.notifyGameState(-1)
                 return;
             }
             this.update();
