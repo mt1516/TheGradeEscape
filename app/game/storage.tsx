@@ -11,6 +11,27 @@ export enum GAMEMODE_DIFFICULTY {
     FINAL_HARD = 'final-hard'
 }
 
+export function getCurrentGrade() {
+    return typeof window !== 'undefined' ? localStorage.getItem('currentGrade') || 'X' : 'X';
+}
+
+export function getCurrentCharacter() {
+    return currentCharacter;
+}
+
+export function getCurrentScore(): number {
+    return parseInt(localStorage.getItem('DTWS-easy') || '0') +
+        parseInt(localStorage.getItem('DTWS-medium') || '0') +
+        parseInt(localStorage.getItem('DTWS-hard') || '0') +
+        parseInt(localStorage.getItem('DITD-easy') || '0') +
+        parseInt(localStorage.getItem('DITD-medium') || '0') +
+        parseInt(localStorage.getItem('DITD-hard') || '0') +
+        parseInt(localStorage.getItem('DBTW-easy') || '0') +
+        parseInt(localStorage.getItem('DBTW-medium') || '0') +
+        parseInt(localStorage.getItem('DBTW-hard') || '0') +
+        parseInt(localStorage.getItem('final-hard') || '0');
+}
+
 export function initStorage() {
     resetCurrentGame(false);
     resetScoreBoard(false);
@@ -66,8 +87,9 @@ export function resetScoreBoard(reload: boolean = true) {
     }
 }
 
-export function updateScoreBoard(score: number, grade = 'F') {
+export function updateScoreBoard(score: number) {
     if (typeof window === 'undefined') return;
+    const grade = getCurrentGrade();
     var scores = [];
     for (var i = 1; i <= 10; i++) {
         scores.push(parseInt(localStorage.getItem('top-' + i) || '0'));
@@ -99,18 +121,18 @@ export function getScoreBoard(): { score: number, grade: string }[] {
 }
 
 export function checkPlayed(mode: GAMEMODE_DIFFICULTY): boolean {
-    return localStorage.getItem(mode) === '1';
+    return localStorage.getItem(mode) != null && localStorage.getItem(mode)! > '0';
 }
 
-export function setPlayed(mode: string, difficulty: string) {
-    localStorage.setItem(mode + '-' + difficulty, '1');
+export function setPlayed(mode: string, difficulty: string, score: number) {
+    localStorage.setItem(mode + '-' + difficulty, score.toString());
 }
 
 export function canPlayFinal(): boolean {
-    return compareGrade('A') >= 0;
+    return checkPlayed(GAMEMODE_DIFFICULTY.DBTW_HARD) && checkPlayed(GAMEMODE_DIFFICULTY.DITD_HARD) && checkPlayed(GAMEMODE_DIFFICULTY.DTWS_HARD);
 }
 
-export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '1') : 1;
+export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '-1') : -1;
 
 export function setCurrentCharacter(c: number) {
     currentCharacter = c;
@@ -119,13 +141,8 @@ export function setCurrentCharacter(c: number) {
     }
 }
 
-export function getCurrentCharacter() {
-    return currentCharacter;
-}
-
-export var currentGrade = typeof window !== 'undefined' ? localStorage.getItem('currentGrade') || 'F' : 'F';
-
 export function promoteGrade() {
+    var currentGrade = getCurrentGrade();
     switch (currentGrade) {
         case 'F':
             currentGrade = 'D';
@@ -160,8 +177,40 @@ export function promoteGrade() {
     }
 }
 
-export function getCurrentGrade() {
-    return currentGrade;
+export function demoteGrade() {
+    var currentGrade = getCurrentGrade();
+    switch (currentGrade) {
+        case 'A+':
+            currentGrade = 'A';
+            break;
+        case 'A':
+            currentGrade = 'A-';
+            break;
+        case 'A-':
+            currentGrade = 'B+';
+            break;
+        case 'B+':
+            currentGrade = 'B';
+            break;
+        case 'B':
+            currentGrade = 'B-';
+            break;
+        case 'B-':
+            currentGrade = 'C+';
+            break;
+        case 'C+':
+            currentGrade = 'C';
+            break;
+        case 'C':
+            currentGrade = 'D';
+            break;
+        case 'D':
+            currentGrade = 'F';
+            break;
+    }
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('currentGrade', currentGrade);
+    }
 }
 
 export function compareGrade(grade: string): number {

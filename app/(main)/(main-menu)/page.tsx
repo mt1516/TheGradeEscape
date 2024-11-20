@@ -1,9 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { initStorage } from '@/app/game/storage';
+import { getCurrentGrade, initStorage } from '@/app/game/storage';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [currentGrade, setCurrentGrade] = useState('Z');
+  useEffect(() => {
+    setCurrentGrade(getCurrentGrade());
+  });
+  if (currentGrade === 'X') {
+    initStorage();
+  }
   return (
     <div className='contianer flex flex-row justify-center items-center h-screen w-screen'>
       <div className="container flex flex-col bg-gray-50 rounded-lg shadow-lg h-5/6 p-10">

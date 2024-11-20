@@ -40,6 +40,7 @@ export default function Confirm(props: {
                                     initStorage();
                                     break;
                             }
+                            window.location.reload();
                         }}>
                         Yes
                     </button>
