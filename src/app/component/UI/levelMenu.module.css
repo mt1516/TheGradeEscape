@@ -1,0 +1,53 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.header {
+    display: flex;
+    /* text-align: center; */
+    flex-direction: row;
+}
+
+.header h1 {
+    /* align the title to the middle */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header button {
+    /* align the button to the right */
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.content button {
+    margin-bottom: 10px;
+}
+  
+.menu {
+    display: flex;
+    flex-direction: column;
+}
+  
+.Final {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.DBTW {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
