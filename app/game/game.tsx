@@ -271,6 +271,13 @@ export default class Game {
         };
     }
 
+    public subscribeToTimer(callback: (time: number) => void): () => void {
+        this.timerCallbacks?.add(callback);
+        return () => {
+            this.timerCallbacks?.delete(callback);
+        };
+    }
+
     private notifyGameState(state: number) {
         this.stateCallbacks.forEach((callback) => callback(state));
     }
