@@ -9,7 +9,7 @@ export default class Projectile {
         this.visual = this.renderProjectile();
         this.visual.position.copy(position);
         this.direction = direction;
-        this.speed = 0.3;
+        this.speed = 2;
     }
 
     private renderProjectile(): THREE.Sprite {
@@ -23,8 +23,8 @@ export default class Projectile {
         return projectile;
     }
 
-    public update(deltaTime: number) {
-        this.visual.position.add(this.direction.clone().multiplyScalar(this.speed * deltaTime));
+    public update() {
+        this.visual.position.add(this.direction.clone().multiplyScalar(this.speed));
     }
 
     public hasHitPlayer(playerVisual: THREE.Sprite): boolean {

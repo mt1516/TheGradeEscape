@@ -115,6 +115,8 @@ export default class Game {
     private startTime: number;
     private lastCall: number;
     private timerCallbacks: Set<(time: number) => void> | null;
+    private lastUpdateTime: number = Date.now();
+    private lastAnimationTime: number = Date.now();
     // private immunityPeriod: number;
     // private lastHitTime: number;
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
@@ -210,6 +212,7 @@ export default class Game {
                 break;
         }
         this.keyboardControls();
+        this.update(0);
         this.playerMovemoment();
     }
 
@@ -385,13 +388,11 @@ export default class Game {
     }
 
     private playerMovemoment() {
-        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
-        this.frameCount++;
-    
-        // Move the player every 10 frames
-        if (this.frameCount >= moveEveryNFrames) {
+        const currentTime = Date.now();
+        const deltaTime = currentTime - this.lastUpdateTime;
+
+        if (deltaTime >= 100) { // Update every 200ms
             this.player.state.checkWin();
-            // TODO: Chnage this to popup
             if (this.player.state.isWin()) {
                 this.player.state.reset(); 
                 promoteGrade();
@@ -403,18 +404,21 @@ export default class Game {
                 this.notifyGameState(-1)
                 return;
             }
-            this.update();
-            this.frameCount = 0; // Reset the frame counter
-            
         }
-        if (this.animationFrameCount == moveEveryNFrames / 2 || this.animationFrameCount == moveEveryNFrames) {
+            this.update(deltaTime);
+            this.lastUpdateTime = currentTime;
+
+        const animationDeltaTime = currentTime - this.lastAnimationTime;
+        if (animationDeltaTime >= 400) { // Animate every 10ms
             this.player.animate();
+            this.lastAnimationTime = currentTime;
         }
 
         requestAnimationFrame(this.playerMovemoment.bind(this));
     }
 
-    private update() {
+    private update(deltaTime: number) {
+        console.log("Updating", deltaTime);
         if (this.keyOrder.length > 0) {
             switch (this.keyOrder[this.keyOrder.length - 1]) {
                 case 'up':
@@ -433,11 +437,11 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        this.player.update(1);
+        this.player.update(deltaTime);
         this.bumpWallUpdate();
         this.darkModeUpdate();
         // this.limitedStepsUpdate();
-        this.bossUpdate();
+        this.bossUpdate(deltaTime);
         // this.updateTimer();
         this.sceneRender.render(this.scene, this.camera);
     }
@@ -492,28 +496,19 @@ export default class Game {
         }
     }
 
-    private bossUpdate() {
+    private bossUpdate(deltaTime: number) {
         if (this.gamemode !== 'Final') {
             return;
         }
         if (this.boss) {
-            const message: updateMessage = this.boss.update(moveEveryNFrames);
+            const message: updateMessage = this.boss.update(deltaTime);
             if (message.hasNewProjectile) {
                 this.scene.add(message.projectile.visual);
             }
             if (message.playerHit) {
-                // this.player.hitByBoss();
                 if (this.player.hitByBoss()) {
                     this.notifyHealthChange();
                 }
-                // const currentTime = Date.now();
-                // if (currentTime - this.lastHitTime < this.immunityPeriod) {
-                //     return;
-                // }
-                // this.player.bumpWallUpdate();
-                // this.notifyHealthChange();
-                // this.lastHitTime = Date.now();
-                // this.player.startImmunity();
             }
         }
     }

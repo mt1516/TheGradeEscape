@@ -35,10 +35,10 @@ export default class Boss extends Player {
         this.visual = this.renderBoss();
         this.visual.position.set(spawnPoint[0], spawnPoint[1], 2);
         this.projectiles = [];
-        this.lastMove = 400;
-        this.lastNewProjectile = 400;
-        this.lastProjectileUpdate = 400;
-        this.lastAnimate = 400;
+        this.lastMove = 10000;
+        this.lastNewProjectile = 10000;
+        this.lastProjectileUpdate = 10000;
+        this.lastAnimate = 10000;
         this.player = player;
     }
 
@@ -57,13 +57,13 @@ export default class Boss extends Player {
         return boss;
     }
 
-    public update(tick: number): updateMessage {
+    public update(deltaTime: number): updateMessage {
         const message = new updateMessage(null, false, false);
         if (this.player.state.isDead() === true) {
             return message;
         }
 
-        this.lastMove -= tick;
+        this.lastMove -= deltaTime;
         if (this.lastMove <= 0) {
             // move 
             // if (this.state.isMove()) {
@@ -73,21 +73,21 @@ export default class Boss extends Player {
 
             // through walls
             // console.log("this.state.isMove() = ", this.state.isMove());
-            // this.chasePlayer(0.2);
+            this.chasePlayer(0.75);
         }
         
-        this.lastProjectileUpdate -= tick;
+        this.lastProjectileUpdate -= deltaTime;
         if (this.lastProjectileUpdate <= 0) {
-            message.playerHit = this.updateProjectiles(tick);
+            message.playerHit = this.updateProjectiles(deltaTime);
         }
 
-        this.lastNewProjectile -= tick;
+        this.lastNewProjectile -= deltaTime;
         if (this.lastNewProjectile <= 0) {
             message.projectile = this.shootProjectiles();
             message.hasNewProjectile = true;
         }
 
-        this.lastAnimate -= tick;
+        this.lastAnimate -= deltaTime;
         if (this.lastAnimate <= 0) {
             this.animate();
         }
@@ -98,7 +98,7 @@ export default class Boss extends Player {
     private chasePlayer(speed: number = 0.2) {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
         this.visual.position.add(direction.multiplyScalar(speed)); // Boss speed
-        this.lastMove = 2;
+        this.lastMove = 400;
         
         if (direction.x < 0) {
             this.state.setDirection(4);
@@ -107,11 +107,11 @@ export default class Boss extends Player {
         }
     }
 
-    private updateProjectiles(tick: number) {
+    private updateProjectiles(deltaTime: number) {
         let playerHit = false;
         let remove: number[] = [];
         this.projectiles.forEach((projectile) => {
-            projectile.update(tick)
+            projectile.update();
             // check if projectile hitbox has hit player hitbox
             if (projectile.hasHitPlayer(this.player.visual)) {
                 playerHit = true;
@@ -130,7 +130,7 @@ export default class Boss extends Player {
                 this.projectiles.splice(index, 1);
             });
         }
-        this.lastProjectileUpdate = 5;
+        this.lastProjectileUpdate = 100;
         return playerHit;
     }
 
@@ -138,7 +138,7 @@ export default class Boss extends Player {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
         const projectile = new Projectile(this.visual.position.clone(), direction, );
         this.projectiles.push(projectile);
-        this.lastNewProjectile = 100;
+        this.lastNewProjectile = 2000;
         return projectile;
     }
 
@@ -156,6 +156,6 @@ export default class Boss extends Player {
         if (this.visual && this.visual.material && this.visual.material.map) {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
-        this.lastAnimate = 10;
+        this.lastAnimate = 400;
     }
 }
