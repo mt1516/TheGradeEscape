@@ -12,7 +12,7 @@ export default function Page() {
     // TODO: Add error.tsx to handle error
     return (
         <>
-            <Close />
+            {/* <Close /> */}
             <div className="flex justify-center items-center h-screen">
                 <Canvas mode={mode} difficulty={difficulty} />
             </div>
