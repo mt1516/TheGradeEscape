@@ -59,7 +59,7 @@ export default class Boss extends Player {
 
     public update(tick: number): updateMessage {
         const message = new updateMessage(null, false, false);
-        if (this.player.state.dead() === true) {
+        if (this.player.state.isDead() === true) {
             return message;
         }
 

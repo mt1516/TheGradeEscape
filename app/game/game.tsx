@@ -33,7 +33,7 @@ export class Mask {
     public mask: THREE.Mesh;
     public needMask: boolean;
     public maskOnDuration: number;
-    private hurtSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
+    private thunderSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
     private audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
     constructor() {
         const maskGeometry = new THREE.RingGeometry(10, 200);
@@ -61,24 +61,24 @@ export class Mask {
             this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
             if (this.maskOnDuration <= 2) {
                 this.audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
+                    this.thunderSound.setBuffer(buffer);
+                    this.thunderSound.setLoop(false);
+                    this.thunderSound.setVolume(1);
+                    this.thunderSound.play();
                 });
             } else if (this.maskOnDuration <= 4) {
                 this.audioLoader.load('/sounds/MediumThunder.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
+                    this.thunderSound.setBuffer(buffer);
+                    this.thunderSound.setLoop(false);
+                    this.thunderSound.setVolume(1);
+                    this.thunderSound.play();
                 });
             } else {
                 this.audioLoader.load('/sounds/LoudThunder.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
+                    this.thunderSound.setBuffer(buffer);
+                    this.thunderSound.setLoop(false);
+                    this.thunderSound.setVolume(1);
+                    this.thunderSound.play();
                 });
             }
         } else {
@@ -143,8 +143,6 @@ export default class Game {
         this.startTime = Date.now();
         this.lastCall = Date.now();
         this.timerCallbacks = new Set();
-        // this.immunityPeriod = 5000; // 5 seconds
-        // this.lastHitTime = 0;
         const stepsRequired = this.maze.getLengthOfSolution();
         this.stepLimit = Math.ceil(stepsRequired * 1.3)
         this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
@@ -169,7 +167,7 @@ export default class Game {
             case 'Final':
                 this.healthChangeCallbacks = new Set();
                 this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
-                this.player.state.setHealth(5); // Set number of hearts to 5
+                this.player.state.setHealth(5);
                 this.scene.add(this.boss.visual);
                 this.scene.add(this.player.immunityMask);
                 break;
@@ -230,6 +228,7 @@ export default class Game {
                 this.healthChangeCallbacks?.clear();
                 break;
         }
+        this.timerCallbacks?.clear();
         window.removeEventListener('keydown', () => {});
         window.removeEventListener('keyup', () => {});
         this.boss = null;
@@ -437,9 +436,9 @@ export default class Game {
         this.player.update(1);
         this.bumpWallUpdate();
         this.darkModeUpdate();
-        this.limitedStepsUpdate();
+        // this.limitedStepsUpdate();
         this.bossUpdate();
-        this.updateTimer();
+        // this.updateTimer();
         this.sceneRender.render(this.scene, this.camera);
     }
 
@@ -504,8 +503,7 @@ export default class Game {
             }
             if (message.playerHit) {
                 // this.player.hitByBoss();
-                const hit = this.player.hitByBoss();
-                if (hit) {
+                if (this.player.hitByBoss()) {
                     this.notifyHealthChange();
                 }
                 // const currentTime = Date.now();

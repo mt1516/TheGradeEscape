@@ -14,10 +14,8 @@ export default class Player {
     protected tilesVertical: number;
     private hurtAnimiationFrameCount: number;
     private hurtSound: THREE.Audio;
-    // public immunity: boolean;
     public immunityPeriod: number;
     public immunityMask: THREE.Mesh;
-    public lastHitTime: number;
     private audioLoader = new THREE.AudioLoader();
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
         this.currentTile = 0;
@@ -29,12 +27,9 @@ export default class Player {
         this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 2);
         this.hurtAnimiationFrameCount = 0;
         this.hurtSound = new THREE.Audio(new THREE.AudioListener());
-        // this.immunity = false;
-        this.immunityPeriod = 2000; // 2.5 seconds
-        // const radius = 2;
+        this.immunityPeriod = 4000;
         this.immunityMask = new THREE.Mesh(new THREE.CircleGeometry(2), new THREE.MeshBasicMaterial({ color: 0xffd500, transparent: true, opacity: 0 }));
         this.immunityMask.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 5);
-        this.lastHitTime = Date.now();
     }
 
     public renderPlayer(): THREE.Sprite {
@@ -141,21 +136,23 @@ export default class Player {
             clearInterval(flickerInterval);
             this.visual.material.opacity = 1;
             this.immunityMask.material.opacity = 0;
+            this.state.setImmunity(false);
+            console.log("Immunity over");
         }, this.immunityPeriod);
     }
 
     public hitByBoss(): boolean {
-        const currentTime = Date.now();
-        // if (this.immunity || currentTime - this.lastHitTime < this.immunityPeriod) {
-        if (currentTime - this.lastHitTime < this.immunityPeriod) {
-            console.log("Player is immune", this.lastHitTime, currentTime);
+        // console.log(this.state.isImmune(), this.state.immunity);
+        if (this.state.isImmune()) {
+            console.log("Player is immune");
             return false;
         }
-        // this.lastHitTime = currentTime;
-        console.log("Player is hit", this.lastHitTime, currentTime);
-        this.startHurtAnimation();
-        this.lastHitTime = currentTime;
-        this.startImmunity();
-        return true;
+        console.log("Player is hit");
+        const successHit = this.state.hitByProjectile();
+        if (successHit) {
+            this.startHurtAnimation();
+            this.startImmunity();
+        }
+        return successHit;
     }
 }
