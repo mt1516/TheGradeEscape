@@ -1,10 +1,18 @@
 import { characters, characterTotal, characterLayoutClassName, characterClassName } from "@/app/game/player/character";
+import { setCurrentCharacter } from "@/app/game/storage";
+import SelectionConfirm from "./popup";
+import { useState } from "react";
 
 export default function Choose(props: {
   current: number;
 }) {
+  const [selectionConfirmPopup, setSelectionConfirmPopup] = useState(false);
+  const closeSelectionConfirmPopup = () => {
+    setSelectionConfirmPopup(false);
+  }
   return (
     <div className="container flex flex-col h-full w-full justify-center">
+      {selectionConfirmPopup && <SelectionConfirm closePopup={closeSelectionConfirmPopup} />}
       <div className="container flex flex-col h-5/6 w-full justify-self-start items-center">
         <div className="flex flex-col w-5/6 h-full justify-center items-start">
           <div className={characterLayoutClassName[characterTotal as keyof typeof characterLayoutClassName]}>
@@ -24,11 +32,20 @@ export default function Choose(props: {
             })()}
           </div>
           <div className="container h-3/6 flex flex-row items-start justify-between">
-            <div className="container text-black text-center text-8xl w-1/6 h-full rounded-md">
-              ^
+            <div className="container flex flex-col w-1/6 h-full">
+              <div className="container text-black text-center text-8xl w-full h-1/2 rounded-md">
+                ^
+              </div>
+              <button className="container bg-green-500 hover:bg-green-600 text-black text-center text-4xl w-full h-1/2 rounded-md border-2 border-black"
+                onClick={() => {
+                  setCurrentCharacter(props.current);
+                  setSelectionConfirmPopup(true);
+                }}>
+                Confirm
+              </button>
             </div>
             <div className="flex flex-row w-4/5 h-full justify-around text-white">
-              <div className="container bg-green-400 text-start text-xl w-1/3 h-full rounded-md p-5">
+              <div className="container bg-yellow-400 text-start text-xl w-1/3 h-full rounded-md p-5">
                 Buff: <br />
                 {characters[props.current % characterTotal].buff}
               </div>

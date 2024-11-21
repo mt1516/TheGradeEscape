@@ -3,7 +3,7 @@
 import Close from '@/app/ui/button';
 import Choose from '@/app/ui/character/choose';
 import { useEffect, useState } from 'react';
-import { getCurrentCharacter, setCurrentCharacter } from '@/app/game/storage';
+import { getCurrentCharacter,  } from '@/app/game/storage';
 import { characterTotal } from "@/app/game/player/character";
 
 export enum CHARACTER {
@@ -26,7 +26,6 @@ export default function CharacterPage() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      setCurrentCharacter(c);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [c]);
