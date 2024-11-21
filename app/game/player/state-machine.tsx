@@ -151,6 +151,7 @@ export default class StateMachine {
             // console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.currentHitboxCoordinate = hitboxCoordinate;
             this.currentRenderCoordinate = renderCoordinate;
+            this.steps += 1;
             this.movedFlag = true;
             return renderCoordinate;
         } else {
@@ -172,11 +173,11 @@ export default class StateMachine {
     
     public limitedStepsUpdate(): boolean {
         if (this.isMove() && this.movedFlag) {
-            this.steps += 1;
+            // this.steps += 1;
             // Avoid overflowing the opengl context
-            if (this.steps % 5 === 0) {
-                return true;
-            }
+            // if (this.steps % 5 === 0) {
+            return true;
+            // }
         }
         if (this.steps >= this.limitedSteps) {
             this.state = STATE.DEAD;
@@ -249,14 +250,9 @@ export default class StateMachine {
         this.health = health;
     }
 
-    // public dead() {
-    //     return this.state === STATE.DEAD;
-    // }
-
     public setImmunity(immune: boolean) {
         if (immune) {
             this.immunity = IMMUNITY.IMMUNE;
-            // this.lastHitTime = Date.now();
         } else {
             this.immunity = IMMUNITY.VULNERABLE;
         }
@@ -280,5 +276,9 @@ export default class StateMachine {
         //     this.setImmunity(false);
         // }, 4000);
         return true;
+    }
+
+    public setDead() {
+        this.state = STATE.DEAD;
     }
 }

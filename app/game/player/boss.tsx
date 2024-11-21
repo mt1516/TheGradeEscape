@@ -4,11 +4,11 @@ import Projectile from './projectile';
 import * as THREE from 'three';
 
 export class updateMessage {
-    public projectile: Projectile | null;
+    public projectiles: (Projectile)[];
     public hasNewProjectile: boolean;
     public playerHit: boolean;
-    constructor(projectile: Projectile | null, hasNewProjectile: boolean, playerHit: boolean) {
-        this.projectile = projectile;
+    constructor(projectile: Projectile[], hasNewProjectile: boolean, playerHit: boolean) {
+        this.projectiles = projectile;
         this.hasNewProjectile = hasNewProjectile;
         this.playerHit = playerHit;
         return this;
@@ -22,11 +22,12 @@ export default class Boss extends Player {
     // protected tilesHorizontal: number;
     // protected tilesVertical: number;
     private projectiles: Projectile[];
-    private lastMove: number;
+    // private lastMove: number;
     private lastNewProjectile: number;
     private lastProjectileUpdate: number;
-    private lastAnimate: number;
+    // private lastAnimate: number;
     private player: Player;
+    private chargedAttack: number;
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], player: Player, spawnPoint: number[]) {
         super(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap, 0);
         this.tilesHorizontal = 4;
@@ -40,6 +41,7 @@ export default class Boss extends Player {
         this.lastProjectileUpdate = 10000;
         this.lastAnimate = 10000;
         this.player = player;
+        this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
     }
 
     private renderBoss(): THREE.Sprite {
@@ -58,10 +60,11 @@ export default class Boss extends Player {
     }
 
     public update(deltaTime: number): updateMessage {
-        const message = new updateMessage(null, false, false);
-        if (this.player.state.isDead() === true) {
-            return message;
-        }
+        const message = new updateMessage([], false, false);
+        console.log(this.projectiles.length);
+        // if (this.player.state.isDead() || this.player.state.isWin()) {
+        //     return message;
+        // }
 
         this.lastMove -= deltaTime;
         if (this.lastMove <= 0) {
@@ -73,7 +76,7 @@ export default class Boss extends Player {
 
             // through walls
             // console.log("this.state.isMove() = ", this.state.isMove());
-            this.chasePlayer(0.75);
+            this.chasePlayer(0.5);
         }
         
         this.lastProjectileUpdate -= deltaTime;
@@ -83,8 +86,13 @@ export default class Boss extends Player {
 
         this.lastNewProjectile -= deltaTime;
         if (this.lastNewProjectile <= 0) {
-            message.projectile = this.shootProjectiles();
+            const newProjectile = this.shootProjectiles();
+            message.projectiles = [newProjectile];
             message.hasNewProjectile = true;
+        }
+
+        if (this.chargedAttack <= 0) {
+            message.projectiles = [...(message.projectiles), ...this.performChargedAttack()];
         }
 
         this.lastAnimate -= deltaTime;
@@ -107,7 +115,7 @@ export default class Boss extends Player {
         }
     }
 
-    private updateProjectiles(deltaTime: number) {
+    private updateProjectiles(deltaTime: number): boolean {
         let playerHit = false;
         let remove: number[] = [];
         this.projectiles.forEach((projectile) => {
@@ -121,25 +129,44 @@ export default class Boss extends Player {
             }
             // check if projectile has exited the map
             if (projectile.visual.position.x < -100 || projectile.visual.position.y < -100 || projectile.visual.position.x > 100 || projectile.visual.position.y > 100) {
+                projectile.visual.material.opacity = 0;
                 remove.push(this.projectiles.indexOf(projectile));
             }
 
         });
         if (remove.length > 0) {
-            remove.forEach((index) => {
+            for (let i = remove.length - 1; i >= 0; i--) {
+                const index = remove[i];
+                this.projectiles[index].visual.material.opacity = 0;
                 this.projectiles.splice(index, 1);
-            });
+            }
         }
-        this.lastProjectileUpdate = 100;
+        this.lastProjectileUpdate = 200;
         return playerHit;
     }
 
     private shootProjectiles(): Projectile {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
-        const projectile = new Projectile(this.visual.position.clone(), direction, );
+        const projectile = new Projectile(this.visual.position.clone(), direction);
         this.projectiles.push(projectile);
+        this.chargedAttack -= 1;
         this.lastNewProjectile = 2000;
         return projectile;
+
+    }
+
+    private performChargedAttack(): Projectile[] {
+        const projectiles: Projectile[] = [];
+        const angleStep = (2 * Math.PI) / 24;
+        for (let i = 0; i < 24; i++) {
+            const angle = i * angleStep;
+            const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+            const projectile = new Projectile(this.visual.position.clone(), direction);
+            this.projectiles.push(projectile);
+            projectiles.push(projectile);
+        }
+        this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
+        return projectiles;
     }
 
     public animate() {
@@ -156,6 +183,6 @@ export default class Boss extends Player {
         if (this.visual && this.visual.material && this.visual.material.map) {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
-        this.lastAnimate = 400;
+        this.lastAnimate = 300;
     }
 }

@@ -8,15 +8,16 @@ import Close from './button';
 export default function Canvas(props: {
     mode: Mode;
     difficulty: Difficulty;
+    sceneRender: THREE.WebGLRenderer;
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const gameRef = useRef<Game | null>(null);
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera();
-    const sceneRender = new THREE.WebGLRenderer();
-    sceneRender.setClearColor(0x000000);
-    sceneRender.setClearAlpha(0);
+    // const sceneRender = new THREE.WebGLRenderer();
+    props.sceneRender.setClearColor(0x000000);
+    props.sceneRender.setClearAlpha(0);
 
     const [gameState, setGameState] = useState(0);
     const [playerHealth, setPlayerHealth] = useState(0);
@@ -26,11 +27,11 @@ export default function Canvas(props: {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const game: Game = new Game(scene, camera, sceneRender, props.mode, props.difficulty);
+            const game: Game = new Game(scene, camera, props.sceneRender, props.mode, props.difficulty);
             gameRef.current = game;
 
             game.resizeWindow([(2 * window.innerWidth / 3), window.innerHeight])
-            containerRef.current?.appendChild(sceneRender.domElement);
+            containerRef.current?.appendChild(props.sceneRender.domElement);
 
             // Handle window resize
             const handleResize = () => {
@@ -70,9 +71,9 @@ export default function Canvas(props: {
                     });
                     break;
             }
-
+            
             unsubscribeToTimer = game.subscribeToTimer((time) => {
-                setTimeLeft(Math.ceil(time)); // Display time in seconds
+                setTimeLeft(Math.ceil(time));
             });
 
             game.run();
@@ -94,9 +95,9 @@ export default function Canvas(props: {
                 }
                 unsubscribeToTimer?.();
                 scene.clear();
-                sceneRender.dispose();
+                props.sceneRender.dispose();
                 camera.clear();
-                containerRef.current?.removeChild(sceneRender.domElement);
+                containerRef.current?.removeChild(props.sceneRender.domElement);
                 gameRef.current = null;
             }
         }
@@ -109,13 +110,11 @@ export default function Canvas(props: {
 
     const renderHearts = () => {
         const hearts = [];
-        // if (props.mode !== 'DBTW') {
-            for (let i = 0; i < playerHealth; i++) {
-                hearts.push(
-                    <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
-                );
-            }
-        // }
+        for (let i = 0; i < playerHealth; i++) {
+            hearts.push(
+                <img key={i} src={"/texture/heart.svg"} alt="Heart" className="w-8 h-8 mr-2" />
+            );
+        }
         return hearts;
     };
 

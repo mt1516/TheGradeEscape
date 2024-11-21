@@ -17,8 +17,8 @@ export default class Player {
     public immunityPeriod: number;
     public immunityMask: THREE.Mesh;
     private audioLoader = new THREE.AudioLoader();
-    private lastMove: number;
-    private lastAnimate: number;
+    protected lastMove = Date.now();
+    protected lastAnimate = Date.now();
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
@@ -52,20 +52,19 @@ export default class Player {
     }
 
     public update(deltaTime: number): void {
-        this.animate();
-        // this.hurtAnimation();
-        // if (this.hurtAnimiationFrameCount > 0) {
-        //     this.hurtAnimiationFrameCount++;
-        //     if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
-        //         this.hurtAnimiationFrameCount = 0;
-        //         this.visual.material.color.setHex(0xffffff);
-        //     }
-        // }
-        if (this.state.isMove()) {
-            let [x, y] = this.state.update();
-            this.visual.position.set(x, y, 3);
+        const currentTime = Date.now();
+        if (currentTime - this.lastMove > 100) {
+            this.lastMove = currentTime;
+            if (this.state.isMove()) {
+                let [x, y] = this.state.update();
+                this.visual.position.set(x, y, 3);
+            }
+            this.immunityMask.position.set(this.visual.position.x, this.visual.position.y, 5);
         }
-        this.immunityMask.position.set(this.visual.position.x, this.visual.position.y, 5);
+        if (currentTime - this.lastAnimate > 100) {
+            this.lastAnimate = currentTime;
+            this.animate();
+        }
     }
 
     private startHurtAnimation() {
@@ -77,9 +76,9 @@ export default class Player {
             this.hurtSound.setVolume(1);
             this.hurtSound.play();
         });
-        if (this.state.isDead()) {
-            return;
-        }
+        // if (this.state.isDead() || this.state.isWin()) {
+        //     return;
+        // }
         setTimeout(() => {
             this.visual.material.color.setHex(0xffffff);
         }, 200);
@@ -136,7 +135,7 @@ export default class Player {
     }
 
     public startImmunity() {
-        if (this.state.isDead()) {
+        if (this.state.isDead() || this.state.isWin()) {
             return;
         }
         this.immunityMask.position.set(this.visual.position.x, this.visual.position.y, 5);
