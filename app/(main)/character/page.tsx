@@ -4,6 +4,7 @@ import Close from '@/app/ui/button';
 import Choose from '@/app/ui/character/choose';
 import { useEffect, useState } from 'react';
 import { getCurrentCharacter, setCurrentCharacter } from '@/app/game/storage';
+import { characterTotal } from "@/app/game/player/character";
 
 export enum CHARACTER {
   NORM = 0,
@@ -16,9 +17,9 @@ export default function CharacterPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setCurrent((c - 1 + 3) % 3); // Ensure positive index
+        setCurrent((c - 1 + characterTotal) % characterTotal); // Ensure positive index
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setCurrent((c + 1) % 3);
+        setCurrent((c + 1) % characterTotal);
       }
     };
 

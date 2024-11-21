@@ -364,6 +364,7 @@ export default class Game {
     
         // Move the player every 10 frames
         if (this.frameCount >= moveEveryNFrames) {
+            
             this.player.state.checkWin();
             // TODO: Chnage this to popup
             if (this.player.state.isWin()) {
@@ -384,7 +385,6 @@ export default class Game {
             }
             this.update();
             this.frameCount = 0; // Reset the frame counter
-            
         }
         if (this.animationFrameCount == moveEveryNFrames / 2 || this.animationFrameCount == moveEveryNFrames) {
             this.player.animate();
