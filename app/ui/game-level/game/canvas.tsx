@@ -51,6 +51,10 @@ export default function Canvas(props: {
                 setGameState(state);
             });
 
+            unsubscribeToGameState = game.subscribeToGameState((state) => {
+                setGameState(state);
+            });
+
             switch (props.mode) {
                 case 'DBTW':
                     unsubscribeToHealthChange = game.subscribeToPlayerHealthChange((health) => {

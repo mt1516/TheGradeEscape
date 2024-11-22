@@ -17,5 +17,4 @@ export default function Close({ handleClosePopup }: { handleClosePopup: () => vo
             </Link> */}
         </div>
     );
-    
 }

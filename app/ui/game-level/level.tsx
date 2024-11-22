@@ -1,4 +1,4 @@
-import { canPlayFinal, canPlayHard, canPlayMedium, checkPlayed, GAMEMODE_DIFFICULTY } from "@/app/game/storage";
+import { canPlayFinal, checkPlayed, GAMEMODE_DIFFICULTY } from "@/app/game/storage";
 import Link from "next/link";
 
 export default function Level() {

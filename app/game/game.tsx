@@ -5,7 +5,7 @@ import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 import Boss, { updateMessage } from './player/boss';
-import { promoteGrade, setPlayed } from './storage';
+import { promoteGrade, demoteGrade, setPlayed, updateScoreBoard } from './storage';
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -240,6 +240,13 @@ export default class Game {
         };
     }
 
+    public subscribeToGameState(callback: (state: number) => void): () => void {
+        this.stateCallbacks.add(callback);
+        return () => {
+            this.stateCallbacks.delete(callback);
+        };
+    }
+
     public subscribeToPlayerHealthChange(callback: (health: number) => void): () => void {
         this.healthChangeCallbacks?.add(callback);
         return () => {
@@ -382,6 +389,33 @@ export default class Game {
             }
         }, false);
     }
+      
+    private getScore() {
+        var score = 50;
+                switch (this.difficulty) {
+                    case 'medium':
+                        score *= 2;
+                        break;
+                    case 'hard':
+                        score *= 3;
+                        break;
+                }
+                switch (this.gamemode) {
+                    case 'DBTW':
+                        score += 2 * this.player.state.getSteps();
+                        break;
+                    case 'DITD':
+                        score += 300;
+                        break;
+                    case 'DTWS':
+                        score += 200 * this.player.state.getHealth();
+                        break;
+                    case 'Final':
+                        score += 500 * this.player.state.getHealth(); 
+                        break;
+                }
+        return score;
+    }  
 
     private playerMovemoment() {
         const currentTime = Date.now();
@@ -391,11 +425,16 @@ export default class Game {
         if (this.player.state.isWin()) {
             this.player.state.reset(); 
             promoteGrade();
-            setPlayed(this.gamemode, this.difficulty);
+            const score = this.getScore();
+            setPlayed(this.gamemode, this.difficulty, score);
+            if (this.gamemode === 'Final') {
+               updateScoreBoard(score);
+            }
             this.notifyGameState(1);
             return;
         } else if (this.player.state.isDead()) {
             this.player.state.reset(); 
+            demoteGrade();
             this.notifyGameState(-1)
             return;
         }

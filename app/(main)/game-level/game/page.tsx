@@ -13,11 +13,8 @@ export default function Page() {
     const sceneRender = new THREE.WebGLRenderer();
     // TODO: Add error.tsx to handle error
     return (
-        <>
-            {/* <Close /> */}
-            <div className="flex justify-center items-center h-screen">
-                <Canvas mode={mode} difficulty={difficulty} sceneRender={sceneRender}/>
-            </div>
-        </>
+        <div className="flex justify-center items-center h-screen">
+            <Canvas mode={mode} difficulty={difficulty} sceneRender={sceneRender}/>
+        </div>
     );
 }
