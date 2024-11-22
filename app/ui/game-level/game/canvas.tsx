@@ -143,8 +143,8 @@ export default function Canvas(props: {
                             <div className='h-fit'> Difficulty: <br />{props.difficulty} </div>
                             <div className='h-fit'> Character: </div>
                             <div className='h-fit'> Health: <div className='h-fit flex flex-row'> {renderHearts()} </div> </div>
-                            <div className='h-fit'> Player steps/ Limited steps: <br /> {playerSteps}/{mazeSolutionLength} </div>
-                            <div className='h-fit'> Time Left: {timeLeft} seconds </div>
+                            <div className='h-fit'> Player steps/ Limited steps: <br /> {playerSteps == 0 ? '-' : playerSteps}/{mazeSolutionLength == 0 ? '-': mazeSolutionLength} </div>
+                            <div className='h-fit'> Due time: {timeLeft} seconds </div>
                         </div>
                     </div>
                 </div>

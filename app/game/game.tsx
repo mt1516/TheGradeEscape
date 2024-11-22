@@ -103,8 +103,6 @@ export default class Game {
     private maze: Maze;
     private stepLimit: number;
     private player: Player;
-    private frameCount: number;
-    private animationFrameCount: number;
     private maskPlayerView: Mask | null;
     private stateCallbacks: Set<(state: number) => void>;
     private mazeSolutionLengthCallbacks: Set<(length: number) => void> | null;
@@ -115,10 +113,9 @@ export default class Game {
     private startTime: number;
     private timerCallbacks: Set<(time: number) => void> | null;
     private lastUpdateTime: number = Date.now();
+    private isTimeout: boolean;
     // private lastAnimationTime: number = Date.now();
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
-        this.frameCount = 0;
-        this.animationFrameCount = 0;
         this.scene = scene;
         this.camera = camera;
         this.sceneRender = sceneRender;
@@ -141,6 +138,7 @@ export default class Game {
         this.boss = null;
         this.startTime = Date.now();
         this.timerCallbacks = new Set();
+        this.isTimeout = false;
         const stepsRequired = this.maze.getLengthOfSolution();
         this.stepLimit = Math.ceil(stepsRequired * 1.3)
         this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
@@ -231,13 +229,6 @@ export default class Game {
         window.removeEventListener('keydown', () => {});
         window.removeEventListener('keyup', () => {});
         this.boss = null;
-    }
-
-    public subscribeToGameState(callback: (state: number) => void): () => void {
-        this.stateCallbacks.add(callback);
-        return () => {
-            this.stateCallbacks.delete(callback);
-        };
     }
 
     public subscribeToGameState(callback: (state: number) => void): () => void {
@@ -423,7 +414,7 @@ export default class Game {
 
         this.player.state.checkWin();
         if (this.player.state.isWin()) {
-            this.player.state.reset(); 
+            this.player.state.setDead(); 
             promoteGrade();
             const score = this.getScore();
             setPlayed(this.gamemode, this.difficulty, score);
@@ -432,8 +423,13 @@ export default class Game {
             }
             this.notifyGameState(1);
             return;
+        } else if (this.isTimeout) {
+            this.player.state.setDead(); 
+            demoteGrade();
+            this.notifyGameState(-2)
+            return;
         } else if (this.player.state.isDead()) {
-            this.player.state.reset(); 
+            this.player.state.setDead(); 
             demoteGrade();
             this.notifyGameState(-1)
             return;
@@ -494,10 +490,7 @@ export default class Game {
         const elapsedTime = (Date.now() - this.startTime) / 1000; // Convert to seconds
         this.notifyTimer(elapsedTime);
         if (elapsedTime >= this.timeLimit) {
-            this.player.state.setDead();
-            alert('Time is up! You lost!');
-            window.location.href = '/game-level'; // Redirect to the home page
-            return;
+            this.isTimeout = true;
         }
     }
 

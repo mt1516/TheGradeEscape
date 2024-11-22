@@ -57,11 +57,6 @@ export default class StateMachine {
         this.immunity = IMMUNITY.VULNERABLE;
     }
 
-    public reset() {
-        this.state = STATE.IDLE;
-        this.direction = DIRECTION.IDLE;
-    }
-
     public update(): number[] {
         this.checkWin();
         return this.move()
@@ -280,5 +275,6 @@ export default class StateMachine {
 
     public setDead() {
         this.state = STATE.DEAD;
+        this.direction = DIRECTION.IDLE;
     }
 }
