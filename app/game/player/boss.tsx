@@ -157,8 +157,18 @@ export default class Boss extends Player {
 
     private performChargedAttack(): Projectile[] {
         const projectiles: Projectile[] = [];
-        const angleStep = (2 * Math.PI) / 24;
-        for (let i = 0; i < 24; i++) {
+        // const numberProjectile = this.player.visual.position.distanceTo(this.visual.position) > 20 ? 36 : 24;
+        let numberProjectile = 0;
+        const distance = this.player.visual.position.distanceTo(this.visual.position);
+        if (distance > 20) {
+            numberProjectile = 36;
+        } else if (distance > 10) {
+            numberProjectile = 24;
+        } else {
+            numberProjectile = 12;
+        }
+        const angleStep = (2 * Math.PI) / numberProjectile;
+        for (let i = 0; i < numberProjectile; i++) {
             const angle = i * angleStep;
             const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
             const projectile = new Projectile(this.visual.position.clone(), direction);
