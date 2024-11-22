@@ -4,11 +4,11 @@ import Projectile from './projectile';
 import * as THREE from 'three';
 
 export class updateMessage {
-    public projectile: Projectile | null;
+    public projectiles: (Projectile)[];
     public hasNewProjectile: boolean;
     public playerHit: boolean;
-    constructor(projectile: Projectile | null, hasNewProjectile: boolean, playerHit: boolean) {
-        this.projectile = projectile;
+    constructor(projectile: Projectile[], hasNewProjectile: boolean, playerHit: boolean) {
+        this.projectiles = projectile;
         this.hasNewProjectile = hasNewProjectile;
         this.playerHit = playerHit;
         return this;
@@ -22,11 +22,12 @@ export default class Boss extends Player {
     // protected tilesHorizontal: number;
     // protected tilesVertical: number;
     private projectiles: Projectile[];
-    private lastMove: number;
+    // private lastMove: number;
     private lastNewProjectile: number;
     private lastProjectileUpdate: number;
-    private lastAnimate: number;
+    // private lastAnimate: number;
     private player: Player;
+    private chargedAttack: number;
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], player: Player, spawnPoint: number[]) {
         super(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap, 0);
         this.tilesHorizontal = 4;
@@ -35,11 +36,12 @@ export default class Boss extends Player {
         this.visual = this.renderBoss();
         this.visual.position.set(spawnPoint[0], spawnPoint[1], 2);
         this.projectiles = [];
-        this.lastMove = 400;
-        this.lastNewProjectile = 400;
-        this.lastProjectileUpdate = 400;
-        this.lastAnimate = 400;
+        this.lastMove = 10000;
+        this.lastNewProjectile = 10000;
+        this.lastProjectileUpdate = 10000;
+        this.lastAnimate = 10000;
         this.player = player;
+        this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
     }
 
     private renderBoss(): THREE.Sprite {
@@ -57,13 +59,14 @@ export default class Boss extends Player {
         return boss;
     }
 
-    public update(tick: number): Projectile | null {
-        const message = new updateMessage(null, false, false);
-        if (this.player.state.dead() === true) {
-            return message;
-        }
+    public update(deltaTime: number): updateMessage {
+        const message = new updateMessage([], false, false);
+        console.log(this.projectiles.length);
+        // if (this.player.state.isDead() || this.player.state.isWin()) {
+        //     return message;
+        // }
 
-        this.lastMove -= tick;
+        this.lastMove -= deltaTime;
         if (this.lastMove <= 0) {
             // move 
             // if (this.state.isMove()) {
@@ -72,22 +75,27 @@ export default class Boss extends Player {
             // }
 
             // through walls
-            console.log("this.state.isMove() = ", this.state.isMove());
-            this.chasePlayer(0.2);
+            // console.log("this.state.isMove() = ", this.state.isMove());
+            this.chasePlayer(0.5);
         }
         
-        this.lastProjectileUpdate -= tick;
+        this.lastProjectileUpdate -= deltaTime;
         if (this.lastProjectileUpdate <= 0) {
-            message.playerHit = this.updateProjectiles(tick);
+            message.playerHit = this.updateProjectiles(deltaTime);
         }
 
-        this.lastNewProjectile -= tick;
+        this.lastNewProjectile -= deltaTime;
         if (this.lastNewProjectile <= 0) {
-            message.projectile = this.shootProjectiles();
+            const newProjectile = this.shootProjectiles();
+            message.projectiles = [newProjectile];
             message.hasNewProjectile = true;
         }
 
-        this.lastAnimate -= tick;
+        if (this.chargedAttack <= 0) {
+            message.projectiles = [...(message.projectiles), ...this.performChargedAttack()];
+        }
+
+        this.lastAnimate -= deltaTime;
         if (this.lastAnimate <= 0) {
             this.animate();
         }
@@ -98,7 +106,7 @@ export default class Boss extends Player {
     private chasePlayer(speed: number = 0.2) {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
         this.visual.position.add(direction.multiplyScalar(speed)); // Boss speed
-        this.lastMove = 2;
+        this.lastMove = 400;
         
         if (direction.x < 0) {
             this.state.setDirection(4);
@@ -107,38 +115,68 @@ export default class Boss extends Player {
         }
     }
 
-    private updateProjectiles(tick: number) {
+    private updateProjectiles(deltaTime: number): boolean {
         let playerHit = false;
         let remove: number[] = [];
         this.projectiles.forEach((projectile) => {
-            projectile.update(tick)
+            projectile.update();
             // check if projectile hitbox has hit player hitbox
-            if (projectile.hasHitPlayer(this.player)) {
+            if (projectile.hasHitPlayer(this.player.visual)) {
+                playerHit = true;
                 projectile.visual.material.opacity = 0;
                 remove.push(this.projectiles.indexOf(projectile));
-                this.player.bumpWallUpdate();
-                playerHit = true;
+                // this.player.bumpWallUpdate();
             }
             // check if projectile has exited the map
-            // if (projectile.visual.position.x < -100 || projectile.visual.position.y < -100 || projectile.visual.position.x > 100 || projectile.visual.position.y > 100) {
-            //     projectile.opacity = 0;
-            //     remove.push(this.projectiles.indexOf(projectile));
-            // }
+            if (projectile.visual.position.x < -100 || projectile.visual.position.y < -100 || projectile.visual.position.x > 100 || projectile.visual.position.y > 100) {
+                projectile.visual.material.opacity = 0;
+                remove.push(this.projectiles.indexOf(projectile));
+            }
 
         });
-        remove.forEach((index) => {
-            this.projectiles.splice(index, 1);
-        });
-        this.lastProjectileUpdate = 5;
+        if (remove.length > 0) {
+            for (let i = remove.length - 1; i >= 0; i--) {
+                const index = remove[i];
+                this.projectiles[index].visual.material.opacity = 0;
+                this.projectiles.splice(index, 1);
+            }
+        }
+        this.lastProjectileUpdate = 200;
         return playerHit;
     }
 
     private shootProjectiles(): Projectile {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
-        const projectile = new Projectile(this.visual.position.clone(), direction, );
+        const projectile = new Projectile(this.visual.position.clone(), direction);
         this.projectiles.push(projectile);
-        this.lastNewProjectile = 100;
+        this.chargedAttack -= 1;
+        this.lastNewProjectile = 2000;
         return projectile;
+
+    }
+
+    private performChargedAttack(): Projectile[] {
+        const projectiles: Projectile[] = [];
+        // const numberProjectile = this.player.visual.position.distanceTo(this.visual.position) > 20 ? 36 : 24;
+        let numberProjectile = 0;
+        const distance = this.player.visual.position.distanceTo(this.visual.position);
+        if (distance > 20) {
+            numberProjectile = 36;
+        } else if (distance > 10) {
+            numberProjectile = 24;
+        } else {
+            numberProjectile = 12;
+        }
+        const angleStep = (2 * Math.PI) / numberProjectile;
+        for (let i = 0; i < numberProjectile; i++) {
+            const angle = i * angleStep;
+            const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+            const projectile = new Projectile(this.visual.position.clone(), direction);
+            this.projectiles.push(projectile);
+            projectiles.push(projectile);
+        }
+        this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
+        return projectiles;
     }
 
     public animate() {
@@ -155,6 +193,6 @@ export default class Boss extends Player {
         if (this.visual && this.visual.material && this.visual.material.map) {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
-        this.lastAnimate = 10;
+        this.lastAnimate = 300;
     }
 }
