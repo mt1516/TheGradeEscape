@@ -4,27 +4,47 @@ export default class Projectile {
     public visual: THREE.Sprite;
     private direction: THREE.Vector3;
     private speed: number;
+    public exploded: boolean = false;
 
-    constructor(position: THREE.Vector3, direction: THREE.Vector3) {
+    constructor(position: THREE.Vector3, direction: THREE.Vector3, speed: number = 1) {
         this.visual = this.renderProjectile();
         this.visual.position.copy(position);
         this.direction = direction;
-        this.speed = 2;
+        this.speed = speed;
     }
 
     private renderProjectile(): THREE.Sprite {
-        let projectileTexture = new THREE.TextureLoader().load('/texture/ust.png');
+        let projectileTexture = new THREE.TextureLoader().load('/texture/fbomb.png');
         projectileTexture.magFilter = THREE.NearestFilter;
         projectileTexture.minFilter = THREE.NearestFilter;
         const projectileMaterial = new THREE.SpriteMaterial({ map: projectileTexture, sizeAttenuation: false });
         projectileMaterial.transparent = true;
         const projectile = new THREE.Sprite(projectileMaterial);
-        projectile.scale.set(1, 1, 1);
+        projectile.scale.set(2, 2, 1);
         return projectile;
     }
 
+    private renderExplosion(): THREE.Sprite {
+        let explosionTexture = new THREE.TextureLoader().load('/texture/explode.png');
+        explosionTexture.magFilter = THREE.NearestFilter;
+        explosionTexture.minFilter = THREE.NearestFilter;
+        const explosionMaterial = new THREE.SpriteMaterial({ map: explosionTexture, sizeAttenuation: false });
+        explosionMaterial.transparent = true;
+        const explosion = new THREE.Sprite(explosionMaterial);
+        explosion.scale.set(4, 4, 1);
+        explosion.position.copy(this.visual.position);
+        return explosion;
+    }
+
+    public explode() {
+        this.exploded = true;
+        return this.renderExplosion();
+    }
+
     public update() {
-        this.visual.position.add(this.direction.clone().multiplyScalar(this.speed));
+        if (!this.exploded) {
+            this.visual.position.add(this.direction.clone().multiplyScalar(this.speed));
+        }
     }
 
     public hasHitPlayer(playerVisual: THREE.Sprite): boolean {

@@ -13,10 +13,10 @@ export default class Player {
     protected tilesHorizontal: number;
     protected tilesVertical: number;
     // private hurtAnimiationFrameCount: number;
-    private hurtSound: THREE.Audio;
+    protected hurtSound: THREE.Audio;
     public immunityPeriod: number;
     public immunityMask: THREE.Mesh;
-    private audioLoader = new THREE.AudioLoader();
+    protected audioLoader = new THREE.AudioLoader();
     protected lastMove = Date.now();
     protected lastAnimate = Date.now();
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
@@ -147,10 +147,17 @@ export default class Player {
         setTimeout(() => {
             clearInterval(flickerInterval);
             this.visual.material.opacity = 1;
-            this.immunityMask.material.opacity = 0;
-            this.state.setImmunity(false);
-            console.log("Immunity over");
-        }, this.immunityPeriod);
+            const shieldFailing = setInterval(() => {
+                const opacity = this.immunityMask.material.opacity === 0.5 ? 0.1 : 0.5;
+                this.immunityMask.material.opacity = opacity;
+            }, 100);
+            setTimeout(() => {
+                clearInterval(shieldFailing);
+                this.immunityMask.material.opacity = 0;
+                this.state.setImmunity(false);
+                console.log("Immunity over");
+            }, 2000);
+        }, this.immunityPeriod - 2000);
     }
 
     public hitByBoss(): boolean {

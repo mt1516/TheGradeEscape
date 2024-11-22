@@ -52,13 +52,16 @@ export class Mask {
         return this.mask;
     }
 
-    public thunder(probability: number=0.05) {
+    public thunder(probability: number=0.2) {
         if (this.maskOnDuration > 0) {
             return;
         }
         if (Math.random() < probability) {
             (this.mask.material as THREE.Material).opacity = 0.8
             this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
+            if (this.thunderSound.isPlaying) {
+                this.thunderSound.stop();
+            }
             if (this.maskOnDuration <= 2) {
                 this.audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
                     this.thunderSound.setBuffer(buffer);
@@ -114,7 +117,7 @@ export default class Game {
     private timeLimit: number;
     private startTime: number;
     private timerCallbacks: Set<(time: number) => void> | null;
-    private lastUpdateTime: number = Date.now();
+    private lastThunder: number;
     // private lastAnimationTime: number = Date.now();
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.frameCount = 0;
@@ -145,6 +148,7 @@ export default class Game {
         this.stepLimit = Math.ceil(stepsRequired * 1.3)
         this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
         this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
+        this.lastThunder = 1000;
         switch (this.gamemode) {
             case 'DBTW':
                 this.healthChangeCallbacks = new Set();
@@ -231,13 +235,6 @@ export default class Game {
         window.removeEventListener('keydown', () => {});
         window.removeEventListener('keyup', () => {});
         this.boss = null;
-    }
-
-    public subscribeToGameState(callback: (state: number) => void): () => void {
-        this.stateCallbacks.add(callback);
-        return () => {
-            this.stateCallbacks.delete(callback);
-        };
     }
 
     public subscribeToGameState(callback: (state: number) => void): () => void {
@@ -477,7 +474,7 @@ export default class Game {
                 this.bumpWallUpdate();
                 break;
             case 'DITD':
-                this.darkModeUpdate();
+                this.darkModeUpdate(deltaTime);
                 break;
             case 'DTWS':
                 this.limitedStepsUpdate();
@@ -509,12 +506,19 @@ export default class Game {
         }
     }
 
-    private darkModeUpdate() {
+    private darkModeUpdate(deltaTime: number) {
         this.maskPlayerView?.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         if (this.maskPlayerView) {
             this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         }
-        this.maskPlayerView?.thunder();
+        if (this.player.state.isStop()) {
+            return;
+        }
+        this.lastThunder -= deltaTime;
+        if (this.lastThunder <= 0) {
+            this.maskPlayerView?.thunder();
+            this.lastThunder = 1000;
+        }
     }
 
     private limitedStepsUpdate() {
@@ -528,13 +532,9 @@ export default class Game {
     }
 
     private bossUpdate(deltaTime: number) {
-        // if (this.gamemode !== 'Final') {
-        //     return;
-        // }
         if (this.boss) {
             const message: updateMessage = this.boss.update(deltaTime);
             if (message.hasNewProjectile) {
-                // this.scene.add(message.projectile.visual);
                 message.projectiles?.forEach((projectile) => {
                     this.scene.add(projectile.visual);
                 });
@@ -543,6 +543,13 @@ export default class Game {
                 if (this.player.hitByBoss()) {
                     this.notifyHealthChange();
                 }
+                message.explosions?.forEach((explosion) => {
+                    this.scene.add(explosion);
+                    setTimeout(() => {
+                        explosion.material.opacity = 0;
+                        this.scene.remove(explosion);
+                    }, 200);
+                });
             }
         }
     }

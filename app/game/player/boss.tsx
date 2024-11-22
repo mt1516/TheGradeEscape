@@ -5,10 +5,12 @@ import * as THREE from 'three';
 
 export class updateMessage {
     public projectiles: (Projectile)[];
+    public explosions: THREE.Sprite[];
     public hasNewProjectile: boolean;
     public playerHit: boolean;
     constructor(projectile: Projectile[], hasNewProjectile: boolean, playerHit: boolean) {
         this.projectiles = projectile;
+        this.explosions = [];
         this.hasNewProjectile = hasNewProjectile;
         this.playerHit = playerHit;
         return this;
@@ -21,7 +23,7 @@ export default class Boss extends Player {
     // protected currentTile: number;
     // protected tilesHorizontal: number;
     // protected tilesVertical: number;
-    private projectiles: Projectile[];
+    public projectiles: Projectile[];
     // private lastMove: number;
     private lastNewProjectile: number;
     private lastProjectileUpdate: number;
@@ -62,26 +64,14 @@ export default class Boss extends Player {
     public update(deltaTime: number): updateMessage {
         const message = new updateMessage([], false, false);
         console.log(this.projectiles.length);
-        // if (this.player.state.isDead() || this.player.state.isWin()) {
-        //     return message;
-        // }
-
         this.lastMove -= deltaTime;
         if (this.lastMove <= 0) {
-            // move 
-            // if (this.state.isMove()) {
-            //     let [x, y] = this.state.update();
-            //     this.visual.position.set(x, y, 3);
-            // }
-
-            // through walls
-            // console.log("this.state.isMove() = ", this.state.isMove());
             this.chasePlayer(0.5);
         }
         
         this.lastProjectileUpdate -= deltaTime;
         if (this.lastProjectileUpdate <= 0) {
-            message.playerHit = this.updateProjectiles(deltaTime);
+            message.playerHit = this.updateProjectiles(message);
         }
 
         this.lastNewProjectile -= deltaTime;
@@ -106,7 +96,7 @@ export default class Boss extends Player {
     private chasePlayer(speed: number = 0.2) {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
         this.visual.position.add(direction.multiplyScalar(speed)); // Boss speed
-        this.lastMove = 400;
+        this.lastMove = 300;
         
         if (direction.x < 0) {
             this.state.setDirection(4);
@@ -115,7 +105,7 @@ export default class Boss extends Player {
         }
     }
 
-    private updateProjectiles(deltaTime: number): boolean {
+    private updateProjectiles(message: updateMessage): boolean {
         let playerHit = false;
         let remove: number[] = [];
         this.projectiles.forEach((projectile) => {
@@ -124,8 +114,17 @@ export default class Boss extends Player {
             if (projectile.hasHitPlayer(this.player.visual)) {
                 playerHit = true;
                 projectile.visual.material.opacity = 0;
+                message.explosions.push(projectile.explode());
+                if (this.hurtSound.isPlaying) {
+                    this.hurtSound.stop();
+                }
+                this.audioLoader.load('/sounds/explode.mp3', (buffer) => {
+                    this.hurtSound.setBuffer(buffer);
+                    this.hurtSound.setLoop(false);
+                    this.hurtSound.setVolume(1);
+                    this.hurtSound.play();
+                });
                 remove.push(this.projectiles.indexOf(projectile));
-                // this.player.bumpWallUpdate();
             }
             // check if projectile has exited the map
             if (projectile.visual.position.x < -100 || projectile.visual.position.y < -100 || projectile.visual.position.x > 100 || projectile.visual.position.y > 100) {
@@ -141,16 +140,16 @@ export default class Boss extends Player {
                 this.projectiles.splice(index, 1);
             }
         }
-        this.lastProjectileUpdate = 200;
+        this.lastProjectileUpdate = 100;
         return playerHit;
     }
 
     private shootProjectiles(): Projectile {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
-        const projectile = new Projectile(this.visual.position.clone(), direction);
+        const projectile = new Projectile(this.visual.position.clone(), direction, 1);
         this.projectiles.push(projectile);
         this.chargedAttack -= 1;
-        this.lastNewProjectile = 2000;
+        this.lastNewProjectile = Math.max(Math.floor(Math.random() * 25), 1500);
         return projectile;
 
     }
@@ -160,9 +159,7 @@ export default class Boss extends Player {
         // const numberProjectile = this.player.visual.position.distanceTo(this.visual.position) > 20 ? 36 : 24;
         let numberProjectile = 0;
         const distance = this.player.visual.position.distanceTo(this.visual.position);
-        if (distance > 20) {
-            numberProjectile = 36;
-        } else if (distance > 10) {
+        if (distance > 40) {
             numberProjectile = 24;
         } else {
             numberProjectile = 12;
@@ -171,7 +168,7 @@ export default class Boss extends Player {
         for (let i = 0; i < numberProjectile; i++) {
             const angle = i * angleStep;
             const direction = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
-            const projectile = new Projectile(this.visual.position.clone(), direction);
+            const projectile = new Projectile(this.visual.position.clone(), direction, 1);
             this.projectiles.push(projectile);
             projectiles.push(projectile);
         }
