@@ -5,6 +5,11 @@ import { Mode } from '../game'
 
 let speed = 1;
 
+enum IMMUNITY {
+    VULNERABLE = 0,
+    IMMUNE,
+}
+
 enum STATE {
     IDLE = 0,
     MOVE,
@@ -34,6 +39,7 @@ export default class StateMachine {
     private currentHitboxCoordinate: number[];
     private currentRenderCoordinate: number[];
     private endCoordinate: number[];
+    public immunity: IMMUNITY;
     constructor(mazeMap: number[][], characterSize: number[], hitboxWidth: number, limitedSteps: number, currentHitboxCoordinate: number[], endCoordinate: number[]) {
         this.state = STATE.IDLE;
         this.direction = DIRECTION.IDLE;
@@ -48,6 +54,7 @@ export default class StateMachine {
         this.currentHitboxCoordinate = currentHitboxCoordinate;
         this.currentRenderCoordinate = [currentHitboxCoordinate[0], currentHitboxCoordinate[1] + Math.floor(this.characterSize[1] / 2)];
         this.endCoordinate = endCoordinate;
+        this.immunity = IMMUNITY.VULNERABLE;
     }
 
     public reset() {
@@ -144,6 +151,7 @@ export default class StateMachine {
             // console.log("valid: hitboxCoordinate, renderCoordinate = ", hitboxCoordinate, renderCoordinate)
             this.currentHitboxCoordinate = hitboxCoordinate;
             this.currentRenderCoordinate = renderCoordinate;
+            this.steps += 1;
             this.movedFlag = true;
             return renderCoordinate;
         } else {
@@ -165,11 +173,11 @@ export default class StateMachine {
     
     public limitedStepsUpdate(): boolean {
         if (this.isMove() && this.movedFlag) {
-            this.steps += 1;
+            // this.steps += 1;
             // Avoid overflowing the opengl context
-            if (this.steps % 5 === 0) {
-                return true;
-            }
+            // if (this.steps % 5 === 0) {
+            return true;
+            // }
         }
         if (this.steps >= this.limitedSteps) {
             this.state = STATE.DEAD;
@@ -238,8 +246,39 @@ export default class StateMachine {
         this.direction = direction;
     }
 
-    public dead() {
-        return (this.state === STATE.DEAD);
+    public setHealth(health: number) {
+        this.health = health;
     }
 
+    public setImmunity(immune: boolean) {
+        if (immune) {
+            this.immunity = IMMUNITY.IMMUNE;
+        } else {
+            this.immunity = IMMUNITY.VULNERABLE;
+        }
+    }
+
+    public isImmune(): boolean {
+        return this.immunity === IMMUNITY.IMMUNE;
+    }
+
+    public hitByProjectile(): boolean {
+        if (this.isImmune()) {
+            return false;
+        }
+        this.health -= 1;
+        if (this.health === 0) {
+            this.state = STATE.DEAD;
+            return true;
+        }
+        this.setImmunity(true);
+        // setTimeout(() => {
+        //     this.setImmunity(false);
+        // }, 4000);
+        return true;
+    }
+
+    public setDead() {
+        this.state = STATE.DEAD;
+    }
 }

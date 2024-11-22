@@ -33,7 +33,8 @@ export class Mask {
     public mask: THREE.Mesh;
     public needMask: boolean;
     public maskOnDuration: number;
-    private hurtSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
+    private thunderSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
+    private audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
     constructor() {
         const maskGeometry = new THREE.RingGeometry(10, 200);
         const maskMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -58,27 +59,26 @@ export class Mask {
         if (Math.random() < probability) {
             (this.mask.material as THREE.Material).opacity = 0.8
             this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
-            const audioLoader = new THREE.AudioLoader();
             if (this.maskOnDuration <= 2) {
-                audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
+                this.audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
+                    this.thunderSound.setBuffer(buffer);
+                    this.thunderSound.setLoop(false);
+                    this.thunderSound.setVolume(1);
+                    this.thunderSound.play();
                 });
             } else if (this.maskOnDuration <= 4) {
-                audioLoader.load('/sounds/MediumThunder.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
+                this.audioLoader.load('/sounds/MediumThunder.mp3',  (buffer) => {
+                    this.thunderSound.setBuffer(buffer);
+                    this.thunderSound.setLoop(false);
+                    this.thunderSound.setVolume(1);
+                    this.thunderSound.play();
                 });
             } else {
-                audioLoader.load('/sounds/LoudThunder.mp3',  (buffer) => {
-                    this.hurtSound.setBuffer(buffer);
-                    this.hurtSound.setLoop(false);
-                    this.hurtSound.setVolume(1);
-                    this.hurtSound.play();
+                this.audioLoader.load('/sounds/LoudThunder.mp3',  (buffer) => {
+                    this.thunderSound.setBuffer(buffer);
+                    this.thunderSound.setLoop(false);
+                    this.thunderSound.setVolume(1);
+                    this.thunderSound.play();
                 });
             }
         } else {
@@ -111,6 +111,11 @@ export default class Game {
     private playerStepsCallbacks: Set<(steps: number) => void> | null;
     private healthChangeCallbacks: Set<(health: number) => void> | null;
     private boss: Boss | null;
+    private timeLimit: number;
+    private startTime: number;
+    private timerCallbacks: Set<(time: number) => void> | null;
+    private lastUpdateTime: number = Date.now();
+    // private lastAnimationTime: number = Date.now();
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.frameCount = 0;
         this.animationFrameCount = 0;
@@ -124,7 +129,6 @@ export default class Game {
         this.gamemode = mode;
         this.gameSetting = (settings[this.gamemode] as Record<Difficulty, setting>)[difficulty];
         this.maze = new Maze(this.gameSetting);
-        this.stepLimit = -1;
         let [middleX, middleY] = this.maze.getMiddleOfMap();
         this.camera.position.set(middleX, middleY, Math.max(this.gameSetting.width, this.gameSetting.height) * 2 * this.gameSetting.cellSize); // Adjust the camera position
         this.camera.lookAt(middleX, middleY, 0); // Adjust the camera position to look at the maze
@@ -134,11 +138,17 @@ export default class Game {
         this.mazeSolutionLengthCallbacks = null;
         this.playerStepsCallbacks = null;
         this.healthChangeCallbacks = null;
-        this.stepLimit = -1;
         this.boss = null;
+        this.startTime = Date.now();
+        this.timerCallbacks = new Set();
+        const stepsRequired = this.maze.getLengthOfSolution();
+        this.stepLimit = Math.ceil(stepsRequired * 1.3)
+        this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
+        this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
         switch (this.gamemode) {
             case 'DBTW':
                 this.healthChangeCallbacks = new Set();
+                this.timeLimit = this.timeLimit * 0.8;
                 break;
             case 'DITD':
                 this.maskPlayerView = new Mask();
@@ -148,16 +158,17 @@ export default class Game {
                 this.scene.add(this.maskPlayerView.mask);
                 break;
             case 'DTWS':
-                this.stepLimit = Math.ceil(this.maze.getLengthOfSolution() * 1.3);
                 this.mazeSolutionLengthCallbacks = new Set();
                 this.playerStepsCallbacks = new Set();
+                this.timeLimit = Math.ceil(this.timeLimit * 0.9);
                 break;
-        }
-        this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
-        if (this.gamemode === 'Final') {
-            this.healthChangeCallbacks = new Set();
-            this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
-            this.scene.add(this.boss.visual);
+            case 'Final':
+                this.healthChangeCallbacks = new Set();
+                this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
+                this.player.state.setHealth(5);
+                this.scene.add(this.boss.visual);
+                this.scene.add(this.player.immunityMask);
+                break;
         }
         this.scene.add(this.player.visual);
         this.renderMaze();
@@ -197,6 +208,7 @@ export default class Game {
                 break;
         }
         this.keyboardControls();
+        this.update(0);
         this.playerMovemoment();
     }
 
@@ -215,8 +227,17 @@ export default class Game {
                 this.healthChangeCallbacks?.clear();
                 break;
         }
+        this.timerCallbacks?.clear();
         window.removeEventListener('keydown', () => {});
         window.removeEventListener('keyup', () => {});
+        this.boss = null;
+    }
+
+    public subscribeToGameState(callback: (state: number) => void): () => void {
+        this.stateCallbacks.add(callback);
+        return () => {
+            this.stateCallbacks.delete(callback);
+        };
     }
 
     public subscribeToGameState(callback: (state: number) => void): () => void {
@@ -247,6 +268,13 @@ export default class Game {
         };
     }
 
+    public subscribeToTimer(callback: (time: number) => void): () => void {
+        this.timerCallbacks?.add(callback);
+        return () => {
+            this.timerCallbacks?.delete(callback);
+        };
+    }
+
     private notifyGameState(state: number) {
         this.stateCallbacks.forEach((callback) => callback(state));
     }
@@ -261,6 +289,10 @@ export default class Game {
 
     private notifyPlayerStepsChange() {
         this.playerStepsCallbacks?.forEach((callback) => callback(this.player.state.getSteps()));
+    }
+
+    private notifyTimer(elapsedTime: number) {
+        this.timerCallbacks?.forEach((callback) => callback(this.timeLimit - elapsedTime));
     }
 
     private renderMaze() {
@@ -357,42 +389,7 @@ export default class Game {
             }
         }, false);
     }
-
-    private playerMovemoment() {
-        // this.camera.rotateZ(-Math.PI / 1800); // this is so funny lol
-        this.frameCount++;
-    
-        // Move the player every 10 frames
-        if (this.frameCount >= moveEveryNFrames) {
-            
-            this.player.state.checkWin();
-            // TODO: Chnage this to popup
-            if (this.player.state.isWin()) {
-                this.player.state.reset(); 
-                promoteGrade();
-                const score = this.getScore();
-                setPlayed(this.gamemode, this.difficulty, score);
-                if (this.gamemode === 'Final') {
-                   updateScoreBoard(score);
-                }
-                this.notifyGameState(1);
-                return;
-            } else if (this.player.state.isDead()) {
-                this.player.state.reset(); 
-                demoteGrade();
-                this.notifyGameState(-1)
-                return;
-            }
-            this.update();
-            this.frameCount = 0; // Reset the frame counter
-        }
-        if (this.animationFrameCount == moveEveryNFrames / 2 || this.animationFrameCount == moveEveryNFrames) {
-            this.player.animate();
-        }
-
-        requestAnimationFrame(this.playerMovemoment.bind(this));
-    }
-
+      
     private getScore() {
         var score = 50;
                 switch (this.difficulty) {
@@ -418,9 +415,29 @@ export default class Game {
                         break;
                 }
         return score;
-    }
+    }  
 
-    private update() {
+    private playerMovemoment() {
+        const currentTime = Date.now();
+        const deltaTime = currentTime - this.lastUpdateTime;
+
+        this.player.state.checkWin();
+        if (this.player.state.isWin()) {
+            this.player.state.reset(); 
+            promoteGrade();
+            const score = this.getScore();
+            setPlayed(this.gamemode, this.difficulty, score);
+            if (this.gamemode === 'Final') {
+               updateScoreBoard(score);
+            }
+            this.notifyGameState(1);
+            return;
+        } else if (this.player.state.isDead()) {
+            this.player.state.reset(); 
+            demoteGrade();
+            this.notifyGameState(-1)
+            return;
+        }
         if (this.keyOrder.length > 0) {
             switch (this.keyOrder[this.keyOrder.length - 1]) {
                 case 'up':
@@ -439,31 +456,60 @@ export default class Game {
         } else {
             this.player.state.stop();
         }
-        this.player.update(1);
-        this.bumpWallUpdate();
-        this.darkModeUpdate();
-        this.limitedStepsUpdate();
-        this.bossUpdate();
+        this.update(deltaTime);
+        this.lastUpdateTime = currentTime;
+
+        // const animationDeltaTime = currentTime - this.lastAnimationTime;
+        // if (animationDeltaTime >= 200) { // Animate every 100ms
+        //     this.player.animate();
+        //     this.lastAnimationTime = currentTime;
+        // }
+
+        requestAnimationFrame(this.playerMovemoment.bind(this));
+    }
+
+    private update(deltaTime: number) {
+        console.log("Updating", deltaTime);
+        // const currentTime = Date.now();
+        this.player.update(deltaTime);
+        switch (this.gamemode) {
+            case 'DBTW':
+                this.bumpWallUpdate();
+                break;
+            case 'DITD':
+                this.darkModeUpdate();
+                break;
+            case 'DTWS':
+                this.limitedStepsUpdate();
+                break;
+            case 'Final':
+                this.bossUpdate(deltaTime);
+                break;
+        }
+        this.updateTimer();
         this.sceneRender.render(this.scene, this.camera);
     }
 
-    private bumpWallUpdate() {
-        if (this.gamemode !== 'DBTW') {
+    private updateTimer() {
+        const elapsedTime = (Date.now() - this.startTime) / 1000; // Convert to seconds
+        this.notifyTimer(elapsedTime);
+        if (elapsedTime >= this.timeLimit) {
+            this.player.state.setDead();
+            alert('Time is up! You lost!');
+            window.location.href = '/game-level'; // Redirect to the home page
             return;
         }
+    }
+
+    private bumpWallUpdate() {
         if (this.player.bumpWallUpdate()) {
-            // console.log(`before: keyOrder = ${this.keyOrder}`)
-            this.notifyHealthChange()
-            this.bumpedKey = [...this.keyOrder]
+            this.notifyHealthChange();
+            this.bumpedKey = [...this.keyOrder];
             this.keyOrder = [];
-            // console.log(`after: keyOrder = ${this.keyOrder}`)
         }
     }
 
     private darkModeUpdate() {
-        if (this.gamemode !== 'DITD') {
-            return;
-        }
         this.maskPlayerView?.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         if (this.maskPlayerView) {
             this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
@@ -472,9 +518,6 @@ export default class Game {
     }
 
     private limitedStepsUpdate() {
-        if (this.gamemode !== 'DTWS') {
-            return;
-        }
         if (this.player.state.isStop()) {
             this.notifyPlayerStepsChange();
             return;
@@ -484,17 +527,22 @@ export default class Game {
         }
     }
 
-    private bossUpdate() {
-        if (this.gamemode !== 'Final') {
-            return;
-        }
+    private bossUpdate(deltaTime: number) {
+        // if (this.gamemode !== 'Final') {
+        //     return;
+        // }
         if (this.boss) {
-            const message: updateMessage = this.boss.update(moveEveryNFrames);
+            const message: updateMessage = this.boss.update(deltaTime);
             if (message.hasNewProjectile) {
-                this.scene.add(message.projectile.visual);
+                // this.scene.add(message.projectile.visual);
+                message.projectiles?.forEach((projectile) => {
+                    this.scene.add(projectile.visual);
+                });
             }
             if (message.playerHit) {
-                this.notifyHealthChange();
+                if (this.player.hitByBoss()) {
+                    this.notifyHealthChange();
+                }
             }
         }
     }
