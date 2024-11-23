@@ -19,6 +19,8 @@ export default class Player {
     protected audioLoader = new THREE.AudioLoader();
     protected lastMove = Date.now();
     protected lastAnimate = Date.now();
+    public movePeriod: number;
+    public animatePeriod: number
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
         this.currentTile = 0;
         this.tilesHorizontal = 3;
@@ -34,6 +36,8 @@ export default class Player {
         this.immunityMask.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 5);
         this.lastMove = 0;
         this.lastAnimate = 0;
+        this.movePeriod = 100;
+        this.animatePeriod = 100;
     }
 
     public renderPlayer(): THREE.Sprite {
@@ -52,18 +56,19 @@ export default class Player {
     }
 
     public update(deltaTime: number): void {
-        const currentTime = Date.now();
-        if (currentTime - this.lastMove > 100) {
-            this.lastMove = currentTime;
+        this.lastMove -= deltaTime;
+        if (this.lastMove < 0) {
             if (this.state.isMove()) {
                 let [x, y] = this.state.update();
                 this.visual.position.set(x, y, 3);
             }
             this.immunityMask.position.set(this.visual.position.x, this.visual.position.y, 5);
+            this.lastMove = this.movePeriod;
         }
-        if (currentTime - this.lastAnimate > 100) {
-            this.lastAnimate = currentTime;
+        this.lastAnimate -= deltaTime;
+        if (this.lastAnimate < 0) {
             this.animate();
+            this.lastAnimate = this.animatePeriod;
         }
     }
 

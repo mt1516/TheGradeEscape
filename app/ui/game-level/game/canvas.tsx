@@ -24,7 +24,8 @@ export default function Canvas(props: {
     const [playerSteps, setPlayerSteps] = useState(0);
     const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
     const [timeLeft, setTimeLeft] = useState(0);
-
+    const [loading, setLoading] = useState(true);
+    
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const game: Game = new Game(scene, camera, props.sceneRender, props.mode, props.difficulty);
@@ -46,10 +47,6 @@ export default function Canvas(props: {
             let unsubscribeToMazeSolutionLengthChange: () => void;
             let unsubscribeToPlayerStepsChange: () => void;
             let unsubscribeToTimer: () => void;
-
-            unsubscribeToGameState = game.subscribeToGameState((state) => {
-                setGameState(state);
-            });
 
             unsubscribeToGameState = game.subscribeToGameState((state) => {
                 setGameState(state);
@@ -81,6 +78,7 @@ export default function Canvas(props: {
             });
 
             game.run();
+            setLoading(false);
             return () => {
                 game.end();
                 window.removeEventListener('resize', handleResize);
@@ -128,6 +126,7 @@ export default function Canvas(props: {
                 backgroundImage: 'url("/background/hkust.jpg")',
             }}
         >
+            {loading && <h1>.......Loading...</h1>}
             <div className="flex justify-start w-8/12 h-full"
                 ref={containerRef}
             >

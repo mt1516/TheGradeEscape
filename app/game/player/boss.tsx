@@ -18,16 +18,9 @@ export class updateMessage {
 }
 
 export default class Boss extends Player {
-    // public state: StateMachine;
-    // public visual: THREE.Sprite;
-    // protected currentTile: number;
-    // protected tilesHorizontal: number;
-    // protected tilesVertical: number;
     public projectiles: Projectile[];
-    // private lastMove: number;
     private lastNewProjectile: number;
     private lastProjectileUpdate: number;
-    // private lastAnimate: number;
     private player: Player;
     private chargedAttack: number;
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], player: Player, spawnPoint: number[]) {
@@ -44,6 +37,8 @@ export default class Boss extends Player {
         this.lastAnimate = 10000;
         this.player = player;
         this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
+        this.movePeriod = 300;
+        this.animatePeriod = 300;
     }
 
     private renderBoss(): THREE.Sprite {
@@ -96,7 +91,7 @@ export default class Boss extends Player {
     private chasePlayer(speed: number = 0.2) {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
         this.visual.position.add(direction.multiplyScalar(speed)); // Boss speed
-        this.lastMove = 300;
+        this.lastMove = this.movePeriod;
         
         if (direction.x < 0) {
             this.state.setDirection(4);
@@ -190,6 +185,6 @@ export default class Boss extends Player {
         if (this.visual && this.visual.material && this.visual.material.map) {
             this.visual.material.map.offset.set(offsetX, offsetY);
         }
-        this.lastAnimate = 300;
+        this.lastAnimate = this.animatePeriod;
     }
 }
