@@ -11,7 +11,7 @@ import { characters } from './player/character';
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
-    ['DBTW', 'Don\'t Break The Wall'],
+    ['DBTW', 'Don\'t Bump The Wall'],
     ['DITD', 'Dancing In The Dark'],
     ['DTWS', 'Don\'t Take Wrong Steps'],
     ['Final', 'Final Boss']

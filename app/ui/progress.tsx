@@ -19,14 +19,13 @@ export default function Progress() {
                 return 'bg-[rgba(255,174,174,0.8)]'
             case 'D':
                 return 'bg-[rgba(255,174,174,0.8)]'
-            //    case 'F':
             default:
                 return 'bg-[rgba(255,100,98,0.7)]'
         }
     };
     const bgColor = getBackgroundColor(currentGrade);
     return (
-        <div className={`absolute top-[10%] right-[8%] w-1/12 h-fit my-auto container ${bgColor} rounded-full flex flex-row justify-center items-center`}>
+        <div className={`absolute top-[10%] right-[8%] w-[10%] h-fit my-auto container ${bgColor} rounded-full flex flex-row justify-center items-center`}>
             <div className=" text-black text-xl w-full h-full text-center">
                 Grade: {currentGrade} <br />
                 Score: {currentScore}
