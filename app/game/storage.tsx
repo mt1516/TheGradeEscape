@@ -16,7 +16,7 @@ export function getCurrentGrade() {
 }
 
 export function getCurrentCharacter() {
-    return currentCharacter;
+    return typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '-1') : -1;
 }
 
 export function getCurrentScore(): number {
@@ -36,7 +36,7 @@ export function initStorage() {
     resetCurrentGame(false);
     resetScoreBoard(false);
     if (typeof window !== 'undefined') {
-        localStorage.setItem('currentCharacter', '1');
+        localStorage.setItem('currentCharacter', '0');
     }
 }
 
@@ -132,10 +132,7 @@ export function canPlayFinal(): boolean {
     return checkPlayed(GAMEMODE_DIFFICULTY.DBTW_HARD) && checkPlayed(GAMEMODE_DIFFICULTY.DITD_HARD) && checkPlayed(GAMEMODE_DIFFICULTY.DTWS_HARD);
 }
 
-export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '-1') : -1;
-
 export function setCurrentCharacter(c: number) {
-    currentCharacter = c;
     if (typeof window !== 'undefined') {
         localStorage.setItem('currentCharacter', c.toString());
     }

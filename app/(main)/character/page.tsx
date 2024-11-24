@@ -13,8 +13,9 @@ export enum CHARACTER {
 }
 
 export default function CharacterPage() {
-  const [c, setCurrent] = useState(getCurrentCharacter());
+  const [c, setCurrent] = useState(0);
   useEffect(() => {
+    setCurrent(getCurrentCharacter());
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' || e.key === 'a') {
         setCurrent((c - 1 + characterTotal) % characterTotal); // Ensure positive index
