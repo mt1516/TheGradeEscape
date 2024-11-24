@@ -17,6 +17,7 @@ export default class Projectile {
         let projectileTexture = new THREE.TextureLoader().load('/texture/fbomb.png');
         projectileTexture.magFilter = THREE.NearestFilter;
         projectileTexture.minFilter = THREE.NearestFilter;
+        projectileTexture.colorSpace = THREE.SRGBColorSpace;
         const projectileMaterial = new THREE.SpriteMaterial({ map: projectileTexture, sizeAttenuation: false });
         projectileMaterial.transparent = true;
         const projectile = new THREE.Sprite(projectileMaterial);
@@ -28,6 +29,7 @@ export default class Projectile {
         let explosionTexture = new THREE.TextureLoader().load('/texture/explode.png');
         explosionTexture.magFilter = THREE.NearestFilter;
         explosionTexture.minFilter = THREE.NearestFilter;
+        explosionTexture.colorSpace = THREE.SRGBColorSpace;
         const explosionMaterial = new THREE.SpriteMaterial({ map: explosionTexture, sizeAttenuation: false });
         explosionMaterial.transparent = true;
         const explosion = new THREE.Sprite(explosionMaterial);

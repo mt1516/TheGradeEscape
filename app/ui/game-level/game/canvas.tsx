@@ -15,7 +15,6 @@ export default function Canvas(props: {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera();
-    // const sceneRender = new THREE.WebGLRenderer();
     props.sceneRender.setClearColor(0x000000);
     props.sceneRender.setClearAlpha(0);
 

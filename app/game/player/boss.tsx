@@ -25,16 +25,16 @@ export default class Boss extends Player {
     private chargedAttack: number;
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], player: Player, spawnPoint: number[]) {
         super(characterSize, hitboxWidth, mapStartCoord, mapEndCoord, mazeMap, 0);
-        this.tilesHorizontal = 4;
-        this.tilesVertical = 2;
+        this.tilesHorizontal = 3;
+        this.tilesVertical = 4;
         this.state = new StateMachine(mazeMap, characterSize, hitboxWidth, 0, mapStartCoord, mapEndCoord);
         this.visual = this.renderBoss();
         this.visual.position.set(spawnPoint[0], spawnPoint[1], 2);
         this.projectiles = [];
-        this.lastMove = 10000;
-        this.lastNewProjectile = 10000;
+        this.lastMove = 0;
+        this.lastNewProjectile = 0;
         this.lastProjectileUpdate = 10000;
-        this.lastAnimate = 10000;
+        this.lastAnimate = 0;
         this.player = player;
         this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
         this.movePeriod = 300;
@@ -44,13 +44,15 @@ export default class Boss extends Player {
     private renderBoss(): THREE.Sprite {
         const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;
         const offsetY = (this.tilesVertical - Math.floor(this.currentTile / this.tilesHorizontal)) / this.tilesVertical;
-        let bossTexture = new THREE.TextureLoader().load('/texture/Boss.png');
+        let bossTexture = new THREE.TextureLoader().load('/texture/Snape.png');
         bossTexture.magFilter = THREE.NearestFilter;
         bossTexture.minFilter = THREE.NearestFilter;
+        bossTexture.colorSpace = THREE.SRGBColorSpace;
         bossTexture.repeat.set(1 / this.tilesHorizontal, 1 / this.tilesVertical);
         bossTexture.offset.set(offsetX, offsetY);
         const bossMaterial = new THREE.SpriteMaterial({ map: bossTexture, sizeAttenuation: false });
         bossMaterial.transparent = true;
+        bossMaterial.opacity = 1;
         const boss = new THREE.Sprite(bossMaterial);
         boss.scale.set(4, 4, 1);
         return boss;
@@ -90,13 +92,21 @@ export default class Boss extends Player {
 
     private chasePlayer(speed: number = 0.2) {
         const direction = new THREE.Vector3().subVectors(this.player.visual.position, this.visual.position).normalize();
-        this.visual.position.add(direction.multiplyScalar(speed)); // Boss speed
+        this.visual.position.add(direction.multiplyScalar(speed));
         this.lastMove = this.movePeriod;
         
-        if (direction.x < 0) {
-            this.state.setDirection(4);
+        if (direction.x > direction.y) {
+            if (direction.x > 0) {
+                this.state.setDirection(2);
+            } else {
+                this.state.setDirection(4);
+            }
         } else {
-            this.state.setDirection(2);
+            if (direction.y > 0) {
+                this.state.setDirection(1);
+            } else {
+                this.state.setDirection(3);
+            }
         }
     }
 
@@ -151,7 +161,6 @@ export default class Boss extends Player {
 
     private performChargedAttack(): Projectile[] {
         const projectiles: Projectile[] = [];
-        // const numberProjectile = this.player.visual.position.distanceTo(this.visual.position) > 20 ? 36 : 24;
         let numberProjectile = 0;
         const distance = this.player.visual.position.distanceTo(this.visual.position);
         if (distance > 40) {
@@ -173,11 +182,17 @@ export default class Boss extends Player {
 
     public animate() {
         switch (this.state.getDirection()) {
+            case 1:
+                this.currentTile = (this.currentTile >= 9 && this.currentTile < 11) ? this.currentTile + 1 : 9;
+                break;
             case 2:
-                this.currentTile = (this.currentTile >= 0 && this.currentTile < 3) ? this.currentTile + 1 : 0;
+                this.currentTile = (this.currentTile >= 6 && this.currentTile < 8) ? this.currentTile + 1 : 6;
+                break;
+            case 3:
+                this.currentTile = (this.currentTile >= 0 && this.currentTile < 2) ? this.currentTile + 1 : 0;
                 break;
             case 4:
-                this.currentTile = (this.currentTile >= 4 && this.currentTile < 7) ? this.currentTile + 1 : 4;
+                this.currentTile = (this.currentTile >= 3 && this.currentTile < 5) ? this.currentTile + 1 : 3;
                 break;
         }
         const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;

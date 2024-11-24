@@ -10,18 +10,19 @@ export enum CHARACTER {
   NORM = 0,
   CS_GUY,
   BUSINESS_GUY,
+  CAT
 }
 
 export default function CharacterPage() {
-  const [c, setCurrent] = useState(0);
+  const [c, setCurrent] = useState(getCurrentCharacter());
   useEffect(() => {
-    setCurrent(getCurrentCharacter());
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' || e.key === 'a') {
         setCurrent((c - 1 + characterTotal) % characterTotal); // Ensure positive index
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
         setCurrent((c + 1) % characterTotal);
       }
+      console.log((c - 1 + characterTotal) % characterTotal, (c + 1) % characterTotal)
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -38,7 +39,6 @@ export default function CharacterPage() {
           <Close />
           <h1 className="text-7xl font-bold text-black w-full text-center justify-self-center">Character Selection</h1>
         </div>
-
         <Choose current={c} />
       </div>
     </div>

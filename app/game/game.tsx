@@ -7,6 +7,8 @@ import settings from './settings.json';
 import Boss, { updateMessage } from './player/boss';
 import { promoteGrade, demoteGrade, setPlayed, updateScoreBoard, getCurrentCharacter } from './storage';
 import { characters } from './player/character';
+import { getCurrentGrade } from "@/app/game/storage";
+
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -181,12 +183,10 @@ export default class Game {
         const updateValues = [];
         const characterIndex = getCurrentCharacter();
         const character = characters[characterIndex];
-        // console.log(character);
         this.player.movePeriod /= character.walkingSpeedMultiplier;
         this.stepLimit *= character.stepLimitMultiplier;
         updateValues.push(character.viewInDarkModeMultiplier);
         this.timeLimit *= character.timeLimitMultiplier;
-        // updateValues.push(character.extraHeart);
         switch (this.gamemode) {
             case 'DBTW':
                 this.player.state.setHealth(3 + character.extraHeart);
@@ -318,10 +318,34 @@ export default class Game {
     }
 
     private renderMaze() {
-        const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x593ac0 }); // Red walls
+        const currentGrade = getCurrentGrade();
+        const getWallTexture = (grade: string) => {
+            switch (grade) {
+                case 'A+':
+                case 'A':
+                case 'A-':
+                    return new THREE.TextureLoader().load('/texture/WallA.png');
+                case 'B+':
+                case 'B':
+                case 'B-':
+                    return new THREE.TextureLoader().load('/texture/WallB.png');
+                case 'C+':
+                case 'C':
+                case 'C-':
+                    return new THREE.TextureLoader().load('/texture/WallC.png');
+                case 'D':
+                    return new THREE.TextureLoader().load('/texture/WallD.png');
+                default:
+                    return new THREE.TextureLoader().load('/texture/WallF.png');
+            }
+        };
+        const wallTexture = getWallTexture(currentGrade);
+        wallTexture.magFilter = THREE.NearestFilter;
+        wallTexture.minFilter = THREE.NearestFilter;
+        const wallMaterial = new THREE.MeshBasicMaterial({ map: wallTexture });
         const pathTexture = new THREE.TextureLoader().load( "/texture/Stone_Floor_002_COLOR.jpg" );
         const pathMaterial = new THREE.MeshBasicMaterial({ map: pathTexture });
-        const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
+        const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell
         const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
         this.maze.mazeMap.forEach((row, y) => {
             row.forEach((cell, x) => {
@@ -485,19 +509,11 @@ export default class Game {
         }
         this.update(deltaTime);
         this.lastUpdateTime = currentTime;
-
-        // const animationDeltaTime = currentTime - this.lastAnimationTime;
-        // if (animationDeltaTime >= 200) { // Animate every 100ms
-        //     this.player.animate();
-        //     this.lastAnimationTime = currentTime;
-        // }
-
         requestAnimationFrame(this.playerMovemoment.bind(this));
     }
 
     private update(deltaTime: number) {
         console.log("Updating", deltaTime);
-        // const currentTime = Date.now();
         this.player.update(deltaTime);
         switch (this.gamemode) {
             case 'DBTW':
@@ -586,7 +602,6 @@ export default class Game {
     }
     
     private addBorder() {
-        // Add border walls
         let cellMiddle = Math.floor(this.gameSetting.cellSize / 2);
         for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize + cellMiddle) {
             this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);

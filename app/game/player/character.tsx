@@ -1,3 +1,5 @@
+import { texture } from "three/webgpu";
+
 export const characters = [
     {
         name: 'Regular',
@@ -9,17 +11,33 @@ export const characters = [
         timeLimitMultiplier: 1,
         extraHeart: 0,
         immunityPeriodMultiplier: 1,
+        tilesHorizontal: 3,
+        tilesVertical: 4,
+        upTile: [9, 11],
+        rightTile: [6, 8],
+        downTile: [0, 2],
+        leftTile: [3, 5],
+        texturePath: '/texture/player_norm.png',
+        animatePeriod: 80,
     },
     {
         name: 'CS guy',
-        buff: '"Dark mode": +10% visibility in dark mode',
+        buff: '"Dark mode": +20% visibility in dark mode',
         debuff: '"Just use AI": -5% time limit',
         walkingSpeedMultiplier: 1,
         stepLimitMultiplier: 1,
-        viewInDarkModeMultiplier: 1.1,
+        viewInDarkModeMultiplier: 1.2,
         timeLimitMultiplier: 0.95,
         extraHeart: 0,
         immunityPeriodMultiplier: 1,
+        tilesHorizontal: 9,
+        tilesVertical: 4,
+        upTile: [0, 8],
+        rightTile: [27, 35],
+        downTile: [18, 26],
+        leftTile: [9, 17],
+        texturePath: '/texture/player_CS.png',
+        animatePeriod: 80,
     },
     {
         name: 'Business guy',
@@ -31,6 +49,14 @@ export const characters = [
         timeLimitMultiplier: 1,
         extraHeart: 0,
         immunityPeriodMultiplier: 1,
+        tilesHorizontal: 9,
+        tilesVertical: 4,
+        upTile: [0, 8],
+        rightTile: [27, 35],
+        downTile: [18, 26],
+        leftTile: [9, 17],
+        texturePath: '/texture/player_business.png',
+        animatePeriod: 75,
     },
     {
         name: 'Cat',
@@ -42,6 +68,14 @@ export const characters = [
         timeLimitMultiplier: 1,
         extraHeart: 1,
         immunityPeriodMultiplier: 0.5,
+        tilesHorizontal: 2,
+        tilesVertical: 4,
+        upTile: [0, 1],
+        rightTile: [6, 7],
+        downTile: [4, 5],
+        leftTile: [2, 3],
+        texturePath: '/texture/player_cat.png',
+        animatePeriod: 100,
     }
 ];
 

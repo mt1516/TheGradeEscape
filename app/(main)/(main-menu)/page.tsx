@@ -12,6 +12,7 @@ export default function Home() {
   });
   if (currentGrade === 'X') {
     initStorage();
+    window.location.reload();
   }
   return (
     <div className='flex flex-row justify-center items-center h-screen w-screen'>
