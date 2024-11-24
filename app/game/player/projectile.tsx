@@ -46,7 +46,7 @@ export default class Projectile {
             this.visual.position.add(this.direction.clone().multiplyScalar(this.speed));
         }
     }
-
+        
     public hasHitPlayer(playerVisual: THREE.Sprite): boolean {
         let playerHitbox = playerVisual.scale.clone();
         let projectileHitbox = this.visual.scale.clone();

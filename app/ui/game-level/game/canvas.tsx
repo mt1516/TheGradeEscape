@@ -25,7 +25,6 @@ export default function Canvas(props: {
     const [mazeSolutionLength, setMazeSolutionLength] = useState(0);
     const [timeLeft, setTimeLeft] = useState(0);
     const [loading, setLoading] = useState(true);
-    
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const game: Game = new Game(scene, camera, props.sceneRender, props.mode, props.difficulty);
@@ -47,6 +46,10 @@ export default function Canvas(props: {
             let unsubscribeToMazeSolutionLengthChange: () => void;
             let unsubscribeToPlayerStepsChange: () => void;
             let unsubscribeToTimer: () => void;
+
+            unsubscribeToGameState = game.subscribeToGameState((state) => {
+                setGameState(state);
+            });
 
             unsubscribeToGameState = game.subscribeToGameState((state) => {
                 setGameState(state);
@@ -142,8 +145,8 @@ export default function Canvas(props: {
                             <div className='h-fit'> Difficulty: <br />{props.difficulty} </div>
                             <div className='h-fit'> Character: </div>
                             <div className='h-fit'> Health: <div className='h-fit flex flex-row'> {renderHearts()} </div> </div>
-                            <div className='h-fit'> Player steps/ Limited steps: <br /> {playerSteps}/{mazeSolutionLength} </div>
-                            <div className='h-fit'> Time Left: {timeLeft} seconds </div>
+                            <div className='h-fit'> Player steps/ Limited steps: <br /> {playerSteps == 0 ? '-' : playerSteps}/{mazeSolutionLength == 0 ? '-': mazeSolutionLength} </div>
+                            <div className='h-fit'> Due time: {timeLeft} seconds </div>
                         </div>
                     </div>
                 </div>
