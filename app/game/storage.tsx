@@ -148,6 +148,9 @@ export function promoteGrade() {
             currentGrade = 'D';
             break;
         case 'D':
+            currentGrade = 'C-';
+            break;
+        case 'C-':
             currentGrade = 'C';
             break;
         case 'C':
@@ -202,6 +205,9 @@ export function demoteGrade() {
             currentGrade = 'C';
             break;
         case 'C':
+            currentGrade = 'C-';
+            break;
+        case 'C-':
             currentGrade = 'D';
             break;
         case 'D':
@@ -214,6 +220,6 @@ export function demoteGrade() {
 }
 
 export function compareGrade(grade: string): number {
-    var grades = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
+    var grades = ['F', 'D', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
     return grades.indexOf(getCurrentGrade()) - grades.indexOf(grade);
 }
