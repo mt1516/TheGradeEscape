@@ -9,6 +9,7 @@ export default function Choose(props: {
   const [selectionConfirmPopup, setSelectionConfirmPopup] = useState(false);
   const closeSelectionConfirmPopup = () => {
     setSelectionConfirmPopup(false);
+    window.location.href = "/";
   }
   return (
     <div className="container flex flex-col h-full w-full justify-center">
