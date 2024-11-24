@@ -256,7 +256,6 @@ export default class StateMachine {
     public isImmune(): boolean {
         return this.immunity === IMMUNITY.IMMUNE;
     }
-
     public hitByProjectile(): boolean {
         if (this.isImmune()) {
             return false;

@@ -36,7 +36,7 @@ export default function Choose(props: {
               <div className="container text-black text-center text-8xl w-full h-1/2 rounded-md">
                 ^
               </div>
-              <button className="container bg-green-500 hover:bg-green-600 text-black text-center text-4xl w-full h-1/2 rounded-md border-2 border-black"
+              <button className="container bg-yellow-400 hover:bg-green-600 text-black text-center text-3xl w-full h-1/2 rounded-md border-2 border-black"
                 onClick={() => {
                   setCurrentCharacter(props.current);
                   setSelectionConfirmPopup(true);
@@ -45,7 +45,7 @@ export default function Choose(props: {
               </button>
             </div>
             <div className="flex flex-row w-4/5 h-full justify-around text-white">
-              <div className="container bg-yellow-400 text-start text-xl w-1/3 h-full rounded-md p-5">
+              <div className="container bg-green-500 text-start text-xl w-1/3 h-full rounded-md p-5">
                 Buff: <br />
                 {characters[props.current % characterTotal].buff}
               </div>
