@@ -8,11 +8,11 @@ export default function Credit() {
                             Credits
                         </h1>
                         <p className="scroll-text">
-                            - Game Design: Your Name <br />
-                            - Development: Your Name <br />
-                            - Artwork: Your Name <br />
-                            - Music: Your Name <br />
-                            - Special Thanks: Your Friends and Family <br />
+                            - Game Idea: Melvin <br />
+                            - Artwork: Bosco, online <br />
+                            - Sound Effects: online <br />
+                            - Front-end: Bosco <br />
+                            - Back-end: Bosco, Melvin <br />
                         </p>
                     </div>
                 </div>
