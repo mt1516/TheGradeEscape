@@ -22,7 +22,6 @@ export default function CharacterPage() {
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
         setCurrent((c + 1) % characterTotal);
       }
-      console.log((c - 1 + characterTotal) % characterTotal, (c + 1) % characterTotal)
     };
 
     window.addEventListener('keydown', handleKeyDown);

@@ -9,7 +9,6 @@ import { promoteGrade, demoteGrade, setPlayed, updateScoreBoard, getCurrentChara
 import { characters } from './player/character';
 import { getCurrentGrade } from "@/app/game/storage";
 
-
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
