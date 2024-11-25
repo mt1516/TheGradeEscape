@@ -3,7 +3,6 @@
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import Canvas from "@/app/ui/game-level/game/canvas";
 import { Mode, Difficulty } from "@/app/game/game";
-import Close from "@/app/ui/game-level/game/button";
 import * as THREE from 'three';
 
 export default function Page() {
