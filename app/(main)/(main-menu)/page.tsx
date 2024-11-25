@@ -23,7 +23,6 @@ export default function Home() {
           <Buttons />
           <div className="container flex flex-col h-5/6 w-2/3 justify-self-end items-center bg-cover bg-no-repeat"
             style={{ backgroundImage: 'url(/background/hkust.jpg)' }}>
-            {/* Placeholder */}
           </div>
         </div>
       </div>
