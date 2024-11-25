@@ -24,16 +24,17 @@ make bun-run
 make bun-run
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see our game.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see our game. <br />
+(Recommended browser: Chrome/Firefox, please avoid using Safari or else there may be some visual bug)
 
 ## Game Controls
 - **Arrow keys/WASD**: Move the player
 - **Mouse**: Click on the buttons in the game
 
 ## Game Description
-The Grade Escape is a 2D maze game where the player is a student trying to escape from the University of Stress and Tension (commonly known as HKUST). 
+The Grade Escape is a 2D maze game where the player is a student trying to escape from the University of Stress and Tension (commonly known as HKUST). <br /> 
 
-<br /> There are 3 game modes in the game: 
+There are 3 game modes in the game: 
 - **Don't Take Wrong Steps**: The player steps count is limited. The player has to reach the exit within the steps limit and the time limit.
 - **Dancing In The Dark**: The maze is dark and the player can only see a small area around him. The player has to reach the exit within the time limit.
 - **Don't Bump The Wall**: The player has to reach the exit without bumping into the wall too much. Bumping into walls will lose one heart The player has to reach the exit within the time limit.
@@ -65,6 +66,8 @@ The Grade Escape is a 2D maze game where the player is a student trying to escap
 - **Better UI**: Make the UI more user-friendly.
 - **Customerize game mode**: Allow the player to customize the game mode.
 - **Customerize character**: Allow the player to customize the character using texture packages.
+- **Build feature**: There are still minor things need to be modify for the project to build with next
+- **Build a well-structured backend**: Avoid using local storage
 
 ## Authors
 - **Yuen Man Him, Bosco** - @[bosco713](https://github.com/bosco713)
