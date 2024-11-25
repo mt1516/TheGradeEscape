@@ -70,6 +70,6 @@ There are 3 game modes in the game:
 - **Build feature**: There are still minor things need to be modify for the project to build with next
 - **Build a well-structured backend**: Avoid using local storage
 
-## Authors
-- **Yuen Man Him, Bosco** - @[bosco713](https://github.com/bosco713)
-- **Tong Tsun Man, Melvin** -@[mt1516](https://github.com/mt1516)
+## Authors (Group 11)
+- **Yuen Man Him, Bosco** - @[bosco713](https://github.com/bosco713) [mhyuenac@connect.ust.hk](mailto:mhyuenac@connect.ust.hk)
+- **Tong Tsun Man, Melvin** -@[mt1516](https://github.com/mt1516) [tmtong@connect.ust.hk](mailto:tmtong@connect.ust.hk)
