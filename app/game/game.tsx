@@ -58,18 +58,18 @@ export class Mask {
         }
         if (Math.random() < probability) {
             (this.mask.material as THREE.Material).opacity = 0.8
-            this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
+            this.maskOnDuration = (Math.floor(Math.random() * 2) + 1) * 1000;
             if (this.thunderSound.isPlaying) {
                 this.thunderSound.stop();
             }
-            if (this.maskOnDuration <= 2) {
+            if (this.maskOnDuration <= 1000) {
                 this.audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
                     this.thunderSound.setBuffer(buffer);
                     this.thunderSound.setLoop(false);
                     this.thunderSound.setVolume(1);
                     this.thunderSound.play();
                 });
-            } else if (this.maskOnDuration <= 4) {
+            } else if (this.maskOnDuration <= 2000) {
                 this.audioLoader.load('/sounds/MediumThunder.mp3',  (buffer) => {
                     this.thunderSound.setBuffer(buffer);
                     this.thunderSound.setLoop(false);
@@ -157,6 +157,9 @@ export default class Game {
                 this.maskPlayerView.needMask = true;
                 this.scene.add(this.maskPlayerView.mask);
                 this.timeLimit = Math.ceil(this.timeLimit * 1.1);
+                if (this.difficulty === 'medium') {
+                    this.timeLimit = Math.ceil(this.timeLimit * 1.2);
+                }
                 break;
             case 'DTWS':
                 this.mazeSolutionLengthCallbacks = new Set();
@@ -551,11 +554,11 @@ export default class Game {
     private darkModeUpdate(deltaTime: number) {
         this.maskPlayerView?.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         if (this.maskPlayerView) {
-            this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
+            this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - deltaTime);
         }
-        if (this.player.state.isStop()) {
-            return;
-        }
+        // if (this.player.state.isStop()) {
+        //     return;
+        // }
         this.lastThunder -= deltaTime;
         if (this.lastThunder <= 0) {
             this.maskPlayerView?.thunder();

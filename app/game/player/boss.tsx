@@ -31,10 +31,10 @@ export default class Boss extends Player {
         this.visual = this.renderBoss();
         this.visual.position.set(spawnPoint[0], spawnPoint[1], 2);
         this.projectiles = [];
-        this.lastMove = 0;
-        this.lastNewProjectile = 0;
-        this.lastProjectileUpdate = 10000;
-        this.lastAnimate = 0;
+        this.lastMove = 15000;
+        this.lastNewProjectile = 15000;
+        this.lastProjectileUpdate = 15000;
+        this.lastAnimate = 15000;
         this.player = player;
         this.chargedAttack = Math.max(Math.floor(Math.random() * 20), 10);
         this.movePeriod = 300;
