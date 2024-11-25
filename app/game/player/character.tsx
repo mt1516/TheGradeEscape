@@ -81,20 +81,24 @@ export const characters = [
 
 export const characterClassName = [
     {
-        selected: 'container bg-red-500 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md',
-        unselected: 'container bg-red-500 w-full h-4/6 rounded-md border-black border-2 shadow-md',
+        selected: 'container bg-red-200 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md bg-contain bg-center bg-no-repeat',
+        unselected: 'container bg-red-200 w-full h-4/6 rounded-md border-black border-2 shadow-md bg-contain bg-center bg-no-repeat',
+        image: "url('/texture/character_norm.png')"
     },
     {
-        selected: "container bg-gray-500 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md",
-        unselected: "container bg-gray-500 w-full h-4/6 rounded-md border-black border-2 shadow-md",
+        selected: "container bg-gray-200 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md bg-contain bg-center bg-no-repeat",
+        unselected: "container bg-gray-200 w-full h-4/6 rounded-md border-black border-2 shadow-md bg-contain bg-center bg-no-repeat",
+        image: "url('/texture/character_CS.png')"
     },
     {
-        selected: "container bg-green-500 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md",
-        unselected: "container bg-green-500 w-full h-4/6 rounded-md border-black border-2 shadow-md",
+        selected: "container bg-green-200 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md bg-contain bg-center bg-no-repeat",
+        unselected: "container bg-green-200 w-full h-4/6 rounded-md border-black border-2 shadow-md bg-contain bg-center bg-no-repeat",
+        image: "url('/texture/character_business.png')",
     },
     {
-        selected: "container bg-blue-500 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md",
-        unselected: "container bg-blue-500 w-full h-4/6 rounded-md border-black border-2 shadow-md",
+        selected: "container bg-blue-200 w-full h-4/6 rounded-md border-yellow-400 border-8 shadow-md bg-contain bg-center bg-no-repeat",
+        unselected: "container bg-blue-200 w-full h-4/6 rounded-md border-black border-2 shadow-md bg-contain bg-center bg-no-repeat",
+        image: "url('/texture/character_cat.png')"
     }
 ]
 
