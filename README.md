@@ -26,6 +26,7 @@ make bun-run
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see our game. <br />
 (Recommended browser: Chrome/Firefox, please avoid using Safari or else there may be some visual bug)
+(If you want to go back to previous page, please use the back button on the top left corner of the page. Using the browser back button may cause some error to show up)
 
 ## Game Controls
 - **Arrow keys/WASD**: Move the player
