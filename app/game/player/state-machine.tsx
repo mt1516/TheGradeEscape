@@ -166,18 +166,10 @@ export default class StateMachine {
         }
     }
     
-    public limitedStepsUpdate(): boolean {
-        if (this.isMove() && this.movedFlag) {
-            // this.steps += 1;
-            // Avoid overflowing the opengl context
-            // if (this.steps % 5 === 0) {
-            return true;
-            // }
-        }
+    public limitedStepsUpdate(): void {
         if (this.steps >= this.limitedSteps) {
             this.state = STATE.DEAD;
         }
-        return false;
     }
 
     private getNextCoordinate(): [number[], number[]] {
@@ -273,5 +265,13 @@ export default class StateMachine {
     public setDead() {
         this.state = STATE.DEAD;
         this.direction = DIRECTION.IDLE;
+    }
+
+    public getStepLimit() {
+        return this.limitedSteps;
+    }
+
+    public setStepLimit(limit: number) {
+        this.limitedSteps = limit;
     }
 }

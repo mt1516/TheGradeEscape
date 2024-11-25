@@ -29,7 +29,7 @@ export default function Gameend(props: {
         </Popup>
       )
     case -1:
-      console.log("gamestate -1")
+      // console.log("gamestate -1")
       return (
         <Popup open={true} closeOnDocumentClick={false} closeOnEscape={false}>
           <div className="flex flex-row justify-start">
@@ -53,7 +53,7 @@ export default function Gameend(props: {
         </Popup>
       )
     case -2:
-      console.log("gamestate -2")
+      // console.log("gamestate -2")
       return (
         <Popup open={true} closeOnDocumentClick={false} closeOnEscape={false}>
           <div className="flex flex-row justify-start">

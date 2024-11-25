@@ -94,8 +94,8 @@ export default class Player {
         return flag;
     }
 
-    public limitedStepsUpdate(): boolean {
-        return this.state.limitedStepsUpdate();
+    public limitedStepsUpdate(): void {
+        this.state.limitedStepsUpdate();
     }
 
     public animate() {
@@ -141,17 +141,17 @@ export default class Player {
                 clearInterval(shieldFailing);
                 this.immunityMask.material.opacity = 0;
                 this.state.setImmunity(false);
-                console.log("Immunity over");
-            }, 1500);
-        }, this.immunityPeriod - 1500);
+                // console.log("Immunity over");
+            }, 2000);
+        }, this.immunityPeriod - 2000);
     }
 
     public hitByBoss(): boolean {
         if (this.state.isImmune()) {
-            console.log("Player is immune");
+            // console.log("Player is immune");
             return false;
         }
-        console.log("Player is hit");
+        // console.log("Player is hit");
         const successHit = this.state.hitByProjectile();
         if (successHit) {
             this.startHurtAnimation();

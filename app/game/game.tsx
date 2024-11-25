@@ -183,7 +183,7 @@ export default class Game {
         const characterIndex = getCurrentCharacter();
         const character = characters[characterIndex];
         this.player.movePeriod /= character.walkingSpeedMultiplier;
-        this.stepLimit *= character.stepLimitMultiplier;
+        this.player.state.setStepLimit(this.player.state.getStepLimit() * character.stepLimitMultiplier);
         updateValues.push(character.viewInDarkModeMultiplier);
         this.timeLimit *= character.timeLimitMultiplier;
         switch (this.gamemode) {
@@ -512,7 +512,7 @@ export default class Game {
     }
 
     private update(deltaTime: number) {
-        console.log("Updating", deltaTime);
+        // console.log("Updating", deltaTime);
         this.player.update(deltaTime);
         switch (this.gamemode) {
             case 'DBTW':
@@ -564,13 +564,12 @@ export default class Game {
     }
 
     private limitedStepsUpdate() {
-        if (this.player.state.isStop()) {
-            this.notifyPlayerStepsChange();
-            return;
-        }
-        if (this.player.limitedStepsUpdate()) {
-            this.notifyPlayerStepsChange();
-        }
+        // if (this.player.state.isStop()) {
+        //     this.notifyPlayerStepsChange();
+        //     return;
+        // }
+        this.player.limitedStepsUpdate();
+        this.notifyPlayerStepsChange();
     }
 
     private bossUpdate(deltaTime: number) {

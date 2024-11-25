@@ -60,7 +60,7 @@ export default class Boss extends Player {
 
     public update(deltaTime: number): updateMessage {
         const message = new updateMessage([], false, false);
-        console.log(this.projectiles.length);
+        // console.log(this.projectiles.length);
         this.lastMove -= deltaTime;
         if (this.lastMove <= 0) {
             this.chasePlayer(0.5);
