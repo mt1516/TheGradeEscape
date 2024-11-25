@@ -16,7 +16,7 @@ export function getCurrentGrade() {
 }
 
 export function getCurrentCharacter() {
-    return currentCharacter;
+    return typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '-1') : -1;
 }
 
 export function getCurrentScore(): number {
@@ -36,7 +36,7 @@ export function initStorage() {
     resetCurrentGame(false);
     resetScoreBoard(false);
     if (typeof window !== 'undefined') {
-        localStorage.setItem('currentCharacter', '1');
+        localStorage.setItem('currentCharacter', '0');
     }
 }
 
@@ -132,10 +132,7 @@ export function canPlayFinal(): boolean {
     return checkPlayed(GAMEMODE_DIFFICULTY.DBTW_HARD) && checkPlayed(GAMEMODE_DIFFICULTY.DITD_HARD) && checkPlayed(GAMEMODE_DIFFICULTY.DTWS_HARD);
 }
 
-export var currentCharacter = typeof window !== 'undefined' ? parseInt(localStorage.getItem('currentCharacter') || '-1') : -1;
-
 export function setCurrentCharacter(c: number) {
-    currentCharacter = c;
     if (typeof window !== 'undefined') {
         localStorage.setItem('currentCharacter', c.toString());
     }
@@ -148,6 +145,9 @@ export function promoteGrade() {
             currentGrade = 'D';
             break;
         case 'D':
+            currentGrade = 'C-';
+            break;
+        case 'C-':
             currentGrade = 'C';
             break;
         case 'C':
@@ -202,6 +202,9 @@ export function demoteGrade() {
             currentGrade = 'C';
             break;
         case 'C':
+            currentGrade = 'C-';
+            break;
+        case 'C-':
             currentGrade = 'D';
             break;
         case 'D':
@@ -214,6 +217,6 @@ export function demoteGrade() {
 }
 
 export function compareGrade(grade: string): number {
-    var grades = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
+    var grades = ['F', 'D', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
     return grades.indexOf(getCurrentGrade()) - grades.indexOf(grade);
 }

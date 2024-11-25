@@ -267,9 +267,6 @@ export default class StateMachine {
             return true;
         }
         this.setImmunity(true);
-        // setTimeout(() => {
-        //     this.setImmunity(false);
-        // }, 4000);
         return true;
     }
 

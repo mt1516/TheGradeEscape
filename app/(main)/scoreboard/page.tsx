@@ -4,7 +4,7 @@ import Scoreboard from "@/app/ui/scoreboard/scoreboard";
 
 export default function Page() {
   return (
-    <div className='contianer flex flex-row justify-center items-center h-screen w-screen'>
+    <div className='flex flex-row justify-center items-center h-screen w-screen'>
       <div className="container flex flex-col bg-gray-50 rounded-lg shadow-lg h-5/6 p-10">
         <div className="container flex flex-row">
           <Close />

@@ -7,7 +7,7 @@ export default function Close() {
             <Link
                 className="absolute top-2 left-0 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex justify-center items-center focus:outline-none"
                 href="/">
-                <Image src="/white-cross.svg" alt="Close" width={24} height={24} />
+                <Image src="/texture/white-cross.svg" alt="Close" width={24} height={24} />
             </Link>
         </div>
     );

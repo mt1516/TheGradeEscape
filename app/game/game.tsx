@@ -5,18 +5,18 @@ import Maze, { MAZECELL } from './maze-generator';
 import Player from './player/player';
 import settings from './settings.json';
 import Boss, { updateMessage } from './player/boss';
-import { promoteGrade, demoteGrade, setPlayed, updateScoreBoard } from './storage';
+import { promoteGrade, demoteGrade, setPlayed, updateScoreBoard, getCurrentCharacter } from './storage';
+import { characters } from './player/character';
+import { getCurrentGrade } from "@/app/game/storage";
 
 export type Mode = 'default' | 'DBTW' | 'DITD' | 'DTWS' | 'Final';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export let Mode2Name = new Map<Mode, string>([
-    ['DBTW', 'Don\'t Break The Wall'],
+    ['DBTW', 'Don\'t Bump The Wall'],
     ['DITD', 'Dancing In The Dark'],
     ['DTWS', 'Don\'t Take Wrong Steps'],
     ['Final', 'Final Boss']
 ]);
-
-let moveEveryNFrames = 5;
 
 export interface setting {
     width: number;
@@ -35,8 +35,8 @@ export class Mask {
     public maskOnDuration: number;
     private thunderSound: THREE.Audio = new THREE.Audio(new THREE.AudioListener());
     private audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
-    constructor() {
-        const maskGeometry = new THREE.RingGeometry(10, 200);
+    constructor(maskRadiusMultiplier: number = 1) {
+        const maskGeometry = new THREE.RingGeometry(10 * maskRadiusMultiplier, 200);
         const maskMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
         maskMaterial.opacity = 0;
         maskMaterial.transparent = true;
@@ -52,13 +52,16 @@ export class Mask {
         return this.mask;
     }
 
-    public thunder(probability: number=0.05) {
+    public thunder(probability: number=0.2) {
         if (this.maskOnDuration > 0) {
             return;
         }
         if (Math.random() < probability) {
             (this.mask.material as THREE.Material).opacity = 0.8
             this.maskOnDuration = Math.floor(Math.random() * 5) + 1;
+            if (this.thunderSound.isPlaying) {
+                this.thunderSound.stop();
+            }
             if (this.maskOnDuration <= 2) {
                 this.audioLoader.load('/sounds/SoftThunder.mp3',  (buffer) => {
                     this.thunderSound.setBuffer(buffer);
@@ -85,10 +88,6 @@ export class Mask {
             (this.mask.material as THREE.Material).opacity = 1;
         }
     }
-
-    // public moveMask(x: number, y: number) {
-    //     this.mask.position.set(x, y, 10);
-    // }
 };
 
 export default class Game {
@@ -112,9 +111,9 @@ export default class Game {
     private timeLimit: number;
     private startTime: number;
     private timerCallbacks: Set<(time: number) => void> | null;
-    private lastUpdateTime: number = Date.now();
+    private lastThunder: number;
+    private lastUpdateTime: number;
     private isTimeout: boolean;
-    // private lastAnimationTime: number = Date.now();
     constructor(scene: THREE.Scene, camera: THREE.OrthographicCamera, sceneRender: THREE.WebGLRenderer, mode: Mode, difficulty: Difficulty) {
         this.scene = scene;
         this.camera = camera;
@@ -141,19 +140,23 @@ export default class Game {
         this.isTimeout = false;
         const stepsRequired = this.maze.getLengthOfSolution();
         this.stepLimit = Math.ceil(stepsRequired * 1.3)
-        this.timeLimit = stepsRequired * 1.2 / moveEveryNFrames;
+        this.timeLimit = stepsRequired * 1.2 / 5;
         this.player = new Player([1, 2], 1, [startX, startY], this.maze.getWinOfMap(), this.maze.mazeMap, this.stepLimit);
+        this.lastUpdateTime = Date.now();
+        this.lastThunder = 1000;
+        const updateValues = this.updateCharacterValues();
         switch (this.gamemode) {
             case 'DBTW':
                 this.healthChangeCallbacks = new Set();
                 this.timeLimit = this.timeLimit * 0.8;
                 break;
             case 'DITD':
-                this.maskPlayerView = new Mask();
+                this.maskPlayerView = new Mask(updateValues[0]);
                 this.maskPlayerView.mask.position.set(startX, startY, 10);
                 this.maskPlayerView.showMask();
                 this.maskPlayerView.needMask = true;
                 this.scene.add(this.maskPlayerView.mask);
+                this.timeLimit = Math.ceil(this.timeLimit * 1.1);
                 break;
             case 'DTWS':
                 this.mazeSolutionLengthCallbacks = new Set();
@@ -163,13 +166,40 @@ export default class Game {
             case 'Final':
                 this.healthChangeCallbacks = new Set();
                 this.boss = new Boss([1, 2], 1, this.maze.getStartOfMap(), this.maze.getWinOfMap(), this.maze.mazeMap, this.player, [startX, startY]);
-                this.player.state.setHealth(5);
+                // this.player.state.setHealth(5);
                 this.scene.add(this.boss.visual);
                 this.scene.add(this.player.immunityMask);
                 break;
         }
+        if (this.difficulty === 'hard') {
+            this.timeLimit = Math.ceil(this.timeLimit * 1.2);
+        }
         this.scene.add(this.player.visual);
         this.renderMaze();
+    }
+
+    private updateCharacterValues(): number[] {
+        const updateValues = [];
+        const characterIndex = getCurrentCharacter();
+        const character = characters[characterIndex];
+        this.player.movePeriod /= character.walkingSpeedMultiplier;
+        this.stepLimit *= character.stepLimitMultiplier;
+        updateValues.push(character.viewInDarkModeMultiplier);
+        this.timeLimit *= character.timeLimitMultiplier;
+        switch (this.gamemode) {
+            case 'DBTW':
+                this.player.state.setHealth(3 + character.extraHeart);
+                break;
+            case 'DITD':
+                break;
+            case 'DTWS':
+                break;
+            case 'Final':
+                this.player.state.setHealth(5 + character.extraHeart);
+                break;
+        }
+        this.player.immunityPeriod *= character.immunityPeriodMultiplier;
+        return updateValues;
     }
 
     public resizeWindow(windowSize: number[]) {
@@ -287,10 +317,34 @@ export default class Game {
     }
 
     private renderMaze() {
-        const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x593ac0 }); // Red walls
+        const currentGrade = getCurrentGrade();
+        const getWallTexture = (grade: string) => {
+            switch (grade) {
+                case 'A+':
+                case 'A':
+                case 'A-':
+                    return new THREE.TextureLoader().load('/texture/WallA.png');
+                case 'B+':
+                case 'B':
+                case 'B-':
+                    return new THREE.TextureLoader().load('/texture/WallB.png');
+                case 'C+':
+                case 'C':
+                case 'C-':
+                    return new THREE.TextureLoader().load('/texture/WallC.png');
+                case 'D':
+                    return new THREE.TextureLoader().load('/texture/WallD.png');
+                default:
+                    return new THREE.TextureLoader().load('/texture/WallF.png');
+            }
+        };
+        const wallTexture = getWallTexture(currentGrade);
+        wallTexture.magFilter = THREE.NearestFilter;
+        wallTexture.minFilter = THREE.NearestFilter;
+        const wallMaterial = new THREE.MeshBasicMaterial({ map: wallTexture });
         const pathTexture = new THREE.TextureLoader().load( "/texture/Stone_Floor_002_COLOR.jpg" );
         const pathMaterial = new THREE.MeshBasicMaterial({ map: pathTexture });
-        const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell 
+        const startMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue start cell
         const winMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green win cell
         this.maze.mazeMap.forEach((row, y) => {
             row.forEach((cell, x) => {
@@ -454,26 +508,18 @@ export default class Game {
         }
         this.update(deltaTime);
         this.lastUpdateTime = currentTime;
-
-        // const animationDeltaTime = currentTime - this.lastAnimationTime;
-        // if (animationDeltaTime >= 200) { // Animate every 100ms
-        //     this.player.animate();
-        //     this.lastAnimationTime = currentTime;
-        // }
-
         requestAnimationFrame(this.playerMovemoment.bind(this));
     }
 
     private update(deltaTime: number) {
         console.log("Updating", deltaTime);
-        // const currentTime = Date.now();
         this.player.update(deltaTime);
         switch (this.gamemode) {
             case 'DBTW':
                 this.bumpWallUpdate();
                 break;
             case 'DITD':
-                this.darkModeUpdate();
+                this.darkModeUpdate(deltaTime);
                 break;
             case 'DTWS':
                 this.limitedStepsUpdate();
@@ -502,12 +548,19 @@ export default class Game {
         }
     }
 
-    private darkModeUpdate() {
+    private darkModeUpdate(deltaTime: number) {
         this.maskPlayerView?.mask.position.set(this.player.visual.position.x, this.player.visual.position.y, 10);
         if (this.maskPlayerView) {
             this.maskPlayerView.maskOnDuration = Math.max(0, this.maskPlayerView.maskOnDuration - 1);
         }
-        this.maskPlayerView?.thunder();
+        if (this.player.state.isStop()) {
+            return;
+        }
+        this.lastThunder -= deltaTime;
+        if (this.lastThunder <= 0) {
+            this.maskPlayerView?.thunder();
+            this.lastThunder = 1000;
+        }
     }
 
     private limitedStepsUpdate() {
@@ -521,13 +574,9 @@ export default class Game {
     }
 
     private bossUpdate(deltaTime: number) {
-        // if (this.gamemode !== 'Final') {
-        //     return;
-        // }
         if (this.boss) {
             const message: updateMessage = this.boss.update(deltaTime);
             if (message.hasNewProjectile) {
-                // this.scene.add(message.projectile.visual);
                 message.projectiles?.forEach((projectile) => {
                     this.scene.add(projectile.visual);
                 });
@@ -536,6 +585,13 @@ export default class Game {
                 if (this.player.hitByBoss()) {
                     this.notifyHealthChange();
                 }
+                message.explosions?.forEach((explosion) => {
+                    this.scene.add(explosion);
+                    setTimeout(() => {
+                        explosion.material.opacity = 0;
+                        this.scene.remove(explosion);
+                    }, 200);
+                });
             }
         }
     }
@@ -545,7 +601,6 @@ export default class Game {
     }
     
     private addBorder() {
-        // Add border walls
         let cellMiddle = Math.floor(this.gameSetting.cellSize / 2);
         for (let x=cellMiddle; x < this.maze.mazeMap[0].length; x+=this.gameSetting.cellSize + cellMiddle) {
             this.addBorderWall(x, this.maze.mazeMap[0].length + cellMiddle, this.gameSetting.cellSize);

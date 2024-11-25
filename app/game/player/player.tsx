@@ -2,9 +2,8 @@
 
 import * as THREE from 'three';
 import StateMachine from './state-machine';
-import { Mode } from '../game'
-
-// var hurtAnimiationResetFrame = 5;
+import { getCurrentCharacter } from '../storage';
+import { characters } from './character';
 
 export default class Player {
     public state: StateMachine;
@@ -12,36 +11,40 @@ export default class Player {
     protected currentTile: number;
     protected tilesHorizontal: number;
     protected tilesVertical: number;
-    // private hurtAnimiationFrameCount: number;
-    private hurtSound: THREE.Audio;
+    private currentCharacter: any;
+    protected hurtSound: THREE.Audio;
     public immunityPeriod: number;
     public immunityMask: THREE.Mesh;
-    private audioLoader = new THREE.AudioLoader();
+    protected audioLoader = new THREE.AudioLoader();
     protected lastMove = Date.now();
     protected lastAnimate = Date.now();
+    public movePeriod: number;
+    public animatePeriod: number
     constructor(characterSize: number[], hitboxWidth: number, mapStartCoord: number[], mapEndCoord: number[], mazeMap: number[][], limitedSteps: number) {
         this.currentTile = 0;
-        this.tilesHorizontal = 3;
-        this.tilesVertical = 4;
+        this.currentCharacter = characters[getCurrentCharacter()];
+        this.tilesHorizontal = this.currentCharacter.tilesHorizontal;
+        this.tilesVertical = this.currentCharacter.tilesVertical;
         this.state = new StateMachine(mazeMap, characterSize, hitboxWidth, limitedSteps, mapStartCoord, mapEndCoord);
-        // console.log("this.mapX, this.mapY, this.left, this.right, this.top, this.bottom = ", this.mapX, this.mapY, this.leftX, this.rightP, this.topP, this.bottomY);
         this.visual = this.renderPlayer();
         this.visual.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 2);
-        // this.hurtAnimiationFrameCount = 0;
         this.hurtSound = new THREE.Audio(new THREE.AudioListener());
         this.immunityPeriod = 5000;
         this.immunityMask = new THREE.Mesh(new THREE.CircleGeometry(2), new THREE.MeshBasicMaterial({ color: 0xffd500, transparent: true, opacity: 0 }));
         this.immunityMask.position.set(mapStartCoord[0], mapStartCoord[1] + Math.floor(characterSize[1] / 2), 5);
         this.lastMove = 0;
         this.lastAnimate = 0;
+        this.movePeriod = 100;
+        this.animatePeriod = this.currentCharacter.animatePeriod;
     }
 
     public renderPlayer(): THREE.Sprite {
         const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;
         const offsetY = (this.tilesVertical - Math.floor(this.currentTile / this.tilesHorizontal)) / this.tilesVertical;
-        let playerTexture = new THREE.TextureLoader().load('/texture/student.png');
+        let playerTexture = new THREE.TextureLoader().load(this.currentCharacter.texturePath);
         playerTexture.magFilter = THREE.NearestFilter;
         playerTexture.minFilter = THREE.NearestFilter;
+        playerTexture.colorSpace = THREE.SRGBColorSpace;
         playerTexture.repeat.set(1 / this.tilesHorizontal, 1 / this.tilesVertical);
         playerTexture.offset.set(offsetX, offsetY);
         const playerMaterial = new THREE.SpriteMaterial({ map: playerTexture, sizeAttenuation: false });
@@ -52,51 +55,34 @@ export default class Player {
     }
 
     public update(deltaTime: number): void {
-        const currentTime = Date.now();
-        if (currentTime - this.lastMove > 100) {
-            this.lastMove = currentTime;
+        this.lastMove -= deltaTime;
+        if (this.lastMove < 0) {
             if (this.state.isMove()) {
                 let [x, y] = this.state.update();
                 this.visual.position.set(x, y, 3);
             }
             this.immunityMask.position.set(this.visual.position.x, this.visual.position.y, 5);
+            this.lastMove = this.movePeriod;
         }
-        if (currentTime - this.lastAnimate > 100) {
-            this.lastAnimate = currentTime;
+        this.lastAnimate -= deltaTime;
+        if (this.lastAnimate < 0) {
             this.animate();
+            this.lastAnimate = this.animatePeriod;
         }
     }
 
     private startHurtAnimation() {
         this.visual.material.color.setHex(0xff0000);
-        // this.hurtAnimiationFrameCount = 1;
         this.audioLoader.load('/sounds/hurtsound.mp3', (buffer) => {
             this.hurtSound.setBuffer(buffer);
             this.hurtSound.setLoop(false);
             this.hurtSound.setVolume(1);
             this.hurtSound.play();
         });
-        // if (this.state.isDead() || this.state.isWin()) {
-        //     return;
-        // }
         setTimeout(() => {
             this.visual.material.color.setHex(0xffffff);
         }, 200);
     }
-
-    // private hurtAnimation() {
-    //     if (this.hurtAnimiationFrameCount > 0) {
-    //         this.hurtAnimiationFrameCount++;
-    //         this.hurtAnimationCallback()
-    //     }
-    // }
-
-    // private hurtAnimationCallback() {
-    //     if (this.hurtAnimiationFrameCount > hurtAnimiationResetFrame) {
-    //         this.hurtAnimiationFrameCount = 0;
-    //         this.visual.material.color.setHex(0xffffff);
-    //     }
-    // }
 
     public bumpWallUpdate(): boolean {
         let flag = this.state.getbumpWallFlag()
@@ -115,16 +101,16 @@ export default class Player {
     public animate() {
         switch (this.state.getDirection()) {
             case 1:
-                this.currentTile = (this.currentTile >= 9 && this.currentTile < 11) ? this.currentTile + 1 : 9;
+                this.currentTile = (this.currentTile >= this.currentCharacter.upTile[0] && this.currentTile < this.currentCharacter.upTile[1]) ? this.currentTile + 1 : this.currentCharacter.upTile[0];
                 break;
             case 2:
-                this.currentTile = (this.currentTile >= 6 && this.currentTile < 8) ? this.currentTile + 1 : 6;
+                this.currentTile = (this.currentTile >= this.currentCharacter.rightTile[0] && this.currentTile < this.currentCharacter.rightTile[1]) ? this.currentTile + 1 : this.currentCharacter.rightTile[0];
                 break;
             case 3:
-                this.currentTile = (this.currentTile >= 0 && this.currentTile < 2) ? this.currentTile + 1 : 0;
+                this.currentTile = (this.currentTile >= this.currentCharacter.downTile[0] && this.currentTile < this.currentCharacter.downTile[1]) ? this.currentTile + 1 : this.currentCharacter.downTile[0];
                 break;
             case 4:
-                this.currentTile = (this.currentTile >= 3 && this.currentTile < 5) ? this.currentTile + 1 : 3;
+                this.currentTile = (this.currentTile >= this.currentCharacter.leftTile[0] && this.currentTile < this.currentCharacter.leftTile[1]) ? this.currentTile + 1 : this.currentCharacter.leftTile[0];
                 break;
         }
         const offsetX = (this.currentTile % this.tilesHorizontal) / this.tilesHorizontal;
@@ -147,14 +133,20 @@ export default class Player {
         setTimeout(() => {
             clearInterval(flickerInterval);
             this.visual.material.opacity = 1;
-            this.immunityMask.material.opacity = 0;
-            this.state.setImmunity(false);
-            console.log("Immunity over");
-        }, this.immunityPeriod);
+            const shieldFailing = setInterval(() => {
+                const opacity = this.immunityMask.material.opacity === 0.5 ? 0.1 : 0.5;
+                this.immunityMask.material.opacity = opacity;
+            }, 100);
+            setTimeout(() => {
+                clearInterval(shieldFailing);
+                this.immunityMask.material.opacity = 0;
+                this.state.setImmunity(false);
+                console.log("Immunity over");
+            }, 1500);
+        }, this.immunityPeriod - 1500);
     }
 
     public hitByBoss(): boolean {
-        // console.log(this.state.isImmune(), this.state.immunity);
         if (this.state.isImmune()) {
             console.log("Player is immune");
             return false;
